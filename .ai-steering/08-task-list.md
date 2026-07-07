@@ -1,110 +1,134 @@
 # 08 — Task List: Web Admin Development Roadmap
 
-## Fase 1: Setup & Foundation
+> **Roadmap backend (dependensi):** repositori **miru-backend-api** — `.ai-steering/08-task-list.md`
+>
+> Web admin **tidak bisa** dikerjakan penuh tanpa endpoint backend yang stabil. Prioritas: auth + CRUD operasional dulu, dashboard/laporan menyusul Fase 4 backend.
 
-### 1.1 Project Setup (✅ Selesai)
-- [x] Create Next.js project
+---
+
+## Ringkasan Fase
+
+| Fase | Nama | Tujuan | Status |
+|------|------|--------|--------|
+| 0 | Scaffold | Next.js + TS + Tailwind setup | ✅ Selesai |
+| 1 | Foundation | API client, auth, layout, types | 🔲 Berikutnya |
+| 2 | Auth & RBAC | Login, role guard, sidebar per role | 🔲 |
+| 3 | MVP Operasional | Setoran, penjemputan, penarikan, pengaduan | 🔲 |
+| 4 | Manajemen & Stok | Nasabah CRUD, reward, gudang, mitra | 🔲 |
+| 5 | Monitoring | Dashboard, laporan, ekspor *(butuh backend Fase 4)* | 🔲 |
+| 6 | Polish & Production | UX, responsive, deploy | 🔲 |
+
+---
+
+## Dependensi Backend per Fase Web Admin
+
+| Fase Web Admin | Backend Minimum |
+|----------------|-----------------|
+| Fase 1–2 | Fase 1 ✅ (auth, envelope, users, waste-categories) |
+| Fase 3 | Fase 2–3 (business logic, workflow status) |
+| Fase 4 | Fase 2–3 (CRUD lengkap) |
+| Fase 5 | Fase 4 (dashboard, reports endpoints) |
+| Role pemerintah | Fase 5 backend |
+
+---
+
+## Fase 0: Scaffold ✅ Selesai
+
+- [x] Create Next.js 16 project
 - [x] Configure TypeScript (strict mode)
 - [x] Configure Tailwind CSS v4
 - [x] Configure ESLint
-- [x] Setup folder structure
+- [x] Dokumentasi `.ai-steering/` selaras backend
 
-### 1.2 Core Infrastructure
-- [ ] Install dependencies: SWR, lucide-react (icons), recharts (grafik), date-fns
-- [ ] Create `lib/api.ts` — API client dengan JWT handling
-- [ ] Create `types/index.ts` — TypeScript interfaces
-- [ ] Create `providers/AuthProvider.tsx` — Auth context
-- [ ] Create `components/layout/Sidebar.tsx` — Navigation sidebar
-- [ ] Create `components/layout/Header.tsx` — Top header
-- [ ] Create `components/layout/DashboardLayout.tsx` — Protected layout
+## Fase 1: Foundation
 
-## Fase 2: Auth & Layout
+### 1.1 Dependencies & Config
+- [ ] Install: SWR, lucide-react, recharts, date-fns, (optional) react-hook-form + zod
+- [ ] Setup `.env.local` dari `.env.example`
+- [ ] Create `lib/config.ts` — `NEXT_PUBLIC_API_URL`
+- [ ] Create `lib/api.ts` — JSON Envelope parser + JWT (lihat `04-api-integration.md`)
+- [ ] Create `types/api.ts` — User, Envelope, model interfaces
 
-- [ ] Create `/login` page (username + password form)
-- [ ] Implement login API call + token storage
-- [ ] Implement role-based redirect (admin vs petugas vs koordinator)
-- [ ] Create dashboard layout with sidebar + header
-- [ ] Implement logout
-- [ ] Handle 401 → redirect to login
+### 1.2 Layout Shell
+- [ ] Create `providers/AuthProvider.tsx`
+- [ ] Create `components/layout/Sidebar.tsx` — role-based menu (`10-integration-and-roles.md`)
+- [ ] Create `components/layout/Header.tsx`
+- [ ] Create `app/(dashboard)/layout.tsx` — protected layout
+- [ ] Create shared: LoadingSkeleton, EmptyState, ErrorMessage, Toast
 
-## Fase 3: Modul Inti (MVP)
+## Fase 2: Auth & RBAC
 
-### 3.1 Dashboard
-- [ ] Create dashboard overview page with stat cards
-- [ ] Add grafik setoran (Recharts bar chart)
-- [ ] Add aktivitas terbaru list
-- [ ] Add pengaduan terbuka list
+- [ ] Create `app/(auth)/login/page.tsx`
+- [ ] Implement login → `POST /api/auth/login/`
+- [ ] Block login role `nasabah` dengan pesan jelas
+- [ ] Role-based redirect (admin → `/`, petugas → `/transaksi/tambah`)
+- [ ] Token refresh on 401
+- [ ] Logout + clear storage
+- [ ] Route middleware/guard by role
 
-### 3.2 Manajemen Nasabah
-- [ ] Create nasabah list page (table with search & filter)
-- [ ] Create nasabah detail page (profil + riwayat transaksi)
-- [ ] Create add nasabah form (by admin)
-- [ ] Create edit nasabah form
+## Fase 3: MVP Operasional (Petugas + Admin)
 
-### 3.3 Kategori & Harga Sampah
-- [ ] Create kategori list page
-- [ ] Create add/edit kategori form (with harga_beli_per_kg)
-- [ ] Create harga history display (future)
+### 3.1 Input Setoran
+- [ ] Form multi-detail: nasabah, kategori, berat (min 1 kg)
+- [ ] Auto-calculate subtotal & total
+- [ ] `POST /api/deposits/`
+- [ ] Riwayat setoran `GET /api/deposits/`
 
-### 3.4 Transaksi Setoran
-- [ ] Create "Input Setoran" form with dynamic detail rows
-- [ ] Implement search/select nasabah (dropdown dengan search)
-- [ ] Implement dynamic category selection with auto price
-- [ ] Implement auto-calculate subtotal & total
-- [ ] Show confirmation before submit
-- [ ] Create transaksi riwayat list (filterable by date/nasabah)
+### 3.2 Penjemputan
+- [ ] List dengan tab status
+- [ ] `PATCH /api/pickups/{id}/` — workflow actions
+- [ ] Assign petugas (planned backend field)
 
-### 3.5 Penjemputan
-- [ ] Create penjemputan list with status tabs (Menunggu, Aktif, Selesai, Ditolak)
-- [ ] Implement status update actions (Setujui, Tolak, Tugaskan, dll)
-- [ ] Create assign petugas modal/dropdown
-- [ ] Implement filter by status
+### 3.3 Penarikan Saldo
+- [ ] List pengajuan `GET /api/withdrawals/?status=menunggu`
+- [ ] Approve `PATCH` — **tanpa payment gateway**
 
-### 3.6 Penarikan Saldo
-- [ ] Create daftar penarikan list
-- [ ] Implement approve/reject actions
-- [ ] Show saldo nasabah before approving
+### 3.4 Pengaduan
+- [ ] List + detail + tindak lanjut
+- [ ] `PATCH /api/complaints/{id}/`
 
-### 3.7 Poin & Reward
-- [ ] Create reward katalog page (CRUD)
-- [ ] Create daftar penukaran poin list
-- [ ] Implement approve penukaran action
+## Fase 4: Manajemen & Stok (Admin)
 
-### 3.8 Stok Gudang & Penjualan Mitra
-- [ ] Create stok gudang table (per kategori)
-- [ ] Create mitra pengepul list (CRUD)
-- [ ] Create form penjualan ke mitra (pilih mitra + kategori + berat + harga)
-- [ ] Create daftar penjualan list
+### 4.1 Nasabah
+- [ ] List `GET /api/users/?role=nasabah` + search
+- [ ] Detail + riwayat transaksi
+- [ ] Create/edit nasabah (admin)
 
-### 3.9 Pengaduan
-- [ ] Create daftar pengaduan list (tab: Terbuka / Ditutup)
-- [ ] Create pengaduan detail page/modal
-- [ ] Implement tindak lanjut form + tutup pengaduan
+### 4.2 Kategori & Harga
+- [ ] CRUD ` /api/waste-categories/`
 
-### 3.10 Laporan
-- [ ] Create laporan page with date filter
-- [ ] Display tabel rekap (sesuai jenis laporan)
-- [ ] Implement export to CSV/Excel
+### 4.3 Reward & Poin
+- [ ] CRUD `/api/rewards/`
+- [ ] Approve `/api/reward-redemptions/`
 
-## Fase 4: Pengaturan & Polish
+### 4.4 Gudang & Mitra
+- [ ] Stok table (dari `stok_terkini_kg` per kategori)
+- [ ] CRUD `/api/partners/`
+- [ ] Form `/api/partner-sales/`
 
-### 4.1 Pengaturan Sistem
-- [ ] Create pengaturan institusi form (nama, alamat, kontak, logo)
-- [ ] Create pengumuman editor
-- [ ] Display audit log (read-only)
+## Fase 5: Monitoring *(Backend Fase 4)*
 
-### 4.2 UX Polish
-- [ ] Add loading skeletons for all pages
-- [ ] Add empty states ("Belum ada data")
-- [ ] Add error boundaries per page
-- [ ] Add toast notifications for success/error actions
-- [ ] Responsive design for mobile (petugas pakai HP)
-- [ ] Dark mode (optional)
+- [ ] Dashboard stat cards
+- [ ] Grafik setoran (Recharts)
+- [ ] Laporan harian/bulanan `GET /api/reports/*`
+- [ ] Export CSV/Excel dari JSON
 
-## Fase 5: Post-MVP
+## Fase 6: Polish & Production
 
-- [ ] Export laporan ke PDF
-- [ ] Print-friendly laporan page
-- [ ] Bulk import nasabah via Excel
-- [ ] Notifikasi real-time (WebSocket) untuk penjemputan baru
-- [ ] Activity log viewer dengan filter
+- [ ] Loading skeletons, empty states, error boundaries
+- [ ] Responsive (petugas pakai HP)
+- [ ] Pengaturan institusi + audit log *(backend Fase 5)*
+- [ ] Deploy + HTTPS + CORS production config
+
+---
+
+## Referensi Dokumentasi
+
+| Dokumen | Kegunaan |
+|---------|----------|
+| `04-api-integration.md` | API client & endpoints |
+| `10-integration-and-roles.md` | Role, menu, alur integrasi |
+| `07-modules-and-features.md` | Halaman per modul |
+| `05-business-rules-sops.md` | Validasi form |
+
+Repositori terkait: **miru-backend-api**, **mirumobileapp** (GitHub terpisah).

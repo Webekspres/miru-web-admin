@@ -1,6 +1,6 @@
 # 05 — Business Rules & SOPs (Web Admin)
 
-> **Referensi utama**: Lihat `miru-backend-api/.ai-steering/05-business-rules-sops.md` untuk detail lengkap.
+> **Referensi utama**: Detail lengkap ada di repositori **miru-backend-api** — `.ai-steering/05-business-rules-sops.md`
 > **Data referensi**: Lihat `09-data-dictionary.md` untuk harga sampah, reward, standar waktu, jenis pengaduan.
 
 ## Ringkasan Aturan yang Wajib Dipatuhi di UI Web Admin

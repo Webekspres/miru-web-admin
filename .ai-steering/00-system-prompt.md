@@ -60,4 +60,13 @@ app/
 ### 7. Error Handling
 - Setiap halaman punya error boundary.
 - Tampilkan pesan error yang user-friendly dalam Bahasa Indonesia.
+- Parse error dari JSON Envelope: `message`, `errors` (field-level), `code`.
 - Jangan expose technical error details ke pengguna.
+
+## Referensi Standarisasi
+
+| Dokumen | Isi |
+|---------|-----|
+| `04-api-integration.md` | API client, envelope, endpoints |
+| `10-integration-and-roles.md` | Role, menu, permission matrix |
+| **miru-backend-api** — `.ai-steering/04-api-contracts-and-standards.md` | Sumber kebenaran kontrak API |

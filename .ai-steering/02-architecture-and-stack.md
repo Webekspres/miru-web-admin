@@ -32,6 +32,7 @@
 │                      ▼                            │
 │              Backend API (Django)                  │
 │              http://localhost:8000/api/            │
+│              JSON Envelope + JWT                   │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -43,9 +44,15 @@
 4. **Error Handling** → setiap fetch bungkus dalam try/catch atau gunakan SWR error handler.
 
 ## Environment Variables
+
+Salin `.env.example` → `.env.local`:
+
 ```
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_APP_NAME=MIRU Bank Sampah
 ```
+
+> Base URL **tanpa** `/api` — prefix `/api` ditambahkan di `lib/config.ts`.
 
 ## Struktur Folder yang Diharapkan
 ```

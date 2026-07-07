@@ -1,17 +1,23 @@
 # 03 — State Management & Data Flow (Web Admin)
 
+> **Integrasi API:** Lihat `04-api-integration.md` untuk JSON Envelope dan API client.
+> **Role & menu:** Lihat `10-integration-and-roles.md`.
+
 ## State Management Strategy
 
 ### 1. Server State (Data dari API)
-Gunakan **SWR** (atau React Query) untuk semua data yang berasal dari backend:
+
+Gunakan **SWR** (atau React Query) untuk semua data dari backend. **Selalu** parse JSON Envelope — payload ada di `data`:
 
 ```typescript
-// Contoh dengan SWR
 import useSWR from 'swr'
 import { api } from '@/lib/api'
 
-function useNasabah() {
-  return useSWR('/users/?role=nasabah', api.fetchJSON)
+function useNasabah(page = 1) {
+  return useSWR(
+    `/users/?role=nasabah&page=${page}`,
+    (path) => api.get<Nasabah[]>(path)
+  )
 }
 ```
 
@@ -22,179 +28,129 @@ function useNasabah() {
 - Built-in error retry
 
 ### 2. Auth State (Global)
-Gunakan React Context untuk auth:
 
 ```typescript
+type WebAdminRole = 'admin' | 'petugas' | 'koordinator' | 'pemerintah'
+
 interface AuthState {
   user: User | null
-  token: string | null
-  role: 'admin' | 'petugas' | 'koordinator' | null
+  role: WebAdminRole | null
+  isAuthenticated: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => void
+  refreshProfile: () => Promise<void>
 }
 ```
-- Token disimpan di `localStorage`
-- Pada mount, cek localStorage untuk restore session
-- Jika token expired, redirect ke login
+
+- Token disimpan di `localStorage` (key: `access_token`, `refresh_token`)
+- On mount: cek token → `GET /api/auth/me/` → restore session
+- Block role `nasabah` saat login
+- Token expired → coba refresh → redirect `/login`
 
 ### 3. UI State (Lokal)
+
 Gunakan React hooks lokal untuk:
 - Form state (useState/useReducer)
 - Modal visibility
 - Search/filter input
-- Pagination controls
+- Pagination controls (sync dengan `meta.pagination`)
 
 ### 4. Form Management
-Untuk form kompleks (transaksi setoran dengan multiple details):
-- Gunakan `useReducer` untuk state multi-step form
-- Atau React Hook Form untuk validasi form yang kompleks
+
+Form kompleks (transaksi setoran multi-detail):
+- `useReducer` untuk state multi-baris
+- Atau React Hook Form + Zod validasi
+- Tampilkan error validasi dari `envelope.errors` per field
 
 ## Data Fetching Pattern
 
-### API Client (`lib/api.ts`)
+### API Client
+
+Semua request melalui `lib/api.ts` yang:
+1. Attach JWT header
+2. Parse JSON Envelope
+3. Throw `ApiError` dengan `message`, `code`, `errors`
+4. Handle 401 → refresh token
+
+Lihat implementasi lengkap di `04-api-integration.md` §4.
+
+### Pattern Server Components
+
 ```typescript
-const API_URL = process.env.NEXT_PUBLIC_API_URL
-
-class ApiClient {
-  private getHeaders(): HeadersInit {
-    const token = localStorage.getItem('token')
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    }
-  }
-
-  async get<T>(path: string): Promise<T> { ... }
-  async post<T>(path: string, body: unknown): Promise<T> { ... }
-  async patch<T>(path: string, body: unknown): Promise<T> { ... }
-  async delete(path: string): Promise<void> { ... }
-}
-
-export const api = new ApiClient()
-```
-
-### Pattern untuk Server Components
-```typescript
-// app/(dashboard)/nasabah/page.tsx — Server Component
+// app/(dashboard)/nasabah/page.tsx
 async function NasabahPage() {
-  const data = await fetch(`${API_URL}/users/?role=nasabah`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store'
-  })
-  const nasabah = await data.json()
-  return <NasabahList data={nasabah} />
+  // Prefer client-side SWR untuk data yang perlu refresh
+  // Server Components hanya untuk static/SEO jika diperlukan
+  return <NasabahListClient />
 }
 ```
 
-### Pattern untuk Client Components
+### Pattern Client Components
+
 ```typescript
-// components/NasabahList.tsx — Client Component
 'use client'
 import useSWR from 'swr'
 
-export function NasabahList() {
-  const { data, error, isLoading } = useSWR('/users/?role=nasabah', api.get)
+export function NasabahListClient() {
+  const { data, error, isLoading, mutate } = useSWR(
+    '/users/?role=nasabah',
+    api.get
+  )
   if (isLoading) return <LoadingSkeleton />
-  if (error) return <ErrorMessage message="Gagal memuat data nasabah" />
-  return <table>{...}</table>
+  if (error) return <ErrorMessage message="Gagal memuat data nasabah" onRetry={mutate} />
+  if (!data?.length) return <EmptyState message="Belum ada nasabah" />
+  return <NasabahTable data={data} />
 }
 ```
 
-## Type Definitions (`types/index.ts`)
+## Type Definitions (`types/`)
+
+Field API menggunakan `snake_case`. Decimal/uang dari API sebagai **string**:
+
 ```typescript
-interface Nasabah {
+interface User {
   id: number
   username: string
+  role: 'nasabah' | 'petugas' | 'admin' | 'koordinator' | 'pemerintah'
   nama_lengkap: string
-  role: 'nasabah'
-  nik?: string
-  no_hp?: string
-  alamat?: string
-  saldo: number
-  poin: number
+  saldo?: string      // "125000.00"
+  poin?: number
+  is_active: boolean
 }
 
-interface KategoriSampah {
-  id: number
-  nama: string
-  harga_beli_per_kg: number
-  stok_terkini_kg: number
-}
-
-interface TransaksiSetoran {
-  id: number
-  nasabah: number
-  petugas: number | null
-  tanggal: string
-  total_nilai: number
-  status: string
-  details: DetailSetoran[]
-}
-
-interface DetailSetoran {
-  id: number
-  kategori: number
-  berat_kg: number
-  harga_saat_itu: number
-  subtotal: number
-}
-
-interface Penjemputan {
-  id: number
-  nasabah: number
-  petugas: number | null
-  estimasi_berat: number
-  alamat_jemput: string
-  jadwal: string
-  status: 'menunggu' | 'disetujui' | 'dijadwalkan' | 'dalam_perjalanan' | 'dijemput' | 'selesai' | 'ditolak'
-}
-
-interface PenarikanSaldo {
-  id: number
-  nasabah: number
-  nominal: number
-  metode: string
-  status: 'menunggu' | 'selesai'
-  tanggal: string
-}
-
-interface Reward {
-  id: number
-  nama: string
-  poin_dibutuhkan: number
-  stok: number
-}
-
-interface PenukaranPoin {
-  id: number
-  nasabah: number
-  reward: number
-  status: 'menunggu' | 'selesai'
-  tanggal: string
-}
-
-interface MitraPengepul {
-  id: number
-  nama: string
-  kontak: string
-}
-
-interface PenjualanMitra {
-  id: number
-  mitra: number
-  kategori: number
-  berat_jual_kg: number
-  harga_jual_per_kg: number
-  total_penjualan: number
-  tanggal: string
-}
-
-interface Pengaduan {
-  id: number
-  nasabah: number
-  keluhan: string
-  status: 'terbuka' | 'ditutup'
-  tanggal: string
-  tindak_lanjut?: string
+interface ApiEnvelope<T> {
+  success: boolean
+  status_code: number
+  message: string
+  data: T | null
+  code?: string
+  errors?: Record<string, string[]>
+  meta: {
+    timestamp: string
+    request_id: string
+    pagination?: PaginationMeta
+  }
 }
 ```
+
+Model lengkap: `04-api-integration.md` §8 dan **miru-backend-api** — `.ai-steering/04-api-contracts-and-standards.md`
+
+## Pagination Pattern
+
+```typescript
+const { data, meta } = await api.getWithMeta<Deposit[]>('/deposits/', { page: '2' })
+// meta.pagination: { count, page, page_size, total_pages, next, previous }
+```
+
+## Role-Based Data Access
+
+Filter data di UI sesuai role (backend tetap enforce 403):
+
+| Role | Query Default |
+|------|---------------|
+| Admin | Semua data |
+| Petugas | Fokus setoran & penjemputan assigned |
+| Koordinator | Read-only, semua data |
+| Pemerintah | Aggregated/laporan saja |
+
+Lihat `10-integration-and-roles.md` untuk matriks lengkap.
