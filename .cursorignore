@@ -1,0 +1,11 @@
+﻿# Token saver — exclude from AI context indexing
+graphify-out/cache/
+graphify-out/*.html
+node_modules/
+.next/
+out/
+build/
+dist/
+.turbo/
+coverage/
+*.lock
