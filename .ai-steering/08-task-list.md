@@ -87,35 +87,35 @@
 > **Tujuan:** Infrastruktur client siap — semua halaman memakai satu API layer.
 
 ### 1.1 Dependencies & Environment
-- [ ] Install: `swr`, `lucide-react`, `recharts`, `date-fns`
-- [ ] Install (opsional): `react-hook-form`, `zod`, `@hookform/resolvers`
-- [ ] Setup `.env.local` dari `.env.example`
-- [ ] `lib/config.ts` — `NEXT_PUBLIC_API_URL`, `API_PREFIX`
+- [x] Install: `swr`, `lucide-react`, `recharts`, `date-fns`
+- [x] Install (opsional): `react-hook-form`, `zod`, `@hookform/resolvers`
+- [x] Setup `.env.local` dari `.env.example`
+- [x] `lib/config.ts` — `NEXT_PUBLIC_API_URL`, `API_PREFIX`
 
 ### 1.2 API Client & Types (Modul 2 — infrastruktur)
-- [ ] `types/api.ts` — `ApiEnvelope<T>`, `PaginationMeta`, `ApiError`
-- [ ] `types/models.ts` — User, WasteCategory, Deposit, Pickup, Withdrawal, Reward, Complaint, Partner, dll.
-- [ ] `lib/api.ts` — parse JSON Envelope, attach JWT, refresh on 401
-- [ ] `lib/format.ts` — format Rupiah (`Rp125.000,00`), tanggal WIT, berat kg
-- [ ] Unit test: envelope parser (success & error cases)
+- [x] `types/api.ts` — `ApiEnvelope<T>`, `PaginationMeta`, `ApiError`
+- [x] `types/models.ts` — User, WasteCategory, Deposit, Pickup, Withdrawal, Reward, Complaint, Partner, dll.
+- [x] `lib/api.ts` — parse JSON Envelope, attach JWT, refresh on 401
+- [x] `lib/format.ts` — format Rupiah (`Rp125.000,00`), tanggal WIT, berat kg
+- [x] Unit test: envelope parser (success & error cases)
 
 ### 1.3 Layout Shell & Shared UI
-- [ ] `components/ui/` — Button, Input, Select, Badge, Card, Table, Modal
-- [ ] `components/layout/Sidebar.tsx` — menu config per role
-- [ ] `components/layout/Header.tsx` — user info, logout
-- [ ] `components/layout/DashboardLayout.tsx` — sidebar + header + main
-- [ ] `components/feedback/LoadingSkeleton.tsx`
-- [ ] `components/feedback/EmptyState.tsx`
-- [ ] `components/feedback/ErrorMessage.tsx` + retry
-- [ ] `components/feedback/Toast.tsx` — success/error notifications
-- [ ] `app/layout.tsx` — root layout, font, metadata MIRU
-- [ ] `app/globals.css` — tema hijau `#16a34a`
+- [x] `components/ui/` — Button, Input, Select, Badge, Card, Table, Modal
+- [x] `components/layout/Sidebar.tsx` — menu config per role
+- [x] `components/layout/Header.tsx` — user info, logout
+- [x] `components/layout/DashboardLayout.tsx` — sidebar + header + main
+- [x] `components/feedback/LoadingSkeleton.tsx`
+- [x] `components/feedback/EmptyState.tsx`
+- [x] `components/feedback/ErrorMessage.tsx` + retry
+- [x] `components/feedback/Toast.tsx` — success/error notifications
+- [x] `app/layout.tsx` — root layout, font, metadata MIRU
+- [x] `app/globals.css` — tema hijau `#16a34a`
 
 ### 1.4 Routing Structure
-- [ ] `app/(auth)/login/page.tsx` — placeholder
-- [ ] `app/(dashboard)/layout.tsx` — protected wrapper
-- [ ] Route groups: `(auth)`, `(dashboard)` sesuai `07-modules-and-features.md`
-- [ ] `middleware.ts` — redirect unauthenticated → `/login`
+- [x] `app/(auth)/login/page.tsx` — placeholder
+- [x] `app/(dashboard)/layout.tsx` — protected wrapper
+- [x] Route groups: `(auth)`, `(dashboard)` sesuai `07-modules-and-features.md`
+- [x] `proxy.ts` — redirect unauthenticated → `/login`
 
 ---
 
@@ -125,30 +125,30 @@
 > **Tujuan:** Staff login aman; nasabah ditolak; menu sesuai role.
 
 ### 2.1 Auth Provider
-- [ ] `providers/AuthProvider.tsx` — user, role, login, logout, refreshProfile
-- [ ] Simpan `access_token` + `refresh_token` (localStorage atau httpOnly via route handler)
-- [ ] Restore session on mount → `GET /api/auth/me/`
-- [ ] Block role `nasabah` — pesan: "Gunakan aplikasi mobile MIRU"
+- [x] `providers/AuthProvider.tsx` — user, role, login, logout, refreshProfile
+- [x] Simpan `access_token` + `refresh_token` (localStorage atau httpOnly via route handler)
+- [x] Restore session on mount → `GET /api/auth/me/`
+- [x] Block role `nasabah` — pesan: "Gunakan aplikasi mobile MIRU"
 
 ### 2.2 Login Page
-- [ ] Form username + password (Bahasa Indonesia)
-- [ ] `POST /api/auth/login/` — parse `data.user.role`
-- [ ] Tampilkan error envelope (`message`, `errors`) di form
-- [ ] Loading state + disable submit saat loading
+- [x] Form username + password (Bahasa Indonesia)
+- [x] `POST /api/auth/login/` — parse `data.user.role`
+- [x] Tampilkan error envelope (`message`, `errors`) di form
+- [x] Loading state + disable submit saat loading
 
 ### 2.3 Role-Based Redirect & Guard
-- [ ] Admin → `/` (dashboard)
-- [ ] Koordinator → `/`
-- [ ] Pemerintah → `/laporan` *(setelah backend Fase 5)*
-- [ ] Petugas → `/transaksi/tambah`
-- [ ] `middleware.ts` / layout guard — cek role vs route
-- [ ] Sidebar filter menu by role (`10-integration-and-roles.md` §3)
-- [ ] Hide tombol edit/delete untuk koordinator & pemerintah (read-only)
+- [x] Admin → `/` (dashboard)
+- [x] Koordinator → `/`
+- [x] Pemerintah → `/laporan` *(setelah backend Fase 5)*
+- [x] Petugas → `/transaksi/tambah`
+- [x] `proxy.ts` / layout guard — cek role vs route
+- [x] Sidebar filter menu by role (`10-integration-and-roles.md` §3)
+- [x] Hide tombol edit/delete untuk koordinator & pemerintah (read-only)
 
 ### 2.4 Logout & Session
-- [ ] Logout clear token + redirect `/login`
-- [ ] Handle 401 global → refresh → login
-- [ ] Handle 403 → toast "Anda tidak memiliki akses"
+- [x] Logout clear token + redirect `/login`
+- [x] Handle 401 global → refresh → login
+- [x] Handle 403 → toast "Anda tidak memiliki akses"
 
 ---
 
