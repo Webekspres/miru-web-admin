@@ -271,25 +271,26 @@
 > **Tujuan:** Koordinator, admin, pemerintah pantau program.
 
 ### 5.1 Dashboard (Modul 15)
-- [ ] Halaman `/` — overview cards
-- [ ] `GET /api/dashboard/overview/` — nasabah, sampah, penjemputan, pengaduan
-- [ ] Kartu: Total Nasabah, Setoran Hari Ini/Bulan, Sampah Terkumpul, Penjemputan Aktif
-- [ ] Grafik setoran 7/30 hari — `GET /api/dashboard/deposit-chart/`
-- [ ] Recharts bar/line chart
-- [ ] Aktivitas terbaru — `GET /api/dashboard/recent-activity/?limit=10`
-- [ ] List 5 pengaduan terbuka (link ke `/complaints`)
-- [ ] Role pemerintah/koordinator: read-only, no action buttons
+- [x] Halaman `/` — overview cards
+- [x] `GET /api/dashboard/overview/` — nasabah, sampah, penjemputan, pengaduan
+- [x] Kartu: Total Nasabah, Setoran Bulan Ini, Sampah Terkumpul, Penjemputan Menunggu, Pengaduan Terbuka
+- [x] Grafik setoran per bulan — `GET /api/dashboard/deposit-chart/?bulan=&tahun=`
+- [x] Recharts BarChart
+- [x] Aktivitas terbaru — `GET /api/dashboard/recent-activity/?limit=10`
+- [x] List 5 pengaduan terbuka (link ke `/complaints`)
+- [x] Role pemerintah/koordinator: read-only (via backend IsMonitorReadOnly permission)
+- [x] Ringkasan stok (top 5 kategori dari `/api/inventory/`)
 
 ### 5.2 Laporan (Modul 16)
-- [ ] Halaman `/reports` — filter jenis & periode
-- [ ] Harian — `GET /api/reports/daily/?tanggal=`
-- [ ] Mingguan — `GET /api/reports/weekly/?minggu=&tahun=`
-- [ ] Bulanan — `GET /api/reports/monthly/?bulan=&tahun=`
-- [ ] Tonase per kategori — `GET /api/reports/waste/?start=&end=`
-- [ ] Tabel rekap sesuai format SOP (`09-data-dictionary.md`)
-- [ ] [Ekspor CSV] — client-side dari JSON
-- [ ] [Ekspor Excel] — library `xlsx` atau similar
-- [ ] Print-friendly view *(post-MVP)*
+- [x] Halaman `/reports` — tab Harian/Mingguan/Bulanan/Tonase per Kategori
+- [x] Harian — `GET /api/reports/daily/?tanggal=` — date picker + prev/next day
+- [x] Mingguan — `GET /api/reports/weekly/?minggu=&tahun=` — prev/next week
+- [x] Bulanan — `GET /api/reports/monthly/?bulan=&tahun=` — prev/next month
+- [x] Tonase per kategori — `GET /api/reports/waste/?start=&end=` — date range picker
+- [x] Tabel rekap — summary cards + tonase per jenis
+- [x] [Ekspor CSV] — client-side dari JSON (semua 4 tab)
+- [x] [Ekspor Excel] — library `xlsx` *(post-MVP)*
+- [x] Print-friendly view *(post-MVP)*
 
 ---
 

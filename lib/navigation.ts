@@ -26,10 +26,13 @@ export const WEB_ADMIN_ROLES: readonly WebAdminRole[] = [
   'pemerintah',
 ] as const
 
+export type NavSection = 'main' | 'settings'
+
 export interface NavItem {
   label: string
   href: string
   icon: LucideIcon
+  section?: NavSection
 }
 
 const ADMIN_MENU: NavItem[] = [
@@ -43,7 +46,12 @@ const ADMIN_MENU: NavItem[] = [
   { label: 'Gudang & Mitra', href: '/warehouse', icon: Package },
   { label: 'Pengaduan', href: '/complaints', icon: Phone },
   { label: 'Laporan', href: '/reports', icon: BarChart3 },
-  { label: 'Pengaturan', href: '/settings', icon: Settings },
+  {
+    label: 'Pengaturan',
+    href: '/settings',
+    icon: Settings,
+    section: 'settings',
+  },
 ]
 
 const PETUGAS_MENU: NavItem[] = [
@@ -81,6 +89,17 @@ const MENU_BY_ROLE: Record<WebAdminRole, NavItem[]> = {
 
 export function getNavItemsForRole(role: WebAdminRole): NavItem[] {
   return MENU_BY_ROLE[role]
+}
+
+export function getNavSectionsForRole(role: WebAdminRole): {
+  main: NavItem[]
+  settings: NavItem[]
+} {
+  const items = getNavItemsForRole(role)
+  return {
+    main: items.filter((item) => (item.section ?? 'main') === 'main'),
+    settings: items.filter((item) => item.section === 'settings'),
+  }
 }
 
 export function isWebAdminRole(role: UserRole): role is WebAdminRole {

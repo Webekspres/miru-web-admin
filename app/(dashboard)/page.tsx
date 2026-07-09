@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
+import { DashboardClient } from '@/components/dashboard/DashboardClient'
 
 export default function DashboardPage() {
-  return (
-    <ModulePlaceholder
-      title="Dashboard"
-      description="Ringkasan statistik nasabah, setoran, penjemputan aktif, dan aktivitas terbaru akan ditampilkan di sini."
-    />
-  )
+  return <DashboardClient />
 }

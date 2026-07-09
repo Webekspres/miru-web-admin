@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
+import { ReportsClient } from '@/components/reports/ReportsClient'
 
 export default function ReportsPage() {
-  return (
-    <ModulePlaceholder
-      title="Laporan"
-      description="Filter periode, rekap data operasional, dan ekspor Excel/CSV."
-    />
-  )
+  return <ReportsClient />
 }

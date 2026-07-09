@@ -1,16 +1,16 @@
-# Graph Report - web-admin  (2026-07-08)
+# Graph Report - web-admin  (2026-07-09)
 
 ## Corpus Check
-- 84 files · ~18,559 words
+- 109 files · ~42,153 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 528 nodes · 778 edges · 30 communities (26 shown, 4 thin omitted)
+- 710 nodes · 1608 edges · 37 communities (30 shown, 7 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2bf87cdb`
+- Built from commit: `e6ba1068`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -43,43 +43,54 @@
 - [[_COMMUNITY_Community 25|Community 25]]
 - [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 31|Community 31]]
+- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 33|Community 33]]
+- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 35|Community 35]]
+- [[_COMMUNITY_Community 36|Community 36]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 38 edges
-2. `ModulePlaceholder()` - 16 edges
-3. `compilerOptions` - 16 edges
-4. `08 — Task List: Web Admin Development Roadmap` - 16 edges
-5. `useAuth()` - 12 edges
-6. `WebAdminRole` - 11 edges
-7. `04 — API Integration (Web Admin)` - 11 edges
-8. `Ringkasan Aturan yang Wajib Dipatuhi di UI Web Admin` - 11 edges
-9. `MIRU Bank Sampah — Web Admin` - 11 edges
-10. `10 — Integration & Roles (Web Admin)` - 10 edges
+2. `useAuth()` - 32 edges
+3. `useToast()` - 28 edges
+4. `formatRupiah()` - 26 edges
+5. `Button` - 24 edges
+6. `Card()` - 21 edges
+7. `api` - 21 edges
+8. `formatWeightKg()` - 20 edges
+9. `canMutate()` - 20 edges
+10. `ErrorMessage()` - 19 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `ToastCard()` --calls--> `cn()`  [EXTRACTED]
-  components/feedback/Toast.tsx → lib/cn.ts
-- `CanWrite()` --calls--> `useAuth()`  [EXTRACTED]
-  components/auth/CanWrite.tsx → providers/AuthProvider.tsx
-- `useCanWrite()` --calls--> `useAuth()`  [EXTRACTED]
-  components/auth/CanWrite.tsx → providers/AuthProvider.tsx
-- `EmptyState()` --calls--> `cn()`  [EXTRACTED]
-  components/feedback/EmptyState.tsx → lib/cn.ts
-- `ErrorMessage()` --calls--> `cn()`  [EXTRACTED]
-  components/feedback/ErrorMessage.tsx → lib/cn.ts
+- `SetujuiModal()` --calls--> `formatRupiah()`  [EXTRACTED]
+  components/balance/WithdrawalManagement.tsx → lib/format.ts
+- `LoginForm()` --calls--> `useAuth()`  [EXTRACTED]
+  components/auth/LoginForm.tsx → providers/AuthProvider.tsx
+- `LoginSessionSync()` --calls--> `useAuth()`  [EXTRACTED]
+  components/auth/LoginSessionSync.tsx → providers/AuthProvider.tsx
+- `DetailPengaduanModal()` --calls--> `formatDateWIT()`  [EXTRACTED]
+  components/complaints/ComplaintManagement.tsx → lib/format.ts
+- `CustomerDetail()` --calls--> `formatRupiah()`  [EXTRACTED]
+  components/customers/CustomerDetail.tsx → lib/format.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (30 total, 4 thin omitted)
+## Communities (37 total, 7 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.08
-Nodes (23): geistMono, geistSans, metadata, ToastCard(), ToastContext, ToastContextValue, ToastItem, ToastProvider() (+15 more)
+Cohesion: 0.05
+Nodes (30): geistMono, geistSans, metadata, CanWrite(), CanWriteProps, useCanWrite(), SetujuiModal(), TabDefinition (+22 more)
+
+### Community 1 - "Community 1"
+Cohesion: 0.21
+Nodes (4): DashboardClient(), ModulePlaceholder(), ModulePlaceholderProps, RewardManagement()
 
 ### Community 2 - "Community 2"
 Cohesion: 0.04
-Nodes (48): 08 — Task List: Web Admin Development Roadmap, 0.1 Project Setup ✅, 1.1 Dependencies & Environment, 1.2 API Client & Types (Modul 2 — infrastruktur), 1.3 Layout Shell & Shared UI, 1.4 Routing Structure, 2.1 Auth Provider, 2.2 Login Page (+40 more)
+Nodes (47): 08 — Task List: Web Admin Development Roadmap, 0.1 Project Setup ✅, 1.1 Dependencies & Environment, 1.2 API Client & Types (Modul 2 — infrastruktur), 1.3 Layout Shell & Shared UI, 1.4 Routing Structure, 2.1 Auth Provider, 2.2 Login Page (+39 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.10
@@ -87,7 +98,7 @@ Nodes (19): 10 — Integration & Roles (Web Admin), 1. Role di Web Admin, 2. Mat
 
 ### Community 4 - "Community 4"
 Cohesion: 0.06
-Nodes (33): dependencies, date-fns, @hookform/resolvers, lucide-react, next, react, react-dom, react-hook-form (+25 more)
+Nodes (34): dependencies, date-fns, @hookform/resolvers, lucide-react, next, react, react-dom, react-hook-form (+26 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.10
@@ -122,8 +133,8 @@ Cohesion: 0.17
 Nodes (11): 00 — System Prompt & Clean Code Rules (Web Admin), 1. Struktur Folder, 2. Komponen, 3. State Management, 4. Styling, 5. TypeScript, 6. Data Fetching, 7. Error Handling (+3 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.09
-Nodes (40): EmptyState(), EmptyStateProps, ErrorMessage(), ErrorMessageProps, CardSkeleton(), LoadingSkeleton(), LoadingSkeletonProps, TableSkeleton() (+32 more)
+Cohesion: 0.05
+Nodes (86): COMPLAINT_TYPE_LABELS, TabDefinition, TabKey, TABS, CustomerFormData, CustomerFormProps, FormErrors, CustomerRow (+78 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.20
@@ -131,15 +142,15 @@ Nodes (9): 01 — Project Overview (Web Admin), 3 Repositori Sistem (GitHub Terp
 
 ### Community 15 - "Community 15"
 Cohesion: 0.20
-Nodes (9): 07 — Modules & Features (Web Admin), 17 Modul — Implementasi di Web Admin, Dashboard (`/`), Halaman Detail per Modul, Laporan (`/laporan`), Layout Dashboard, Nasabah (`/nasabah`), Penjemputan (`/penjemputan`) (+1 more)
+Nodes (9): 07 — Modules & Features (Web Admin), 17 Modul — Implementasi di Web Admin, Dashboard (`/`), Halaman Detail per Modul, Laporan (`/reports`), Layout Dashboard, Nasabah (`/customers`), Penjemputan (`/pickups`) (+1 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.29
 Nodes (6): 02 — Architecture & Stack (Web Admin), Alur Data, Arsitektur, Environment Variables, Struktur Folder yang Diharapkan, Tech Stack
 
 ### Community 17 - "Community 17"
-Cohesion: 0.11
-Nodes (18): Announcement, Complaint, ComplaintStatus, ComplaintType, Deposit, DepositDetail, InstitutionSettings, Partner (+10 more)
+Cohesion: 0.08
+Nodes (20): TabDefinition, TabKey, TABS, PickupAction, Announcement, Complaint, ComplaintStatus, ComplaintType (+12 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.33
@@ -154,40 +165,52 @@ Cohesion: 0.33
 Nodes (5): graphify, Hook-Based Usage, Installation Verification, Meta Commands (always use rtk directly), RTK - Rust Token Killer
 
 ### Community 21 - "Community 21"
-Cohesion: 0.43
-Nodes (6): formatDateWIT(), formatRupiah(), formatWeightKg(), rupiahFormatter, toNumber(), weightFormatter
+Cohesion: 0.22
+Nodes (8): CustomerDetail(), formatDateWIT(), rupiahFormatter, toNumber(), weightFormatter, DetailDepositModal(), getStatusBadgeVariant(), getStatusLabel()
 
 ### Community 23 - "Community 23"
-Cohesion: 0.08
-Nodes (42): LoginForm(), LoginSessionSync(), DashboardAuthShell(), DashboardAuthShellProps, api, clearTokens(), fetchWithTimeout(), getAccessToken() (+34 more)
+Cohesion: 0.06
+Nodes (45): LoginForm(), LoginSessionSync(), CardSkeleton(), DashboardAuthShell(), DashboardAuthShellProps, ApiClient, clearTokens(), fetchWithTimeout() (+37 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.11
-Nodes (21): DashboardLayout(), DashboardLayoutProps, Header(), HeaderProps, HeaderUser, Sidebar(), SidebarProps, validateWebAdminRole() (+13 more)
+Nodes (24): DashboardLayout(), DashboardLayoutProps, Header(), HeaderProps, HeaderUser, Sidebar(), SidebarProps, validateWebAdminRole() (+16 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.46
-Nodes (5): CanWrite(), CanWriteProps, useCanWrite(), canMutate(), isReadOnlyRole()
+Cohesion: 0.11
+Nodes (12): DailyReport, getCurrentWeek(), MonthlyReport, MONTHS, Periode, ReportsClient(), TabKey, TABS (+4 more)
+
+### Community 30 - "Community 30"
+Cohesion: 0.14
+Nodes (8): ACTIVITY_ICONS, ACTIVITY_LABELS, ActivityItem, ChartDay, DashboardOverview, DepositChart, MONTHS, StatCardProps
+
+### Community 31 - "Community 31"
+Cohesion: 0.21
+Nodes (12): OverviewCards(), StockMiniSummary(), DetailRowInput(), formatRupiah(), formatWeightKg(), DailyReportView(), MonthlyReportView(), todayISO() (+4 more)
+
+### Community 34 - "Community 34"
+Cohesion: 0.33
+Nodes (6): calculateSLADays(), DetailPengaduanModal(), getComplaintTypeLabel(), getSLAStatus(), getStatusBadgeVariant(), getStatusLabel()
 
 ## Knowledge Gaps
-- **268 isolated node(s):** `geistSans`, `geistMono`, `metadata`, `CanWriteProps`, `EmptyStateProps` (+263 more)
+- **313 isolated node(s):** `geistSans`, `geistMono`, `metadata`, `CanWriteProps`, `TabKey` (+308 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `Community 13` to `Community 0`, `Community 28`?**
-  _High betweenness centrality (0.025) - this node is a cross-community bridge._
-- **Why does `useAuth()` connect `Community 23` to `Community 0`, `Community 29`?**
-  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **Why does `useAuth()` connect `Community 0` to `Community 1`, `Community 13`, `Community 17`, `Community 21`, `Community 23`, `Community 30`?**
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
+- **Why does `cn()` connect `Community 13` to `Community 28`, `Community 23`?**
+  _High betweenness centrality (0.012) - this node is a cross-community bridge._
+- **Why does `Button` connect `Community 13` to `Community 0`, `Community 17`, `Community 23`, `Community 28`, `Community 29`, `Community 30`?**
+  _High betweenness centrality (0.009) - this node is a cross-community bridge._
 - **What connects `geistSans`, `geistMono`, `metadata` to the rest of the system?**
-  _268 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _313 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.07777777777777778 - nodes in this community are weakly interconnected._
-- **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.08901515151515152 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05137844611528822 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.04081632653061224 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.041666666666666664 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
   _Cohesion score 0.1 - nodes in this community are weakly interconnected._
