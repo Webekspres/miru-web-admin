@@ -1,6 +1,6 @@
 import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
 
-export default function NasabahPage() {
+export default function CustomersPage() {
   return (
     <ModulePlaceholder
       title="Nasabah"

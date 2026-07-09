@@ -35,23 +35,23 @@
 
 | No | Modul | Halaman | Fase Target | Backend API |
 |----|-------|---------|-------------|-------------|
-| 1 | Manajemen Pengguna | `/nasabah`, `/petugas` | Fase 4 | `GET/POST/PATCH /api/users/` |
+| 1 | Manajemen Pengguna | `/customers`, `/staff` | Fase 4 | `GET/POST/PATCH /api/users/` |
 | 2 | Autentikasi | `/login` | Fase 2 | `/api/auth/login/`, `/api/auth/me/` |
-| 3 | Profil Nasabah | `/nasabah/{id}` | Fase 4 | `GET /api/users/{id}/`, riwayat |
-| 4 | Edukasi Sampah | `/edukasi` | Fase 8 (post-MVP) | Planned |
-| 5 | Katalog & Harga | `/sampah/kategori` | Fase 4 | `/api/waste-categories/` |
-| 6 | Setor Langsung | `/transaksi/tambah` | Fase 3 | `POST /api/deposits/` |
-| 7 | Penjemputan | `/penjemputan` | Fase 3 | `/api/pickups/` + actions |
+| 3 | Profil Nasabah | `/customers/{id}` | Fase 4 | `GET /api/users/{id}/`, riwayat |
+| 4 | Edukasi Sampah | `/education` | Fase 8 (post-MVP) | Planned |
+| 5 | Katalog & Harga | `/waste/categories` | Fase 4 | `/api/waste-categories/` |
+| 6 | Setor Langsung | `/transactions/add` | Fase 3 | `POST /api/deposits/` |
+| 7 | Penjemputan | `/pickups` | Fase 3 | `/api/pickups/` + actions |
 | 8 | Penimbangan | (form setoran) | Fase 3 | Nested `details[]` |
-| 9 | Saldo & Riwayat | `/nasabah/{id}`, `/transaksi` | Fase 3–4 | `/api/deposits/`, `/api/withdrawals/` |
-| 10 | Penarikan Saldo | `/saldo` | Fase 3 | `/api/withdrawals/` + approve |
+| 9 | Saldo & Riwayat | `/customers/{id}`, `/transactions` | Fase 3–4 | `/api/deposits/`, `/api/withdrawals/` |
+| 10 | Penarikan Saldo | `/balance` | Fase 3 | `/api/withdrawals/` + approve |
 | 11 | Poin & Reward | `/reward` | Fase 4 | `/api/rewards/`, `/api/reward-redemptions/` |
-| 12 | Stok Gudang | `/gudang` | Fase 4–5 | `/api/waste-categories/`, `/api/inventory/` |
-| 13 | Penjualan Mitra | `/gudang/jual`, `/gudang/mitra` | Fase 4 | `/api/partners/`, `/api/partner-sales/` |
-| 14 | Pengaduan | `/pengaduan` | Fase 3 | `/api/complaints/` |
+| 12 | Stok Gudang | `/warehouse` | Fase 4–5 | `/api/waste-categories/`, `/api/inventory/` |
+| 13 | Penjualan Mitra | `/warehouse/sales`, `/warehouse/partners` | Fase 4 | `/api/partners/`, `/api/partner-sales/` |
+| 14 | Pengaduan | `/complaints` | Fase 3 | `/api/complaints/` |
 | 15 | Dashboard | `/` | Fase 5 | `/api/dashboard/*` |
-| 16 | Laporan | `/laporan` | Fase 5 | `/api/reports/*` |
-| 17 | Pengaturan & Audit | `/pengaturan` | Fase 6 | `/api/settings/`, `/api/audit-log/` |
+| 16 | Laporan | `/reports` | Fase 5 | `/api/reports/*` |
+| 17 | Pengaturan & Audit | `/settings` | Fase 6 | `/api/settings/`, `/api/audit-log/` |
 
 ---
 
@@ -139,8 +139,8 @@
 ### 2.3 Role-Based Redirect & Guard
 - [x] Admin → `/` (dashboard)
 - [x] Koordinator → `/`
-- [x] Pemerintah → `/laporan` *(setelah backend Fase 5)*
-- [x] Petugas → `/transaksi/tambah`
+- [x] Pemerintah → `/reports` *(setelah backend Fase 5)*
+- [x] Petugas → `/transactions/add`
 - [x] `proxy.ts` / layout guard — cek role vs route
 - [x] Sidebar filter menu by role (`10-integration-and-roles.md` §3)
 - [x] Hide tombol edit/delete untuk koordinator & pemerintah (read-only)
@@ -158,58 +158,58 @@
 > **Tujuan:** Petugas & admin bisa operasional harian end-to-end.
 
 ### 3.1 Input Setoran (Modul 6, 8)
-- [ ] Halaman `/transaksi/tambah` — form multi-baris detail
-- [ ] Search/select nasabah — `GET /api/users/?role=nasabah&search=`
-- [ ] Select kategori — `GET /api/waste-categories/` (auto harga, read-only)
-- [ ] Input berat kg — validasi min **1 kg** per baris (client + server)
-- [ ] Auto-calculate subtotal & total (preview sebelum submit)
-- [ ] Dynamic rows: tambah/hapus baris detail
-- [ ] Konfirmasi dialog sebelum submit
-- [ ] `POST /api/deposits/` — nested `details: [{ kategori, berat_kg }]`
-- [ ] Success toast + redirect ke riwayat atau reset form
-- [ ] Error handling: stok, validasi field dari `envelope.errors`
+- [x] Halaman `/transactions/add` (`app/(dashboard)/transactions/add/`) — form multi-baris detail
+- [x] Search/select nasabah — `GET /api/users/?role=nasabah&search=`
+- [x] Select kategori — `GET /api/waste-categories/` (auto harga, read-only)
+- [x] Input berat kg — validasi min **1 kg** per baris (client + server)
+- [x] Auto-calculate subtotal & total (preview sebelum submit)
+- [x] Dynamic rows: tambah/hapus baris detail
+- [x] Konfirmasi dialog sebelum submit
+- [x] `POST /api/deposits/` — nested `details: [{ kategori, berat_kg }]`
+- [x] Success toast + redirect ke riwayat atau reset form
+- [x] Error handling: stok, validasi field dari `envelope.errors`
 
 ### 3.2 Riwayat Setoran (Modul 9)
-- [ ] Halaman `/transaksi` — tab Riwayat
-- [ ] `GET /api/deposits/` — pagination, filter `?nasabah=`, `?ordering=-tanggal`
-- [ ] Tabel: tanggal, nasabah, petugas, total, status
-- [ ] Detail modal/page — `GET /api/deposits/{id}/` (bukti digital)
-- [ ] Role petugas: default filter hari ini
+- [x] Halaman `/transactions` (`app/(dashboard)/transactions/`) — tab Riwayat
+- [x] `GET /api/deposits/` — pagination, filter `?nasabah=`, `?ordering=-tanggal`
+- [x] Tabel: tanggal, nasabah, petugas, total, status
+- [x] Detail modal/page — `GET /api/deposits/{id}/` (bukti digital)
+- [x] Role petugas: default filter hari ini
 
 ### 3.3 Penjemputan (Modul 7)
-- [ ] Halaman `/penjemputan` — tab status (Menunggu, Aktif, Selesai, Ditolak)
-- [ ] `GET /api/pickups/?status=` — pagination
-- [ ] Tabel: tanggal, nasabah, alamat, estimasi berat, status, petugas
-- [ ] Tombol aksi per status (`10-integration-and-roles.md` workflow):
+- [x] Halaman `/pickups` (`app/(dashboard)/pickups/`) — tab status (Menunggu, Aktif, Selesai, Ditolak)
+- [x] `GET /api/pickups/?status=` — pagination
+- [x] Tabel: tanggal, nasabah, alamat, estimasi berat, status, petugas
+- [x] Tombol aksi per status (`10-integration-and-roles.md` workflow):
   - menunggu → [Setujui] [Tolak]
   - disetujui → [Tugaskan Petugas]
   - dijadwalkan → [Mulai Penjemputan]
   - dalam_perjalanan → [Sampai di Lokasi]
   - dijemput → [Selesaikan] → link input setoran
-- [ ] `PATCH /api/pickups/{id}/` atau action endpoints (`approve`, `assign`, `update-status`)
-- [ ] Modal assign petugas — dropdown `GET /api/users/?role=petugas`
-- [ ] Petugas: hanya lihat penjemputan assigned ke dirinya *(backend Fase 2.3)*
+- [x] `PATCH /api/pickups/{id}/` atau action endpoints (`approve`, `assign`, `update-status`)
+- [x] Modal assign petugas — dropdown `GET /api/users/?role=petugas`
+- [x] Petugas: hanya lihat penjemputan assigned ke dirinya *(backend Fase 2.3)*
 
 ### 3.4 Penarikan Saldo (Modul 10)
-- [ ] Halaman `/saldo` — list pengajuan
-- [ ] `GET /api/withdrawals/?status=menunggu`
-- [ ] Tampilkan saldo nasabah saat ini sebelum approve
-- [ ] [Setujui] → `PATCH` atau `POST .../approve/` — **tanpa payment gateway**
-- [ ] Konfirmasi: "Pencairan dilakukan manual tunai/transfer di luar sistem"
-- [ ] Filter tab: Menunggu | Selesai
-- [ ] Permission: admin only (koordinator read-only)
+- [x] Halaman `/balance` (`app/(dashboard)/balance/`) — list pengajuan
+- [x] `GET /api/withdrawals/?status=menunggu`
+- [x] Tampilkan saldo nasabah saat ini sebelum approve
+- [x] [Setujui] → `PATCH` atau `POST .../approve/` — **tanpa payment gateway**
+- [x] Konfirmasi: "Pencairan dilakukan manual tunai/transfer di luar sistem"
+- [x] Filter tab: Menunggu | Selesai
+- [x] Permission: admin only (koordinator read-only)
 
 ### 3.5 Pengaduan (Modul 14)
-- [ ] Halaman `/pengaduan` — tab Terbuka | Ditutup
-- [ ] `GET /api/complaints/?status=`
-- [ ] Detail drawer/modal — keluhan, nasabah, tanggal, jenis
-- [ ] Form tindak lanjut — field `tindak_lanjut` *(backend Fase 2.7)*
-- [ ] [Tutup Pengaduan] → `PATCH /api/complaints/{id}/` status `ditutup`
-- [ ] Badge SLA — target 1–2 hari kerja
+- [x] Halaman `/complaints` (`app/(dashboard)/complaints/`) — tab Terbuka | Ditutup
+- [x] `GET /api/complaints/?status=`
+- [x] Detail drawer/modal — keluhan, nasabah, tanggal, jenis
+- [x] Form tindak lanjut — field `tindak_lanjut` *(backend Fase 2.7)*
+- [x] [Tutup Pengaduan] → `PATCH /api/complaints/{id}/` status `ditutup`
+- [x] Badge SLA — target 1–2 hari kerja
 
 ### 3.6 Integrasi QR Nasabah (Modul 3 — petugas)
-- [ ] Input/cari nasabah by ID dari scan QR (manual ID atau future camera)
-- [ ] `GET /api/users/{id}/` — pre-fill form setoran
+- [x] Input/cari nasabah by ID dari scan QR (manual ID atau future camera)
+- [x] `GET /api/users/{id}/` — pre-fill form setoran
 
 ---
 
@@ -219,9 +219,9 @@
 > **Tujuan:** Admin kelola master data & stok gudang.
 
 ### 4.1 Manajemen Nasabah (Modul 1, 3, 9)
-- [ ] Halaman `/nasabah` — tabel + search + pagination
+- [ ] Halaman `/customers` — tabel + search + pagination
 - [ ] `GET /api/users/?role=nasabah&search=`
-- [ ] Halaman `/nasabah/{id}` — profil, saldo, poin
+- [ ] Halaman `/customers/{id}` — profil, saldo, poin
 - [ ] Tab riwayat: setoran, penarikan, penukaran — aggregate dari API
 - [ ] Form tambah nasabah (admin) — `POST /api/users/` role nasabah
 - [ ] Form edit nasabah — `PATCH /api/users/{id}/`
@@ -229,13 +229,13 @@
 - [ ] Export CSV nasabah (client-side dari JSON)
 
 ### 4.2 Manajemen Staff (Modul 1)
-- [ ] Halaman `/petugas` — list petugas, admin, koordinator
+- [ ] Halaman `/staff` — list petugas, admin, koordinator
 - [ ] `GET /api/users/?role=petugas` (+ admin, koordinator tabs)
 - [ ] Form create staff — admin only, `POST /api/users/` dengan role
 - [ ] Edit/deactivate staff — admin only
 
 ### 4.3 Kategori & Harga Sampah (Modul 5)
-- [ ] Halaman `/sampah/kategori` — tabel kategori + stok
+- [ ] Halaman `/waste/categories` — tabel kategori + stok
 - [ ] `GET /api/waste-categories/`
 - [ ] Form tambah/edit — `POST/PATCH /api/waste-categories/`
 - [ ] Validasi harga > 0, nama unik
@@ -250,16 +250,16 @@
 - [ ] Tampilkan stok reward & poin dibutuhkan
 
 ### 4.5 Stok Gudang (Modul 12)
-- [ ] Halaman `/gudang` — ringkasan stok per kategori
+- [ ] Halaman `/warehouse` — ringkasan stok per kategori
 - [ ] Data dari `stok_terkini_kg` di waste-categories
 - [ ] `GET /api/inventory/` *(backend Fase 4.3)*
 - [ ] Indikator stok rendah (warna/alert)
 - [ ] Riwayat mutasi stok *(post-MVP)*
 
 ### 4.6 Mitra & Penjualan (Modul 13)
-- [ ] Halaman `/gudang/mitra` — CRUD mitra
+- [ ] Halaman `/warehouse/partners` — CRUD mitra
 - [ ] `GET/POST/PATCH /api/partners/`
-- [ ] Halaman `/gudang/jual` — form penjualan
+- [ ] Halaman `/warehouse/sales` — form penjualan
 - [ ] Pilih mitra + kategori + berat + harga jual
 - [ ] Validasi client: stok >= berat jual
 - [ ] `POST /api/partner-sales/`
@@ -279,11 +279,11 @@
 - [ ] Grafik setoran 7/30 hari — `GET /api/dashboard/deposit-chart/`
 - [ ] Recharts bar/line chart
 - [ ] Aktivitas terbaru — `GET /api/dashboard/recent-activity/?limit=10`
-- [ ] List 5 pengaduan terbuka (link ke `/pengaduan`)
+- [ ] List 5 pengaduan terbuka (link ke `/complaints`)
 - [ ] Role pemerintah/koordinator: read-only, no action buttons
 
 ### 5.2 Laporan (Modul 16)
-- [ ] Halaman `/laporan` — filter jenis & periode
+- [ ] Halaman `/reports` — filter jenis & periode
 - [ ] Harian — `GET /api/reports/daily/?tanggal=`
 - [ ] Mingguan — `GET /api/reports/weekly/?minggu=&tahun=`
 - [ ] Bulanan — `GET /api/reports/monthly/?bulan=&tahun=`
@@ -301,7 +301,7 @@
 > **Tujuan:** Transparansi & pengaturan institusi.
 
 ### 6.1 Pengaturan Institusi (Modul 17)
-- [ ] Halaman `/pengaturan` — tab Institusi | Pengumuman | Audit
+- [ ] Halaman `/settings` — tab Institusi | Pengumuman | Audit
 - [ ] Form profil institusi — `GET/PATCH /api/settings/`
 - [ ] Field: nama, alamat, kontak, logo URL, jam operasional
 - [ ] Editor pengumuman — rich text sederhana atau textarea
@@ -316,7 +316,7 @@
 ### 6.3 Role Pemerintah Distrik
 - [ ] Login pemerintah — sidebar terbatas (Dashboard, Laporan, Stok read-only)
 - [ ] Semua form write disabled
-- [ ] Landing redirect `/laporan`
+- [ ] Landing redirect `/reports`
 
 ---
 
@@ -362,7 +362,7 @@
 - [ ] CORS backend whitelist domain admin
 
 ### 8.2 Post-MVP
-- [ ] Modul edukasi sampah `/edukasi` *(butuh backend content API)*
+- [ ] Modul edukasi sampah `/education` *(butuh backend content API)*
 - [ ] Bulk import nasabah CSV/Excel
 - [ ] Dark mode (opsional)
 - [ ] Notifikasi real-time penjemputan baru *(WebSocket — post-MVP)*

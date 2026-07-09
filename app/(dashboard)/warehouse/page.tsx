@@ -1,6 +1,6 @@
 import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
 
-export default function GudangPage() {
+export default function WarehousePage() {
   return (
     <ModulePlaceholder
       title="Gudang & Stok"

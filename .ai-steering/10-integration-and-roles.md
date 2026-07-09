@@ -118,8 +118,8 @@ Legenda: ✅ Full | 👁 Read-only | ✏️ Create/Update | ❌ Tidak ada akses
 |------|--------------|
 | `admin` | `/` (dashboard penuh) |
 | `koordinator` | `/` (dashboard monitoring) |
-| `pemerintah` | `/laporan` |
-| `petugas` | `/transaksi/tambah` (input setoran) |
+| `pemerintah` | `/reports` |
+| `petugas` | `/transactions/add` (input setoran) |
 
 ---
 

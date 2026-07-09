@@ -15,25 +15,25 @@ const WEB_ADMIN_ROLES: WebAdminRole[] = [
 export const LANDING_PATH_BY_ROLE: Record<WebAdminRole, string> = {
   admin: '/',
   koordinator: '/',
-  pemerintah: '/laporan',
-  petugas: '/transaksi/tambah',
+  pemerintah: '/reports',
+  petugas: '/transactions/add',
 }
 
 const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
   admin: ['/'],
-  petugas: ['/', '/transaksi', '/penjemputan', '/nasabah', '/laporan'],
+  petugas: ['/', '/transactions', '/pickups', '/customers', '/reports'],
   koordinator: [
     '/',
-    '/nasabah',
-    '/transaksi',
-    '/penjemputan',
-    '/saldo',
+    '/customers',
+    '/transactions',
+    '/pickups',
+    '/balance',
     '/reward',
-    '/gudang',
-    '/pengaduan',
-    '/laporan',
+    '/warehouse',
+    '/complaints',
+    '/reports',
   ],
-  pemerintah: ['/', '/laporan', '/gudang'],
+  pemerintah: ['/', '/reports', '/warehouse'],
 }
 
 export function isWebAdminRoleValue(role: string): role is WebAdminRole {

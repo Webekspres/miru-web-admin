@@ -17,15 +17,15 @@ app/
 ├── (auth)/              # Login page
 ├── (dashboard)/         # Layout after login
 │   ├── page.tsx         # Dashboard overview
-│   ├── nasabah/         # Nasabah management
-│   ├── transaksi/       # Transactions
-│   ├── penjemputan/     # Pickup management
-│   ├── saldo/           # Balance withdrawals
+│   ├── customers/      # Nasabah management
+│   ├── transactions/    # Transactions
+│   ├── pickups/         # Pickup management
+│   ├── balance/         # Balance withdrawals
 │   ├── reward/          # Rewards & points
-│   ├── gudang/          # Warehouse & stock
-│   ├── pengaduan/       # Complaints
-│   ├── laporan/         # Reports
-│   └── pengaturan/      # Settings
+│   ├── warehouse/       # Warehouse & stock
+│   ├── complaints/      # Complaints
+│   ├── reports/         # Reports
+│   └── settings/        # Settings
 ├── layout.tsx           # Root layout
 └── globals.css          # Global styles + Tailwind
 ```

@@ -1,6 +1,6 @@
 import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
 
-export default function KategoriSampahPage() {
+export default function WasteCategoriesPage() {
   return (
     <ModulePlaceholder
       title="Katalog & Harga Sampah"

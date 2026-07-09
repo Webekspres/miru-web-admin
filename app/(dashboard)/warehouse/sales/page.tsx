@@ -1,6 +1,6 @@
 import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
 
-export default function PenjualanMitraPage() {
+export default function PartnerSalesPage() {
   return (
     <ModulePlaceholder
       title="Penjualan Mitra"

@@ -1,6 +1,6 @@
 import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
 
-export default function PengaturanPage() {
+export default function SettingsPage() {
   return (
     <ModulePlaceholder
       title="Pengaturan"

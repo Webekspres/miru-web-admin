@@ -1,6 +1,6 @@
 import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
 
-export default function PetugasPage() {
+export default function StaffPage() {
   return (
     <ModulePlaceholder
       title="Petugas & Staff"
