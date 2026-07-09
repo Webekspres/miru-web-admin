@@ -72,6 +72,12 @@ const KOORDINATOR_MENU: NavItem[] = [
   { label: 'Gudang', href: '/warehouse', icon: Package },
   { label: 'Pengaduan', href: '/complaints', icon: Phone },
   { label: 'Laporan', href: '/reports', icon: BarChart3 },
+  {
+    label: 'Pengaturan',
+    href: '/settings',
+    icon: Settings,
+    section: 'settings',
+  },
 ]
 
 const PEMERINTAH_MENU: NavItem[] = [
