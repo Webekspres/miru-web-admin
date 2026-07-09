@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
+import { RewardManagement } from '@/components/reward/RewardManagement'
 
 export default function RewardPage() {
-  return (
-    <ModulePlaceholder
-      title="Reward & Poin"
-      description="Katalog reward, daftar penukaran poin, dan persetujuan penukaran."
-    />
-  )
+  return <RewardManagement />
 }

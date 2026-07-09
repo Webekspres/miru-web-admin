@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
+import { PartnerSalesView } from '@/components/warehouse/PartnerSalesView'
 
 export default function PartnerSalesPage() {
-  return (
-    <ModulePlaceholder
-      title="Penjualan Mitra"
-      description="Form penjualan ke mitra/pengepul dan daftar transaksi penjualan."
-    />
-  )
+  return <PartnerSalesView />
 }

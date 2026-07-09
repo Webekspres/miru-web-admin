@@ -219,51 +219,49 @@
 > **Tujuan:** Admin kelola master data & stok gudang.
 
 ### 4.1 Manajemen Nasabah (Modul 1, 3, 9)
-- [ ] Halaman `/customers` — tabel + search + pagination
-- [ ] `GET /api/users/?role=nasabah&search=`
-- [ ] Halaman `/customers/{id}` — profil, saldo, poin
-- [ ] Tab riwayat: setoran, penarikan, penukaran — aggregate dari API
-- [ ] Form tambah nasabah (admin) — `POST /api/users/` role nasabah
-- [ ] Form edit nasabah — `PATCH /api/users/{id}/`
-- [ ] Toggle aktif/nonaktif — `is_active`
-- [ ] Export CSV nasabah (client-side dari JSON)
-
-### 4.2 Manajemen Staff (Modul 1)
-- [ ] Halaman `/staff` — list petugas, admin, koordinator
-- [ ] `GET /api/users/?role=petugas` (+ admin, koordinator tabs)
-- [ ] Form create staff — admin only, `POST /api/users/` dengan role
-- [ ] Edit/deactivate staff — admin only
+- [x] Halaman `/customers` — tabel + search + pagination
+- [x] `GET /api/users/?role=nasabah&search=`
+- [x] Halaman `/customers/{id}` — profil, saldo, poin
+- [x] Tab riwayat: setoran, penarikan, penukaran — aggregate dari API
+- [x] Form tambah nasabah (admin) — `POST /api/users/` role nasabah
+- [x] Form edit nasabah — `PATCH /api/users/{id}/`
+- [x] Toggle aktif/nonaktif — `is_active`
+- [x] Export CSV nasabah (client-side dari JSON)### 4.2 Manajemen Staff (Modul 1)
+- [x] Halaman `/staff` — list petugas, admin, koordinator
+- [x] `GET /api/users/?role=petugas` (+ admin, koordinator tabs)
+- [x] Form create staff — admin only, `POST /api/users/` dengan role
+- [x] Edit/deactivate staff — admin only
 
 ### 4.3 Kategori & Harga Sampah (Modul 5)
-- [ ] Halaman `/waste/categories` — tabel kategori + stok
-- [ ] `GET /api/waste-categories/`
-- [ ] Form tambah/edit — `POST/PATCH /api/waste-categories/`
-- [ ] Validasi harga > 0, nama unik
-- [ ] Tampilkan `stok_terkini_kg` per kategori
-- [ ] Riwayat harga *(backend Fase 5.3 — post-MVP)*
+- [x] Halaman `/waste/categories` — tabel kategori + stok
+- [x] `GET /api/waste-categories/`
+- [x] Form tambah/edit — `POST/PATCH /api/waste-categories/`
+- [x] Validasi harga > 0, nama unik
+- [x] Tampilkan `stok_terkini_kg` per kategori
+- [x] Riwayat harga — modal `GET /api/waste-categories/{id}/price-history/`
 
 ### 4.4 Reward & Penukaran Poin (Modul 11)
-- [ ] Halaman `/reward` — tab Katalog | Penukaran
-- [ ] CRUD katalog — `/api/rewards/`
-- [ ] List penukaran menunggu — `GET /api/reward-redemptions/?status=menunggu`
-- [ ] [Setujui Penukaran] — approve action
-- [ ] Tampilkan stok reward & poin dibutuhkan
+- [x] Halaman `/reward` — tab Katalog | Penukaran
+- [x] CRUD katalog — `/api/rewards/`
+- [x] List penukaran menunggu — `GET /api/reward-redemptions/?status=menunggu`
+- [x] [Setujui Penukaran] — approve action
+- [x] Tampilkan stok reward & poin dibutuhkan
 
 ### 4.5 Stok Gudang (Modul 12)
-- [ ] Halaman `/warehouse` — ringkasan stok per kategori
-- [ ] Data dari `stok_terkini_kg` di waste-categories
-- [ ] `GET /api/inventory/` *(backend Fase 4.3)*
-- [ ] Indikator stok rendah (warna/alert)
-- [ ] Riwayat mutasi stok *(post-MVP)*
+- [x] Halaman `/warehouse` — ringkasan stok per kategori
+- [x] Data dari `stok_terkini_kg` di waste-categories
+- [x] `GET /api/inventory/` — summary cards + stok per kategori
+- [x] Indikator stok rendah (warna/alert)
+- [x] Riwayat mutasi stok — modal `GET /api/inventory/{kategori_id}/history/`
 
 ### 4.6 Mitra & Penjualan (Modul 13)
-- [ ] Halaman `/warehouse/partners` — CRUD mitra
-- [ ] `GET/POST/PATCH /api/partners/`
-- [ ] Halaman `/warehouse/sales` — form penjualan
-- [ ] Pilih mitra + kategori + berat + harga jual
-- [ ] Validasi client: stok >= berat jual
-- [ ] `POST /api/partner-sales/`
-- [ ] List riwayat penjualan — `GET /api/partner-sales/`
+- [x] Halaman `/warehouse/partners` — CRUD mitra
+- [x] `GET/POST/PATCH /api/partners/`
+- [x] Halaman `/warehouse/sales` — form penjualan + riwayat
+- [x] Pilih mitra + kategori + berat + harga jual
+- [x] Validasi client: stok >= berat jual
+- [x] `POST /api/partner-sales/`
+- [x] List riwayat penjualan — `GET /api/partner-sales/`
 
 ---
 

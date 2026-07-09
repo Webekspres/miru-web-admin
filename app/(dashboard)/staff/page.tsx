@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
+import { StaffList } from '@/components/staff/StaffList'
 
 export default function StaffPage() {
-  return (
-    <ModulePlaceholder
-      title="Petugas & Staff"
-      description="Manajemen akun petugas, koordinator, dan staff bank sampah."
-    />
-  )
+  return <StaffList />
 }

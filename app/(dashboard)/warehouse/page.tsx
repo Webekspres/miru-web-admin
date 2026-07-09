@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
+import { WarehouseStock } from '@/components/warehouse/WarehouseStock'
 
 export default function WarehousePage() {
-  return (
-    <ModulePlaceholder
-      title="Gudang & Stok"
-      description="Stok per kategori sampah dan riwayat mutasi stok gudang."
-    />
-  )
+  return <WarehouseStock />
 }
