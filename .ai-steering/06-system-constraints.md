@@ -1,31 +1,76 @@
 # 06 — System Constraints (Web Admin)
 
-## ⚠️ Batasan yang WAJIB Dipatuhi di UI
+> **Referensi utama (backend):** repositori **miru-backend-api** — `.ai-steering/06-system-constraints.md`
+>
+> Dokumen ini fokus pada **implikasi UI/UX** di web admin.
+
+## ⚠️ Batasan KERAS — Jangan Implementasikan
 
 ### 1. Pencairan Saldo — TANPA Payment Gateway
-- **Jangan tambahkan** tombol "Bayar Sekarang" atau "Transfer Otomatis".
-- Proses: Admin setujui → Admin bayar manual (tunai/transfer) → Admin konfirmasi selesai.
-- UI hanya perlu: [Setujui] dan [Selesai] — tidak ada pemrosesan pembayaran.
+- **Jangan** tambahkan tombol "Bayar Sekarang", Midtrans, Xendit, atau transfer otomatis.
+- Proses: Admin [Setujui] → bayar manual tunai/transfer → [Selesai].
+- UI hanya mengubah status, bukan memproses pembayaran.
 
-### 2. Penjemputan — TANPA GPS Tracking
-- **Jangan tambahkan** peta interaktif dengan lokasi real-time petugas.
-- Status diperbarui MANUAL oleh petugas.
-- Cukup tampilkan alamat penjemputan (text).
+### 2. Penjemputan — TANPA GPS Live Tracking
+- **Jangan** tambahkan peta real-time lokasi petugas.
+- Status diperbarui **manual** oleh petugas via dropdown/tombol aksi.
+- Cukup tampilkan alamat penjemputan sebagai teks.
 
 ### 3. Hardware — TANPA Integrasi Fisik
-- **Jangan** asumsikan ada timbangan digital otomatis atau barcode scanner.
-- Berat diinput manual oleh petugas.
-- QR Code untuk ID nasabah bisa discan via kamera (file upload atau kamera HP).
+- **Jangan** asumsikan timbangan digital otomatis atau barcode scanner hardware.
+- Berat diinput manual. QR nasabah via kamera HP (upload/scan).
 
-### 4. Multi-Role Access
-- Nasabah → TIDAK bisa login ke web admin.
-- Petugas → hanya bisa lihat halaman: transaksi (input), penjemputan, nasabah (read-only).
-- Admin → akses penuh ke semua halaman.
-- Koordinator → dashboard + laporan (read-only, tidak bisa edit data).
-- Distrik → dashboard + laporan (read-only).
+### 4. TIDAK ADA Integrasi Dukcapil
+- NIK field opsional, tanpa validasi ke database kependudukan.
 
-### 5. Tampilan Role-Based
-Setiap halaman harus menyesuaikan tampilan berdasarkan role:
-- Petugas → tombol "Input Setoran" besar, sidebar terbatas.
-- Admin → sidebar lengkap dengan semua menu.
-- Koordinator/Distrik → hanya Dashboard dan Laporan.
+### 5. Google Maps — Sederhana Saja
+- Static map atau input alamat teks saja.
+- **Jangan** navigasi real-time, distance matrix, geofencing.
+
+### 6. Multi-Tenant
+- Sistem untuk **satu** Bank Sampah Distrik Mimika Baru.
+- **Jangan** desain multi-tenant / multi-organisasi.
+
+---
+
+## Role & Akses
+
+| Role | Web Admin | Mobile |
+|------|:---------:|:------:|
+| Nasabah | ❌ | ✅ |
+| Petugas | ✅ | ❌ |
+| Admin | ✅ | ❌ |
+| Koordinator | ✅ | ❌ |
+| Pemerintah Distrik | ✅ (read-only) | ❌ |
+| Mitra/Pengepul | ❌ (data only) | ❌ |
+
+Detail matriks: `10-integration-and-roles.md`
+
+### Tampilan Role-Based
+- **Petugas** → landing `/transaksi/tambah`, sidebar terbatas
+- **Admin** → sidebar lengkap
+- **Koordinator** → read-only, no tombol edit/delete
+- **Pemerintah** → dashboard + laporan saja
+
+---
+
+## Keamanan & Privasi UI
+
+- Jangan tampilkan password, token, atau stack trace ke user
+- Mask NIK di tabel (tampilkan partial: `****1234`)
+- Logout clear semua token dari storage
+- HTTPS wajib di production
+
+---
+
+## Jam Operasional
+
+Senin–Sabtu, 08.00–17.00 WIT. Tampilkan banner info jika di luar jam layanan pada halaman operasional.
+
+---
+
+## Dependensi Backend
+
+UI web admin **bergantung penuh** pada backend API. Jika endpoint belum tersedia (dashboard, reports), gunakan placeholder/mock dengan flag jelas — jangan hardcode sebagai data produksi.
+
+Progress backend: **miru-backend-api** — `.ai-steering/08-task-list.md`

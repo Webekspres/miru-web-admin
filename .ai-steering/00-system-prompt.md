@@ -17,15 +17,15 @@ app/
 ├── (auth)/              # Login page
 ├── (dashboard)/         # Layout after login
 │   ├── page.tsx         # Dashboard overview
-│   ├── nasabah/         # Nasabah management
-│   ├── transaksi/       # Transactions
-│   ├── penjemputan/     # Pickup management
-│   ├── saldo/           # Balance withdrawals
+│   ├── customers/      # Nasabah management
+│   ├── transactions/    # Transactions
+│   ├── pickups/         # Pickup management
+│   ├── balance/         # Balance withdrawals
 │   ├── reward/          # Rewards & points
-│   ├── gudang/          # Warehouse & stock
-│   ├── pengaduan/       # Complaints
-│   ├── laporan/         # Reports
-│   └── pengaturan/      # Settings
+│   ├── warehouse/       # Warehouse & stock
+│   ├── complaints/      # Complaints
+│   ├── reports/         # Reports
+│   └── settings/        # Settings
 ├── layout.tsx           # Root layout
 └── globals.css          # Global styles + Tailwind
 ```
@@ -60,4 +60,13 @@ app/
 ### 7. Error Handling
 - Setiap halaman punya error boundary.
 - Tampilkan pesan error yang user-friendly dalam Bahasa Indonesia.
+- Parse error dari JSON Envelope: `message`, `errors` (field-level), `code`.
 - Jangan expose technical error details ke pengguna.
+
+## Referensi Standarisasi
+
+| Dokumen | Isi |
+|---------|-----|
+| `04-api-integration.md` | API client, envelope, endpoints |
+| `10-integration-and-roles.md` | Role, menu, permission matrix |
+| **miru-backend-api** — `.ai-steering/04-api-contracts-and-standards.md` | Sumber kebenaran kontrak API |

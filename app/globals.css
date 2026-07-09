@@ -3,24 +3,139 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary: #16a34a;
+  --primary-hover: #15803d;
+  --primary-foreground: #ffffff;
+  --surface-muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-surface-muted: var(--surface-muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #09090b;
+    --foreground: #fafafa;
+    --primary: #22c55e;
+    --primary-hover: #16a34a;
+    --primary-foreground: #052e16;
+    --surface-muted: #18181b;
+    --muted-foreground: #a1a1aa;
+    --border: #27272a;
+    --success: #22c55e;
+    --warning: #eab308;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+:focus-visible {
+  outline-color: var(--primary);
+}
+
+/* ── Print-friendly styles ───────────────────────────────── */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Hide sidebar, header, buttons, and other non-essential UI */
+  nav,
+  header,
+  .print-hidden,
+  button:not(.print-show),
+  [role="tablist"] {
+    display: none !important;
+  }
+
+  /* Ensure cards and tables are fully visible */
+  .print-show {
+    display: block !important;
+  }
+
+  /* Card styling for print */
+  [class*="Card"] {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Table styling for print */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 6px 8px !important;
+    font-size: 11pt !important;
+  }
+
+  th {
+    background: #f0f0f0 !important;
+    color: black !important;
+    font-weight: 600;
+  }
+
+  /* Ensure content uses full width */
+  main,
+  [class*="dashboard-layout"],
+  [class*="space-y"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Add MIRU header for print */
+  body::before {
+    content: "MIRU Bank Sampah — Laporan";
+    display: block;
+    font-size: 18pt;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 16px;
+    color: #16a34a !important;
+  }
+
+  /* Page breaks */
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  @page {
+    margin: 20mm 15mm;
+  }
 }

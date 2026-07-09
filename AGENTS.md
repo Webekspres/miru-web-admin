@@ -28,4 +28,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Stack
 
 - Next.js 16 (App Router) + TypeScript strict + Tailwind v4
+- Backend API: repositori GitHub **miru-backend-api** — JWT + JSON Envelope
 - Steering docs: `.ai-steering/` (on-demand only)
+- Integrasi & role: `.ai-steering/10-integration-and-roles.md`
+- Kontrak API: **miru-backend-api** — `.ai-steering/04-api-contracts-and-standards.md`
