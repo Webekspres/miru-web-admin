@@ -20,7 +20,7 @@ export const LANDING_PATH_BY_ROLE: Record<WebAdminRole, string> = {
 }
 
 const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
-  admin: ['/'],
+  admin: ['/', '/settings'],
   petugas: ['/', '/transactions', '/pickups', '/customers', '/reports'],
   koordinator: [
     '/',
@@ -32,6 +32,7 @@ const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
     '/warehouse',
     '/complaints',
     '/reports',
+    '/settings',
   ],
   pemerintah: ['/', '/reports', '/warehouse'],
 }

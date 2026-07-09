@@ -172,6 +172,18 @@ export interface Announcement {
   tanggal: string
 }
 
+export interface AuditLog {
+  id: number
+  user: number | null
+  user_nama: string | null
+  action: 'create' | 'update' | 'delete'
+  model_name: string
+  object_id: string | null
+  changes: Record<string, { old: unknown; new: unknown }> | null
+  timestamp: string
+  ip_address: string | null
+}
+
 export interface PriceHistory {
   id: number
   kategori: number

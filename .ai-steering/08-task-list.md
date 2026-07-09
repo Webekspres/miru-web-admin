@@ -300,22 +300,22 @@
 > **Tujuan:** Transparansi & pengaturan institusi.
 
 ### 6.1 Pengaturan Institusi (Modul 17)
-- [ ] Halaman `/settings` — tab Institusi | Pengumuman | Audit
-- [ ] Form profil institusi — `GET/PATCH /api/settings/`
-- [ ] Field: nama, alamat, kontak, logo URL, jam operasional
-- [ ] Editor pengumuman — rich text sederhana atau textarea
-- [ ] Preview pengumuman
+- [x] Halaman `/settings` — tab Institusi | Pengumuman | Audit
+- [x] Form profil institusi — `GET/PATCH /api/settings/`
+- [x] Field: nama, alamat, kontak, logo URL, jam operasional
+- [x] Editor pengumuman — rich text sederhana atau textarea
+- [x] Preview pengumuman
 
 ### 6.2 Audit Log (Modul 17)
-- [ ] Tab audit log — read-only table
-- [ ] `GET /api/audit-log/?user=&model=&date_after=`
-- [ ] Filter by user, model, tanggal
-- [ ] Admin full access; koordinator read-only
+- [x] Tab audit log — read-only table
+- [x] `GET /api/audit-log/?user=&model=&date_after=`
+- [x] Filter by user, model, tanggal
+- [x] Admin full access; koordinator read-only *(backend: IsAdmin)*
 
 ### 6.3 Role Pemerintah Distrik
-- [ ] Login pemerintah — sidebar terbatas (Dashboard, Laporan, Stok read-only)
-- [ ] Semua form write disabled
-- [ ] Landing redirect `/reports`
+- [x] Login pemerintah — sidebar terbatas (Dashboard, Laporan, Stok read-only) *(Fase 2)*
+- [x] Semua form write disabled *(Fase 2 — IsPemerintahReadOnly + canMutate)*
+- [x] Landing redirect `/reports` *(Fase 2)*
 
 ---
 

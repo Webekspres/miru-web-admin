@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
+import { SettingsClient } from '@/components/settings/SettingsClient'
 
 export default function SettingsPage() {
-  return (
-    <ModulePlaceholder
-      title="Pengaturan"
-      description="Profil institusi, pengumuman, dan audit log viewer."
-    />
-  )
+  return <SettingsClient />
 }
