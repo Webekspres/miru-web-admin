@@ -172,6 +172,16 @@ export interface Announcement {
   tanggal: string
 }
 
+export interface Notification {
+  id: number
+  user: number
+  judul: string
+  deskripsi: string
+  kategori: string
+  is_read: boolean
+  created_at: string
+}
+
 export interface AuditLog {
   id: number
   user: number | null

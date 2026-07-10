@@ -3,8 +3,14 @@ export const API_BASE_URL =
 
 export const API_PREFIX = `${API_BASE_URL}/api`
 
+export const API_DOCS_URL = `${API_BASE_URL}/api/docs/`
+
 export const APP_NAME =
   process.env.NEXT_PUBLIC_APP_NAME ?? 'MIRU Bank Sampah'
+
+export const PLAY_STORE_URL =
+  process.env.NEXT_PUBLIC_PLAY_STORE_URL ??
+  'https://play.google.com/store/apps/details?id=com.example.mirumobileapp'
 
 export const API_DEBUG = process.env.NEXT_PUBLIC_API_DEBUG === 'true'
 

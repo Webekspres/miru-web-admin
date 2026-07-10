@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Suspense } from 'react'
 import { Leaf } from 'lucide-react'
 import { LoginForm } from '@/components/auth/LoginForm'
@@ -47,6 +48,12 @@ export default function LoginPage() {
           <Suspense fallback={<LoginFormFallback />}>
             <LoginForm />
           </Suspense>
+
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            <Link href="/" className="font-medium text-primary hover:underline">
+              Kembali ke halaman utama
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </>

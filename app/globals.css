@@ -70,69 +70,56 @@ body {
     color: black !important;
   }
 
-  /* Hide sidebar, header, buttons, and other non-essential UI */
-  nav,
-  header,
   .print-hidden,
-  button:not(.print-show),
-  [role="tablist"] {
+  aside,
+  header,
+  nav {
     display: none !important;
   }
 
-  /* Ensure cards and tables are fully visible */
-  .print-show {
-    display: block !important;
+  body * {
+    visibility: hidden;
   }
 
-  /* Card styling for print */
-  [class*="Card"] {
-    border: 1px solid #ccc !important;
+  .report-print-target,
+  .report-print-target * {
+    visibility: visible;
+  }
+
+  .report-print-target {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
     box-shadow: none !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
   }
 
-  /* Table styling for print */
+  .report-print-target::before {
+    content: attr(data-print-title);
+    display: block;
+    font-size: 16pt;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #16a34a !important;
+  }
+
   table {
     border-collapse: collapse;
     width: 100%;
   }
 
-  th, td {
+  th,
+  td {
     border: 1px solid #ccc !important;
     padding: 6px 8px !important;
     font-size: 11pt !important;
+    color: black !important;
   }
 
   th {
     background: #f0f0f0 !important;
-    color: black !important;
     font-weight: 600;
-  }
-
-  /* Ensure content uses full width */
-  main,
-  [class*="dashboard-layout"],
-  [class*="space-y"] {
-    margin: 0 !important;
-    padding: 0 !important;
-    max-width: 100% !important;
-  }
-
-  /* Add MIRU header for print */
-  body::before {
-    content: "MIRU Bank Sampah — Laporan";
-    display: block;
-    font-size: 18pt;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 16px;
-    color: #16a34a !important;
-  }
-
-  /* Page breaks */
-  h1, h2, h3 {
-    page-break-after: avoid;
   }
 
   @page {

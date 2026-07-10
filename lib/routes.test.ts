@@ -7,8 +7,8 @@ import {
 
 describe('getLandingPathForRole', () => {
   it('returns role-specific landing pages', () => {
-    expect(getLandingPathForRole('admin')).toBe('/')
-    expect(getLandingPathForRole('koordinator')).toBe('/')
+    expect(getLandingPathForRole('admin')).toBe('/dashboard')
+    expect(getLandingPathForRole('koordinator')).toBe('/dashboard')
     expect(getLandingPathForRole('pemerintah')).toBe('/reports')
     expect(getLandingPathForRole('petugas')).toBe('/transactions/add')
   })
