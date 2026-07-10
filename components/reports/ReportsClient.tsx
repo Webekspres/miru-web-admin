@@ -278,7 +278,7 @@ function DailyReportView() {
             <SummaryCard title="Penarikan" value={formatRupiah(data.total_penarikan)} icon={<Users className="size-5" />} />
           </div>
 
-          <Card>
+          <Card className="report-print-target" data-print-title={`Laporan Harian — ${tanggal}`}>
             <CardHeader>
               <CardTitle className="text-base">Tonase per Jenis Sampah</CardTitle>
             </CardHeader>
@@ -391,7 +391,10 @@ function WeeklyReportView() {
             <SummaryCard title="Nasabah Baru" value={data.nasabah_baru.toLocaleString('id-ID')} icon={<Users className="size-5" />} />
           </div>
 
-          <Card>
+          <Card
+            className="report-print-target"
+            data-print-title={`Laporan Mingguan — Minggu ${minggu} ${tahun}`}
+          >
             <CardHeader>
               <CardTitle className="text-base">Tonase per Jenis Sampah</CardTitle>
             </CardHeader>
@@ -510,7 +513,10 @@ function MonthlyReportView() {
             <SummaryCard title="Reward Ditukar" value={data.jumlah_reward_ditukar.toLocaleString('id-ID')} icon={<TrendingUp className="size-5" />} />
           </div>
 
-          <Card>
+          <Card
+            className="report-print-target"
+            data-print-title={`Laporan Bulanan — ${MONTHS[bulan - 1]} ${tahun}`}
+          >
             <CardHeader>
               <CardTitle className="text-base">Tonase per Jenis Sampah</CardTitle>
             </CardHeader>
@@ -613,7 +619,10 @@ function WasteReportView() {
             <SummaryCard title="Total Nilai" value={formatRupiah(data.total_nilai)} icon={<TrendingUp className="size-5" />} />
           </div>
 
-          <Card>
+          <Card
+            className="report-print-target"
+            data-print-title={`Laporan Tonase — ${start} s.d. ${end}`}
+          >
             <CardHeader>
               <CardTitle className="text-base">Tonase per Kategori</CardTitle>
             </CardHeader>
@@ -632,7 +641,7 @@ export function ReportsClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="print-hidden flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Laporan</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -646,7 +655,7 @@ export function ReportsClient() {
 
       {/* Tab Navigation */}
       <Card>
-        <div className="border-b border-border">
+        <div className="print-hidden border-b border-border">
           <div className="flex gap-1 px-4" role="tablist">
             {TABS.map((tab) => {
               const Icon = tab.icon

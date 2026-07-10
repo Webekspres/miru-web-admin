@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import {
   AUTH_ROUTES,
   PUBLIC_FILE,
+  PUBLIC_ROUTES,
   ROLE_COOKIE_KEY,
   TOKEN_KEYS,
 } from '@/lib/auth-constants'
@@ -17,6 +18,12 @@ function isAuthRoute(pathname: string): boolean {
   )
 }
 
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  )
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -26,23 +33,27 @@ export function proxy(request: NextRequest) {
 
   const hasToken = Boolean(request.cookies.get(TOKEN_KEYS.access)?.value)
   const onAuthRoute = isAuthRoute(pathname)
+  const onPublicRoute = isPublicRoute(pathname)
   const roleCookie = request.cookies.get(ROLE_COOKIE_KEY)?.value
   const role = roleCookie && isWebAdminRoleValue(roleCookie) ? roleCookie : null
 
   if (hasToken && onAuthRoute) {
-    const landing = role ? getLandingPathForRole(role) : '/'
+    const landing = role ? getLandingPathForRole(role) : '/dashboard'
     return NextResponse.redirect(new URL(landing, request.url))
   }
 
-  if (!hasToken && !onAuthRoute) {
+  if (hasToken && pathname === '/') {
+    const landing = role ? getLandingPathForRole(role) : '/dashboard'
+    return NextResponse.redirect(new URL(landing, request.url))
+  }
+
+  if (!hasToken && !onAuthRoute && !onPublicRoute) {
     const loginUrl = new URL('/login', request.url)
-    if (pathname !== '/') {
-      loginUrl.searchParams.set('from', pathname)
-    }
+    loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  if (hasToken && role && !onAuthRoute && !canAccessRoute(role, pathname)) {
+  if (hasToken && role && !onPublicRoute && !onAuthRoute && !canAccessRoute(role, pathname)) {
     return NextResponse.redirect(new URL(getLandingPathForRole(role), request.url))
   }
 

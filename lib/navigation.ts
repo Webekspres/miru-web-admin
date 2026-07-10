@@ -28,23 +28,26 @@ export const WEB_ADMIN_ROLES: readonly WebAdminRole[] = [
 
 export type NavSection = 'main' | 'settings'
 
+export type SidebarBadgeKey = 'complaints' | 'withdrawals' | 'pickups'
+
 export interface NavItem {
   label: string
   href: string
   icon: LucideIcon
   section?: NavSection
+  badgeKey?: SidebarBadgeKey
 }
 
 const ADMIN_MENU: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Nasabah', href: '/customers', icon: Users },
   { label: 'Petugas & Staff', href: '/staff', icon: UserCog },
   { label: 'Transaksi Setoran', href: '/transactions', icon: Wallet },
-  { label: 'Penjemputan', href: '/pickups', icon: Truck },
-  { label: 'Penarikan Saldo', href: '/balance', icon: Wallet },
+  { label: 'Penjemputan', href: '/pickups', icon: Truck, badgeKey: 'pickups' },
+  { label: 'Penarikan Saldo', href: '/balance', icon: Wallet, badgeKey: 'withdrawals' },
   { label: 'Reward & Poin', href: '/reward', icon: Gift },
   { label: 'Gudang & Mitra', href: '/warehouse', icon: Package },
-  { label: 'Pengaduan', href: '/complaints', icon: Phone },
+  { label: 'Pengaduan', href: '/complaints', icon: Phone, badgeKey: 'complaints' },
   { label: 'Laporan', href: '/reports', icon: BarChart3 },
   {
     label: 'Pengaturan',
@@ -55,22 +58,22 @@ const ADMIN_MENU: NavItem[] = [
 ]
 
 const PETUGAS_MENU: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Input Setoran', href: '/transactions/add', icon: Wallet },
-  { label: 'Penjemputan', href: '/pickups', icon: Truck },
+  { label: 'Penjemputan', href: '/pickups', icon: Truck, badgeKey: 'pickups' },
   { label: 'Nasabah', href: '/customers', icon: Users },
   { label: 'Laporan Harian Saya', href: '/reports', icon: BarChart3 },
 ]
 
 const KOORDINATOR_MENU: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Nasabah', href: '/customers', icon: Users },
   { label: 'Transaksi', href: '/transactions', icon: Wallet },
-  { label: 'Penjemputan', href: '/pickups', icon: Truck },
-  { label: 'Penarikan', href: '/balance', icon: Wallet },
+  { label: 'Penjemputan', href: '/pickups', icon: Truck, badgeKey: 'pickups' },
+  { label: 'Penarikan', href: '/balance', icon: Wallet, badgeKey: 'withdrawals' },
   { label: 'Reward', href: '/reward', icon: Gift },
   { label: 'Gudang', href: '/warehouse', icon: Package },
-  { label: 'Pengaduan', href: '/complaints', icon: Phone },
+  { label: 'Pengaduan', href: '/complaints', icon: Phone, badgeKey: 'complaints' },
   { label: 'Laporan', href: '/reports', icon: BarChart3 },
   {
     label: 'Pengaturan',
@@ -81,7 +84,7 @@ const KOORDINATOR_MENU: NavItem[] = [
 ]
 
 const PEMERINTAH_MENU: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Laporan', href: '/reports', icon: BarChart3 },
   { label: 'Ringkasan Stok', href: '/warehouse', icon: Building2 },
 ]

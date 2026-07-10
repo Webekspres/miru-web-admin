@@ -10,5 +10,8 @@ export const ACCESS_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24
 
 export const AUTH_ROUTES = ['/login'] as const
 
+/** Rute publik yang tidak memerlukan autentikasi */
+export const PUBLIC_ROUTES = ['/', '/login'] as const
+
 export const PUBLIC_FILE =
   /\.(?:svg|png|jpg|jpeg|gif|webp|ico)$/

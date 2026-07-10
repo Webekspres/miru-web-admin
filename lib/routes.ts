@@ -1,4 +1,5 @@
 import type { UserRole } from '@/types/models'
+import { getNavSectionsForRole } from '@/lib/navigation'
 
 export type WebAdminRole = Extract<
   UserRole,
@@ -13,17 +14,24 @@ const WEB_ADMIN_ROLES: WebAdminRole[] = [
 ]
 
 export const LANDING_PATH_BY_ROLE: Record<WebAdminRole, string> = {
-  admin: '/',
-  koordinator: '/',
+  admin: '/dashboard',
+  koordinator: '/dashboard',
   pemerintah: '/reports',
   petugas: '/transactions/add',
 }
 
 const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
-  admin: ['/', '/settings'],
-  petugas: ['/', '/transactions', '/pickups', '/customers', '/reports'],
+  admin: ['/dashboard', '/settings', '/profile'],
+  petugas: [
+    '/dashboard',
+    '/transactions',
+    '/pickups',
+    '/customers',
+    '/reports',
+    '/profile',
+  ],
   koordinator: [
-    '/',
+    '/dashboard',
     '/customers',
     '/transactions',
     '/pickups',
@@ -33,8 +41,9 @@ const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
     '/complaints',
     '/reports',
     '/settings',
+    '/profile',
   ],
-  pemerintah: ['/', '/reports', '/warehouse'],
+  pemerintah: ['/dashboard', '/reports', '/warehouse', '/profile'],
 }
 
 export function isWebAdminRoleValue(role: string): role is WebAdminRole {
@@ -45,14 +54,17 @@ export function getLandingPathForRole(role: WebAdminRole): string {
   return LANDING_PATH_BY_ROLE[role]
 }
 
+export function getProfilePathForRole(role: WebAdminRole): string {
+  const { settings } = getNavSectionsForRole(role)
+  return settings.length > 0 ? '/settings' : '/profile'
+}
+
 export function canAccessRoute(role: WebAdminRole, pathname: string): boolean {
   if (role === 'admin') return true
-  if (pathname === '/') return true
+  if (pathname === '/dashboard') return true
 
   return ALLOWED_PREFIXES[role].some(
-    (prefix) =>
-      prefix !== '/' &&
-      (pathname === prefix || pathname.startsWith(`${prefix}/`)),
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   )
 }
 

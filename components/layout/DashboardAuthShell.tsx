@@ -58,6 +58,7 @@ export function DashboardAuthShell({ children }: DashboardAuthShellProps) {
     <DashboardLayout
       role={role}
       user={{
+        id: user.id,
         nama_lengkap: user.nama_lengkap,
         role,
       }}

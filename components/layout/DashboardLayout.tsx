@@ -57,7 +57,7 @@ export function DashboardLayout({
       {sidebarOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="print-hidden fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={closeSidebar}
           aria-label="Tutup menu navigasi"
         />
@@ -81,7 +81,7 @@ export function DashboardLayout({
           sidebarOpen={sidebarOpen}
           onToggleSidebar={toggleSidebar}
         />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 print:p-0">{children}</main>
       </div>
     </div>
   )
