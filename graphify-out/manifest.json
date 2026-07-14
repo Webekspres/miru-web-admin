@@ -20,8 +20,8 @@
     "semantic_hash": ""
   },
   "next.config.ts": {
-    "mtime": 1783054586.3712986,
-    "ast_hash": "9b77af189a21a7a64e4bd7a426f64176",
+    "mtime": 1783992079.9698381,
+    "ast_hash": "11162df089c96992ebe45a2cda0b8928",
     "semantic_hash": ""
   },
   "package.json": {
@@ -580,18 +580,18 @@
     "semantic_hash": ""
   },
   "components/landing/LandingPage.tsx": {
-    "mtime": 1783674948.3476472,
-    "ast_hash": "f9958f6c26af06839a45adf9b5b2bf76",
+    "mtime": 1783675798.6337132,
+    "ast_hash": "a1429d8a348fb7abc3c600686e24d1ed",
     "semantic_hash": ""
   },
   "components/layout/NotificationBell.tsx": {
-    "mtime": 1783674981.002512,
-    "ast_hash": "0179c52154757d7e26192cda95f242ad",
+    "mtime": 1783675339.0226216,
+    "ast_hash": "9d3685b5bbe8fabec2e204f1018e5f3d",
     "semantic_hash": ""
   },
   "components/layout/ProfileDropdown.tsx": {
-    "mtime": 1783674987.5319705,
-    "ast_hash": "4eb5e689cab531fd065b48aa55e8ae75",
+    "mtime": 1783675803.303245,
+    "ast_hash": "69f5ee2cf9e220e9b9203251657890e1",
     "semantic_hash": ""
   },
   "components/profile/ProfileClient.tsx": {
