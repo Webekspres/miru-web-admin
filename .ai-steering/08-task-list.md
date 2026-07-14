@@ -9,9 +9,11 @@
 > **Referensi (repo ini):**
 > - `04-api-integration.md`, `07-modules-and-features.md`, `10-integration-and-roles.md`
 > - `05-business-rules-sops.md`, `06-system-constraints.md`
+> - `11-security-and-privacy.md` — **pedoman keamanan & privasi web admin**
 >
 > **Referensi backend:**
-> - `miru-backend-api` → `.ai-steering/08-task-list.md`, `04-api-contracts`, `07-modules`
+> - `miru-backend-api` → `.ai-steering/08-task-list.md`, `04-api-contracts`, `07-modules`,
+>   **`11-security-and-privacy.md` (kanonik)**
 
 ---
 
@@ -56,40 +58,57 @@
 ## Fase 7: Kualitas & Testing (UAT Ready)
 
 > **Tujuan:** Web admin stabil untuk UAT multi-role.
-> **Sumber:** Kriteria UAT di roadmap; Business Rules §SLA; `07` UX.
+> **Sumber:** Kriteria UAT di roadmap; Business Rules §SLA; `07` UX;
+> **`11-security-and-privacy.md`** §2–3, §9.
+
+### 7.0 Keamanan Client (sebelum / beriringan UAT)
+> Detail: `11-security-and-privacy.md`.
+
+- [x] Blokir login role `nasabah`; logout clear token
+- [x] Role guard sidebar + `canMutate` untuk koordinator/pemerintah
+- [x] 401 refresh → login; 403 toast tanpa detail internal
+- [ ] Pastikan tidak ada route tersembunyi tanpa guard role
+- [ ] Mask NIK di tabel (partial) di mana NIK ditampilkan
+- [ ] Jangan log / tampilkan JWT, password, atau stack trace ke user
+- [ ] Session expired → redirect `/login` dengan pesan jelas
+- [ ] Double-submit prevention pada form transaksi keuangan
+- [ ] Optimistic UI **disabled** untuk operasi saldo (tunggu server confirm)
+- [ ] Error boundary per route (`error.tsx`) — tanpa stack user-facing
 
 ### 7.1 Testing
 - [ ] Setup Vitest + React Testing Library untuk komponen (util sudah ada sebagian)
 - [x] Unit test API client / envelope / auth / permissions / routes / format *(ada di `lib/*.test.ts`)*
 - [ ] Test AuthProvider / form setoran (validasi min 1 kg, auto-calculate) dengan RTL
 - [ ] E2E manual checklist per role: admin, petugas, koordinator, pemerintah
+- [ ] E2E keamanan: nasabah ditolak; pemerintah tidak bisa mutate; petugas tidak approve penarikan
 - [ ] E2E alur: login → input setoran → cek saldo di mobile *(mirumobileapp)*
 
 ### 7.2 UX & Accessibility
 - [x] Loading skeleton / Empty state / ErrorMessage component *(fondasi ada)*
 - [ ] Pastikan skeleton & empty dipakai konsisten di semua halaman data
-- [ ] Error boundary per route segment (`error.tsx`) — belum ada
 - [ ] Keyboard navigation form utama
 - [ ] Kontras warna tema hijau (a11y min)
 - [ ] Responsive: tablet & mobile (petugas pakai HP)
 
 ### 7.3 Error & Edge Cases
 - [ ] Network offline message
-- [ ] Session expired flow teruji end-to-end
-- [ ] Double-submit prevention pada form transaksi saldo
-- [ ] Optimistic UI **disabled** untuk operasi saldo (tunggu server confirm)
+- [ ] Verifikasi ulang session expired + double-submit (lihat 7.0)
 
 ---
 
 ## Fase 8: Production Deploy
 
-> **Sumber:** Jawaban Persyaratan §6.5 (domain, SSL, server Webekspres); Timeline go-live.
+> **Sumber:** Jawaban Persyaratan §6.5 (domain, SSL, server Webekspres); Timeline go-live;
+> Security §5–7, §9.
 
 - [ ] `next build` tanpa error
-- [ ] Env production: `NEXT_PUBLIC_API_URL=https://…`
+- [ ] Env production: `NEXT_PUBLIC_API_URL=https://…` (**HTTPS only**)
+- [ ] Pastikan tidak ada secret non-public ikut ke bundle client
 - [ ] Deploy ke server Webekspres (Node/Nginx atau setara)
 - [ ] HTTPS wajib
+- [ ] Security headers (HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` / CSP) via Nginx atau Next headers
 - [ ] Pastikan CORS backend whitelist domain admin
+- [ ] Checklist go-live keamanan web: `11-security-and-privacy.md` §9
 
 ---
 
@@ -120,31 +139,33 @@
 - [ ] Banner admin: harga terjadwal belum aktif
 
 ### 9.4 Modul 6 / 10 — Bukti digital & verifikasi KTP
-> **Sumber:** Jawaban §6.3.4, §6.3.6; Proposal bukti transaksi digital / tanda terima.
+> **Sumber:** Jawaban §6.3.4, §6.3.6; Proposal bukti transaksi; Security §4, §6.
 
-- [ ] Upload/lihat foto KTP saat proses penarikan besar
-- [ ] Unduh / cetak tanda terima PDF setoran & penarikan
+- [ ] Upload/lihat foto KTP **hanya** di alur penarikan besar (bukan list nasabah generik)
+- [ ] Mask NIK di UI; akses need-to-know
+- [ ] Unduh / cetak tanda terima PDF setoran & penarikan (role-gated)
 - [ ] Pastikan print-friendly view laporan (sudah ada sebagian — verifikasi UAT)
 
 ### 9.5 Modul 15 / 16 — Monitoring & laporan OPD
-> **Sumber:** Proposal modul 15–16; Jawaban §6.2.14; Constraints arsip.
+> **Sumber:** Proposal modul 15–16; Jawaban §6.2.14; Constraints arsip; Security §4 (export PII).
 
 - [x] Ekspor CSV laporan (client-side)
 - [x] Ekspor Excel laporan (client-side `xlsx`)
+- [ ] Batasi kolom PII pada export sesuai need-to-know / role
 - [ ] Ekspor PDF laporan bulanan untuk arsip kantor distrik
 - [ ] Tab/section evaluasi: kendala + rekomendasi tindak lanjut
 - [ ] Kartu/widget wilayah teraktif di dashboard (jika API siap)
 - [ ] Laporan harian petugas (view terbatas) — jika diminta SOP operasional final
 
 ### 9.6 Operasional & notifikasi
-> **Sumber:** Proposal modul 9 (notifikasi status); Jawaban §6.6.5 (push — panel web baca status); Persyaratan import data.
+> **Sumber:** Proposal modul 9; Jawaban §6.6.5; Persyaratan import; Security §6.
 
-- [ ] Bulk import nasabah CSV/Excel (UI + feedback error baris)
-- [ ] Panel notifikasi in-app (dari `/api/notifications/`) — list / mark-read
+- [ ] Bulk import nasabah CSV/Excel (UI + feedback error baris; batasi ukuran file)
+- [ ] Panel notifikasi in-app (dari `/api/notifications/`) — list / mark-read; tanpa PII berlebih
 - [ ] (Opsional) preview peta statis alamat jemput — Constraints: Maps sederhana saja
 
 ### 9.7 Out of Scope / tidak dari persyaratan
-> Jangan dijadwalkan sebagai pekerjaan default.
+> Jangan dijadwalkan sebagai pekerjaan default. Lihat juga Security §1 larangan.
 
 - [ ] ❌ Dark mode (tidak ada di dokumen persyaratan)
 - [ ] ❌ WebSocket / notifikasi real-time peta petugas (bertentangan dengan larangan live tracking)
@@ -281,3 +302,11 @@
 | **UAT Ready** | Fase 7; role ditest, responsive OK |
 | **Go-Live** | Fase 8 deploy + HTTPS |
 | **Pengembangan Lanjutan** | Fase 9 iteratif per dokumen persyaratan |
+
+## Indeks dokumen keamanan
+
+| Repo | Dokumen |
+|------|---------|
+| Backend (kanonik) | `miru-backend-api` → `.ai-steering/11-security-and-privacy.md` |
+| Web Admin | `.ai-steering/11-security-and-privacy.md` |
+| Mobile | `mirumobileapp` → `.ai-steering/11-security-and-privacy.md` |

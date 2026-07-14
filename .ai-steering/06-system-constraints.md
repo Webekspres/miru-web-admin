@@ -60,6 +60,7 @@ Detail matriks: `10-integration-and-roles.md`
 - Mask NIK di tabel (tampilkan partial: `****1234`)
 - Logout clear semua token dari storage
 - HTTPS wajib di production
+- Pedoman lengkap: **`11-security-and-privacy.md`** (selaras kanonik backend)
 
 ---
 
