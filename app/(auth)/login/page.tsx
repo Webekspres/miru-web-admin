@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { Leaf } from 'lucide-react'
 import { LoginForm } from '@/components/auth/LoginForm'
+import { MiruLogo } from '@/components/brand/MiruLogo'
 import { LoginSessionSync } from '@/components/auth/LoginSessionSync'
 import { CardSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
@@ -32,10 +32,8 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md">
         <CardHeader className="items-center text-center">
-          <div className="mb-2 flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Leaf className="size-6" aria-hidden />
-          </div>
-          <CardTitle>MIRU Bank Sampah</CardTitle>
+          <MiruLogo variant="full" height={48} className="mb-2" priority />
+          <CardTitle className="sr-only">MIRU Bank Sampah</CardTitle>
           <CardDescription>{APP_NAME}</CardDescription>
         </CardHeader>
 

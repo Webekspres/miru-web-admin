@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   "app/layout.tsx": {
-    "mtime": 1783501467.4074702,
-    "ast_hash": "b6bc753dec68d0678d75d6335bacacbb",
+    "mtime": 1784192082.6590302,
+    "ast_hash": "6f89932d0d4dd13f0f2715334ae4cec5",
     "semantic_hash": ""
   },
   "eslint.config.mjs": {
@@ -70,8 +70,8 @@
     "semantic_hash": ""
   },
   ".ai-steering/06-system-constraints.md": {
-    "mtime": 1783409948.472035,
-    "ast_hash": "3e6a1fa18022751d79392a33a1f78011",
+    "mtime": 1783998263.3827262,
+    "ast_hash": "910a63b3ba8bc7f7c20869c31186fd79",
     "semantic_hash": ""
   },
   ".ai-steering/07-modules-and-features.md": {
@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   ".ai-steering/08-task-list.md": {
-    "mtime": 1783586362.5739708,
-    "ast_hash": "061bf7ee015ae71407dfb0e0757f896d",
+    "mtime": 1783998219.1163661,
+    "ast_hash": "65d3adc366dc4085d86ffecc4cd3de5d",
     "semantic_hash": ""
   },
   ".ai-steering/09-data-dictionary.md": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "components/layout/Sidebar.tsx": {
-    "mtime": 1783675181.780829,
-    "ast_hash": "50757f43d2e170c692afec9937c55412",
+    "mtime": 1784192084.4321058,
+    "ast_hash": "5307a47c82ac47a57030a4f381499357",
     "semantic_hash": ""
   },
   "components/ui/Badge.tsx": {
@@ -270,8 +270,8 @@
     "semantic_hash": ""
   },
   "app/(auth)/login/page.tsx": {
-    "mtime": 1783675303.463308,
-    "ast_hash": "ff1f3ead82e6e64ecaf5dd75703f2691",
+    "mtime": 1784192088.5431325,
+    "ast_hash": "a9700cd143e696f021421d667f0ed924",
     "semantic_hash": ""
   },
   "app/(dashboard)/layout.tsx": {
@@ -580,8 +580,8 @@
     "semantic_hash": ""
   },
   "components/landing/LandingPage.tsx": {
-    "mtime": 1783675798.6337132,
-    "ast_hash": "a1429d8a348fb7abc3c600686e24d1ed",
+    "mtime": 1784192088.2101266,
+    "ast_hash": "3c8ebb039f7ccab4b9bb2ee36486660d",
     "semantic_hash": ""
   },
   "components/layout/NotificationBell.tsx": {
@@ -612,6 +612,86 @@
   "hooks/useSidebarBadges.ts": {
     "mtime": 1783675174.606084,
     "ast_hash": "0c8557b4aaa1ea114788a06c83b592ca",
+    "semantic_hash": ""
+  },
+  "components/brand/MiruLogo.tsx": {
+    "mtime": 1784192077.416412,
+    "ast_hash": "a888731e28edcf6aa99e7fece1cb86ca",
+    "semantic_hash": ""
+  },
+  ".ai-steering/11-security-and-privacy.md": {
+    "mtime": 1783998152.5089471,
+    "ast_hash": "f2fc2321d52ab0a2d4d87dd3682c8e75",
+    "semantic_hash": ""
+  },
+  "app/apple-icon.png": {
+    "mtime": 1784192064.9480693,
+    "ast_hash": "c5a4d0a861bcf814a6c7e08c4669d114",
+    "semantic_hash": ""
+  },
+  "app/icon.png": {
+    "mtime": 1784192064.9470701,
+    "ast_hash": "251f4f118711774a29f2beaae19b8501",
+    "semantic_hash": ""
+  },
+  "public/brand/apple-touch-icon.png": {
+    "mtime": 1784192064.796822,
+    "ast_hash": "c5a4d0a861bcf814a6c7e08c4669d114",
+    "semantic_hash": ""
+  },
+  "public/brand/apple-touch-icon.webp": {
+    "mtime": 1784192064.9060338,
+    "ast_hash": "85331a336482c8df2b0f8616017633f6",
+    "semantic_hash": ""
+  },
+  "public/brand/icon-192.png": {
+    "mtime": 1784192064.6396732,
+    "ast_hash": "e15cff5de1a579014e9599b8156f7ae1",
+    "semantic_hash": ""
+  },
+  "public/brand/icon-192.webp": {
+    "mtime": 1784192064.7891843,
+    "ast_hash": "f0d7eb508630036cfb782c3b0af38e16",
+    "semantic_hash": ""
+  },
+  "public/brand/icon-512.png": {
+    "mtime": 1784192063.9437642,
+    "ast_hash": "e58e2cc6a1b3a3a2a2c481ba3782f802",
+    "semantic_hash": ""
+  },
+  "public/brand/icon-512.webp": {
+    "mtime": 1784192064.6266742,
+    "ast_hash": "b31f9253c84d2562f139cd97a9b36df9",
+    "semantic_hash": ""
+  },
+  "public/brand/logo-bg.svg": {
+    "mtime": 1784191501.6590488,
+    "ast_hash": "96135b96cdfc02dcea399916cbaabc4b",
+    "semantic_hash": ""
+  },
+  "public/brand/logo-with-text-bg.svg": {
+    "mtime": 1784191516.0070148,
+    "ast_hash": "0c2f0810f1f0c5c91ac2a83023889ad3",
+    "semantic_hash": ""
+  },
+  "public/brand/logo-with-text.svg": {
+    "mtime": 1784191330.9181051,
+    "ast_hash": "2a7e20cc5f8377a9d3469e99a3ae7201",
+    "semantic_hash": ""
+  },
+  "public/brand/logo.svg": {
+    "mtime": 1784191355.3080504,
+    "ast_hash": "675e37304ba8f7f5b06c6861c2dece74",
+    "semantic_hash": ""
+  },
+  "public/brand/og-image.png": {
+    "mtime": 1784192064.9682376,
+    "ast_hash": "474a5ff9b00ee25cca56cfd553471683",
+    "semantic_hash": ""
+  },
+  "public/brand/og-image.webp": {
+    "mtime": 1784192065.8116267,
+    "ast_hash": "90ed443ab505d3ef8e680f7a3fb83c45",
     "semantic_hash": ""
   }
 }

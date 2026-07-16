@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Leaf, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { MiruLogo } from '@/components/brand/MiruLogo'
 import { cn } from '@/lib/cn'
 import { APP_NAME } from '@/lib/config'
 import { useSidebarBadges } from '@/hooks/useSidebarBadges'
@@ -112,9 +113,7 @@ export function Sidebar({ role, open, onClose, className }: SidebarProps) {
       aria-hidden={!open}
     >
       <div className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-4">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Leaf className="size-5" aria-hidden />
-        </div>
+        <MiruLogo variant="icon" height={36} className="rounded-lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-foreground">MIRU</p>
           <p className="truncate text-xs text-muted-foreground">{APP_NAME}</p>

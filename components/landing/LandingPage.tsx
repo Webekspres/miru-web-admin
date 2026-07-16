@@ -4,7 +4,6 @@ import Link from 'next/link'
 import {
   BarChart3,
   BookOpen,
-  Leaf,
   LogIn,
   Recycle,
   Smartphone,
@@ -12,6 +11,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
+import { MiruLogo } from '@/components/brand/MiruLogo'
 import { APP_NAME, API_DOCS_URL, PLAY_STORE_URL } from '@/lib/config'
 
 const BENEFITS = [
@@ -59,9 +59,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" className="flex min-w-0 items-center gap-2">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Leaf className="size-5" aria-hidden />
-            </div>
+            <MiruLogo variant="icon" height={36} className="rounded-lg" />
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-foreground">MIRU</p>
               <p className="truncate text-xs text-muted-foreground">{APP_NAME}</p>
@@ -94,7 +92,7 @@ export function LandingPage() {
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
             <div className="mx-auto max-w-3xl text-center">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-                <Leaf className="size-4" aria-hidden />
+                <MiruLogo variant="icon" height={20} />
                 Platform Bank Sampah Digital
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
