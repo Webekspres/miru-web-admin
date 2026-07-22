@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "components/pickups/PickupManagement.tsx": {
-    "mtime": 1783564875.770905,
-    "ast_hash": "9b96cd1e05f3a985d3ba1d7747bae558",
+    "mtime": 1784635490.6101253,
+    "ast_hash": "3e40575e8aa448ab8abc933337a9cb06",
     "semantic_hash": ""
   },
   "components/reports/ReportsClient.tsx": {
@@ -615,8 +615,8 @@
     "semantic_hash": ""
   },
   "components/brand/MiruLogo.tsx": {
-    "mtime": 1784192077.416412,
-    "ast_hash": "a888731e28edcf6aa99e7fece1cb86ca",
+    "mtime": 1784192259.1343534,
+    "ast_hash": "269ce771098c2160bbd313d93207d97f",
     "semantic_hash": ""
   },
   ".ai-steering/11-security-and-privacy.md": {

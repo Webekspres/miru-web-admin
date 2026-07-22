@@ -141,16 +141,21 @@ function AssignPetugasModal({
     onConfirm(Number(selectedId))
   }
 
+  function handleClose() {
+    setSelectedId('')
+    onClose()
+  }
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       title="Tugaskan Petugas"
-      description="Pilih petugas yang akan menjemput."
+      description="Pilih petugas yang akan menjemput sampah nasabah ini."
       size="sm"
       footer={
         <>
-          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+          <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
             Batal
           </Button>
           <Button
@@ -320,14 +325,11 @@ export function PickupManagement() {
     const p: Record<string, string> = {
       page: String(page),
       page_size: '20',
-      ordering: '-tanggal_pengajuan',
+      ordering: '-jadwal',
     }
 
-    // Status filter: if it's an array, we need a different approach
-    // Backend may support ?status__in= or comma-separated
     const statusFilter = activeTabDef.statusFilter
     if (Array.isArray(statusFilter)) {
-      // For "Aktif" tab, use status__in for multiple statuses
       p.status__in = statusFilter.join(',')
     } else {
       p.status = statusFilter
@@ -386,36 +388,56 @@ export function PickupManagement() {
       return
     }
 
-    // Direct action (no modal)
-    await executeAction(pickup.id, { status: action.nextStatus })
+    // Direct action (no modal) — e.g. Setujui / update status petugas
+    const ok = await executeAction(pickup.id, { status: action.nextStatus })
+    if (!ok) return
+
+    // Setelah setujui: pindah ke tab Aktif + buka modal tugaskan petugas
+    if (action.nextStatus === 'disetujui') {
+      setActiveTab('aktif')
+      setPage(1)
+      setAssignModal({
+        open: true,
+        pickup: { ...pickup, status: 'disetujui' },
+      })
+    }
   }
 
   async function handleAssign(petugasId: number) {
     if (!assignModal.pickup) return
-    await executeAction(assignModal.pickup.id, {
+    const ok = await executeAction(assignModal.pickup.id, {
       status: 'dijadwalkan',
       petugas: petugasId,
     })
-    setAssignModal({ open: false, pickup: null })
+    if (ok) {
+      setAssignModal({ open: false, pickup: null })
+    }
   }
 
   async function handleTolak(alasan: string) {
     if (!tolakModal.pickup) return
-    await executeAction(tolakModal.pickup.id, {
+    const ok = await executeAction(tolakModal.pickup.id, {
       status: 'ditolak',
       catatan: alasan,
     })
-    setTolakModal({ open: false, pickup: null })
+    if (ok) {
+      setTolakModal({ open: false, pickup: null })
+    }
   }
 
-  async function executeAction(pickupId: number, body: Record<string, unknown>) {
+  async function executeAction(
+    pickupId: number,
+    body: Record<string, unknown>,
+  ): Promise<boolean> {
     setActionLoading(true)
     try {
       await api.patch(`/pickups/${pickupId}/`, body)
       toastSuccess('Status penjemputan berhasil diperbarui.')
-      fetchMutate()
-    } catch (err) {
+      await fetchMutate()
+      return true
+    } catch {
       toastError('Gagal memperbarui status. Coba lagi.')
+      return false
     } finally {
       setActionLoading(false)
     }
@@ -525,7 +547,7 @@ export function PickupManagement() {
                       <TableCell className="font-medium">
                         {pickup.nasabah_nama ?? `#${pickup.nasabah}`}
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-muted-foreground" title={pickup.alamat_jemput}>
+                      <TableCell className="max-w-50 truncate text-muted-foreground" title={pickup.alamat_jemput}>
                         {pickup.alamat_jemput}
                       </TableCell>
                       <TableCell>
@@ -539,7 +561,7 @@ export function PickupManagement() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {pickup.petugas_nama ?? '—'}
+                        {pickup.petugas_nama ?? 'Belum ditugaskan'}
                       </TableCell>
                       {!isReadOnly && (
                         <TableCell>
