@@ -29,42 +29,40 @@
 | — | Out of Scope | Larangan sistem / di luar modul | — | ⛔ |
 
 > **Status proyek:** MVP web-admin selesai. API backend Fase 8 fitur bisnis hampir semua siap.
-> Kerja aktif = **Fase 9 wire UI ke API** + **Fase 7 UAT** + **Fase 8 deploy**.
-> Item hanya dari Proposal / Jawaban / Modules / Business Rules — **tidak menambah modul** di luar 17.
+> **Kerja aktif #1:** **Audit Temuan** (`temuan.md`) — section di puncak BAGIAN A.
+> Setelah itu: sisa Fase 9 wire UI + Fase 7 UAT + Fase 8 deploy.
+> Item hanya dari Proposal / Jawaban / Modules / Business Rules / **temuan audit** — **tidak menambah modul** di luar 17.
 
 ### Cakupan 17 Modul — Web Admin
 
 | No | Modul | Halaman | Status MVP | Lanjutan (sisa) |
 |----|-------|---------|------------|-----------------|
-| 1 | Manajemen Pengguna | `/customers`, `/staff` | ✅ | Filter kelurahan; bulk import |
-| 2 | Autentikasi | `/login` | ✅ | — |
+| 1 | Manajemen Pengguna | `/customers`, `/staff` | ✅ | Filter kelurahan; bulk import; verifikasi HP |
+| 2 | Autentikasi | `/login` | ✅ | Pesan BI + disable empty (temuan) |
 | 3 | Profil Nasabah | `/customers/{id}` | ✅ | Lihat KTP penarikan besar; field RT/RW |
-| 4 | Edukasi Sampah | `/education` | ⚠️ Placeholder | CRUD artikel (API ✅) |
-| 5 | Katalog & Harga | `/waste/categories` | ✅ | Form `tanggal_berlaku` H-3 |
-| 6 | Setor Langsung | `/transactions/add` | ✅ | Unduh PDF bukti |
-| 7 | Penjemputan | `/pickups` | ✅ | UI wilayah/kuota; map sederhana (opsional) |
+| 4 | Edukasi Sampah | `/education` | ⚠️ Placeholder | CRUD + Markdown (temuan) |
+| 5 | Katalog & Harga | `/waste/categories` | ✅ | Menu sidebar + form H-3 (temuan) |
+| 6 | Setor Langsung | `/transactions/add` | ✅ | Fix lookup ID; scan QR; notif nilai |
+| 7 | Penjemputan | `/pickups` | ✅ | Approve+assign; filter petugas; notif |
 | 8 | Penimbangan | (form setoran) | ✅ | — |
 | 9 | Saldo & Riwayat | `/customers/{id}`, `/transactions` | ✅ | Notifikasi in-app ✅ |
 | 10 | Penarikan Saldo | `/balance` | ✅ | Tanda terima PDF; KTP penarikan besar |
-| 11 | Poin & Reward | `/reward` | ✅ | — |
-| 12 | Stok Gudang | `/warehouse` | ✅ | — |
-| 13 | Penjualan Mitra | `/warehouse/sales`, `partners` | ✅ | — |
-| 14 | Pengaduan | `/complaints` | ✅ | — |
-| 15 | Dashboard | `/dashboard` | ✅ | Widget wilayah teraktif |
+| 11 | Poin & Reward | `/reward` | ✅ | Tab pengajuan dulu; notif (temuan) |
+| 12 | Stok Gudang | `/warehouse` | ✅ | Link ke sales (temuan) |
+| 13 | Penjualan Mitra | `/warehouse/sales`, partners | ✅ | CRUD mitra discoverable (temuan) |
+| 14 | Pengaduan | `/complaints` | ✅ | Alert tindak lanjut; notif (temuan) |
+| 15 | Dashboard | `/dashboard` | ✅ | Dashboard petugas + per role (temuan) |
 | 16 | Laporan | `/reports` | ✅ | PDF arsip; evaluasi kendala; batasi PII export |
-| 17 | Pengaturan & Audit | `/settings` | ✅ | — |
+| 17 | Pengaturan & Audit | `/settings` | ✅ | Pisah pengumuman/audit; jam TimeField (temuan) |
 
 ---
 
 ## Urutan kerja disarankan (Web)
 
-1. **9.1 Edukasi** — ganti placeholder `/education` (API `/api/edukasi/` sudah ✅).
-2. **9.3 Harga H-3** — form `tanggal_berlaku` + banner terjadwal.
-3. **9.2 Wilayah** — filter/form kelurahan–RT/RW + indikator kuota jemput.
-4. **9.4 Bukti & KTP** — PDF unduh + upload/lihat KTP hanya di penarikan besar.
-5. **9.5 Laporan** — evaluasi kendala, wilayah teraktif, batasi PII export.
-6. **Fase 7 UAT** beriringan; **Fase 8 deploy** saat staging stabil.
-7. **9.6 Bulk import** setelah backend endpoint import siap.
+1. **⛔ PRIORITAS UTAMA — Audit Temuan** (`temuan.md`) — kerjakan dulu.
+2. Sisa Fase 9 wire (wilayah, PDF/KTP, laporan) yang belum tertutup temuan.
+3. Fase 7 UAT beriringan; Fase 8 deploy saat staging stabil.
+4. Bulk import setelah backend endpoint import siap.
 
 ---
 
@@ -74,7 +72,98 @@
 
 ---
 
+## 🔥 Audit Temuan — PRIORITAS UTAMA (kerjakan dulu)
+
+> **Sumber:** `temuan.md` (root monorepo).
+> **Aturan:** Section ini di atas Fase 9/7/8. Koordinasi kontrak dengan `backend/.ai-steering/08-task-list.md` § Audit Temuan.
+> Toast/pesan: Bahasa Indonesia ramah; sukses **dan** gagal terlihat jelas.
+
+### W0. UX umum web
+
+- [ ] **`cursor-pointer`** pada semua button, link, dan elemen klikabel (termasuk yang styled sebagai button)
+- [ ] **Toast/popup hasil aksi edit/create/delete** di semua form mutate
+  - Sukses: singkat BI (“Perubahan berhasil disimpan.”)
+  - Gagal: tampilkan `message` + field errors dari envelope, bukan silent fail
+
+### W1. Modul 2 — Login
+
+- [ ] **Disable tombol Login** jika username atau password kosong (jangan submit)
+  - Hapus perilaku: klik kosong → “username/password salah”
+- [ ] **Pesan rate-limit BI** — jangan tampilkan teks Inggris throttle mentah; map ke kalimat ramah + sisa detik jika ada
+- [ ] **Pesan login gagal BI** selaras backend (username tidak ada / password salah)
+
+### W2. Modul 6 — Input setoran
+
+- [ ] **Perbaiki bug “ID nasabah tidak ditemukan”** padahal ID benar
+  - Samakan format ID dengan QR / API lookup; tampilkan error envelope yang spesifik
+- [ ] **Scan QR dari kamera** di form setoran (izin kamera + parse payload QR MIRU → isi nasabah)
+  - Fallback: input manual tetap ada
+- [ ] **Pastikan notifikasi / feedback nilai setoran** menampilkan Rupiah benar (koordinasi backend notif Rp0)
+- [ ] Multi-jenis sampah di web **tetap** didukung (regresi); mobile multi-jenis adalah task mobile terpisah / out-of-scope nasabah input
+
+### W3. Modul 7 — Penjemputan (web)
+
+- [ ] **Setujui jangan fire API dulu** sebelum petugas dipilih
+  - UX: modal/flow “Setujui + pilih petugas” → satu submit; cegah jemput aktif tanpa petugas
+  - Selaras backend T3 (approve+assign atomik)
+- [ ] **Dropdown assign petugas: jangan tampilkan nomor HP** — cukup nama (dan role/kode jika perlu)
+- [ ] **Filter list untuk petugas (non-admin):** sembunyikan `menunggu` & `ditolak`; hanya jemput yang harus dikerjakan petugas login
+- [ ] **Notifikasi lonceng / badge** untuk jemput baru (admin) dan jemput selesai (petugas+admin) — andalkan API notif backend T3; pastikan UI refresh badge
+
+### W4. Modul 11 — Reward & penukaran
+
+- [ ] **Susunan halaman `/reward`:** tab/default **Pengajuan penukaran** (tabel siapa mengajukan) dulu → tab kedua **Katalog reward**
+- [ ] **Notifikasi admin** saat ada pengajuan tukar poin baru (lonceng)
+- [ ] Saat approve gagal karena poin tidak cukup setelah harga berubah: tampilkan pesan server BI; jangan toast generik
+
+### W5. Modul 14 — Pengaduan
+
+- [ ] **Sebelum tutup:** jika `tindak_lanjut` kosong → alert/dialog “Isi tindak lanjut dulu” (client-side), jangan sampai request gagal tanpa penjelasan
+- [ ] **Notifikasi admin** saat pengaduan baru
+- [ ] Opsi jenis **Lainnya** muncul di filter/detail jika backend sudah menambah choice
+
+### W6. Modul 4 — Edukasi
+
+- [ ] **Menu sidebar “Edukasi”** mengarah ke CRUD (bukan placeholder)
+- [ ] Halaman CRUD penuh: list + form; **editor/preview Markdown** untuk isi artikel
+- [ ] Role mutate: admin/koordinator; read-only sesuai matriks
+
+### W7. Modul 5 — Katalog & harga
+
+- [ ] **Menu sidebar jelas** ke katalog harga (label ramah; route `/waste/categories` atau redirect `/waste` → categories)
+  - Dokumentasikan di UI mengapa tidak ada index `/waste` kosong (atau buat hub sederhana: Kategori | Riwayat harga)
+- [ ] **Form ubah harga + `tanggal_berlaku`** dengan validasi client **H+3**
+  - Preview pengumuman; banner “harga terjadwal belum aktif” di halaman kategori/dashboard
+
+### W8. Modul 12–13 — Gudang & mitra
+
+- [ ] **Dari `/warehouse`:** CTA/tab/link jelas ke **`/warehouse/sales`** (penjualan ke mitra)
+- [ ] **CRUD mitra discoverable:** halaman atau section “Kelola mitra” (bukan hanya dropdown tanpa jalan menambah)
+  - Route mis. `/warehouse/partners` atau modal manage dari sales — pastikan ada di nav/sidebar atau tombol di sales
+
+### W9. Modul 15 — Dashboard per role
+
+- [ ] **Petugas punya dashboard** (bukan kosong / redirect tanpa ringkasan)
+  - Widget: jemput ditugaskan, tugas hari ini, dll. sesuai API T9
+- [ ] **Widget per role** (admin / koordinator / petugas / pemerintah) hanya tampilkan yang role boleh lihat
+
+### W10. Modul 1 — Nasabah & staff
+
+- [ ] Setelah admin isi/ubah nomor HP: tampilkan status **belum verifikasi**; dokumentasikan bahwa user akan diverifikasi saat login mobile
+- [ ] **Icon mata show/hide password** di form set/reset password nasabah & staff
+
+### W11. Modul 17 — Pengaturan (restruktur)
+
+- [ ] **Jam operasional:** input tipe waktu (buka/tutup), bukan textarea bebas — selaras backend TimeField
+- [ ] **Hapus input logo** institusi (pakai ikon app tetap)
+- [ ] **Pindahkan Pengumuman** dari settings → **menu sidebar** + halaman kelola khusus
+- [ ] **Pindahkan Audit log** dari settings → **menu sidebar** + halaman khusus
+- [ ] **`/settings` hanya berisi:** data institusi + kebijakan data + tentang MIRU
+
+---
+
 ## Fase 9: Pengembangan Lanjutan (prioritas wire UI)
+  *(item di bawah yang sudah overlap temuan: kerjakan lewat section Audit Temuan di atas; sisanya setelah temuan)*
 
 > Bergantung Backend Fase 8 fitur bisnis (sudah ✅ untuk item di bawah, kecuali bulk import & Maps).
 
