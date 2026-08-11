@@ -117,6 +117,7 @@ function NasabahSearch({
   const inputRef = useRef<HTMLInputElement | null>(null)
   const listRef = useRef<HTMLUListElement | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const listboxId = useId()
 
   // Debounce search query (300ms)
   useEffect(() => {
@@ -135,7 +136,9 @@ function NasabahSearch({
 
   // Reset highlight when results change
   useEffect(() => {
-    setHighlightedIdx(-1)
+    setTimeout(() => {
+      setHighlightedIdx(-1)
+    }, 0)
   }, [data])
 
   const results: NasabahOption[] = (data ?? [])
@@ -224,9 +227,11 @@ function NasabahSearch({
             placeholder="Cari nasabah berdasarkan nama atau No. HP..."
             className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
             aria-label="Cari nasabah"
-            aria-expanded={open}
-            aria-autocomplete="list"
             role="combobox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
           />
         </div>
       )}
@@ -257,8 +262,12 @@ function NasabahSearch({
           )}
 
           {!isLoading && results.length > 0 && (
-            <ul ref={listRef} className="max-h-60 overflow-y-auto py-1" role="listbox">
-              {results.map((nasabah, idx) => (
+            <ul
+              id={listboxId}
+              ref={listRef}
+              className="max-h-60 overflow-y-auto py-1"
+              role="listbox"
+            >              {results.map((nasabah, idx) => (
                 <li
                   key={nasabah.id}
                   role="option"
@@ -306,7 +315,8 @@ function NasabahQrCameraScanner({
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const handledRef = useRef(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
-  const [starting, setStarting] = useState(false)
+  // true saat mount (scanner hanya di-render saat modal open)
+  const [starting, setStarting] = useState(true)
 
   const stopScanner = useCallback(async () => {
     const scanner = scannerRef.current
@@ -328,9 +338,6 @@ function NasabahQrCameraScanner({
     if (!open) return
 
     handledRef.current = false
-    setCameraError(null)
-    setStarting(true)
-
     let cancelled = false
 
     async function start() {
@@ -400,7 +407,7 @@ function NasabahQrCameraScanner({
         )}
         <div
           id={scannerHostId}
-          className="overflow-hidden rounded-lg border border-border bg-black/5 [&_video]:max-h-[320px] [&_video]:w-full [&_video]:object-cover"
+          className="overflow-hidden rounded-lg border border-border bg-black/5 [&_video]:max-h-80 [&_video]:w-full [&_video]:object-cover"
         />
         <p className="text-xs text-muted-foreground">
           Payload QR: JSON MIRU dengan field <code className="text-[11px]">id</code>, atau ID angka.
@@ -534,7 +541,7 @@ function NasabahQrInput({
     <div className="space-y-3">
       {/* ID Input + Search / Camera */}
       <div className="flex flex-wrap items-end gap-2">
-        <div className="min-w-0 flex-1 basis-[200px]">
+        <div className="min-w-0 flex-1 basis-50">
           <Input
             label="ID Nasabah / Payload QR"
             type="text"
@@ -618,12 +625,13 @@ function NasabahQrInput({
         Scan QR kartu digital nasabah, atau masukkan ID / tempel payload JSON secara manual.
       </p>
 
-      <NasabahQrCameraScanner
-        open={cameraOpen}
-        onClose={() => setCameraOpen(false)}
-        onDetected={handleQrDetected}
-      />
-    </div>
+      {cameraOpen ? (
+        <NasabahQrCameraScanner
+          open
+          onClose={() => setCameraOpen(false)}
+          onDetected={handleQrDetected}
+        />
+      ) : null}    </div>
   )
 }
 
@@ -680,7 +688,7 @@ function DetailRowInput({
   return (
     <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface-muted/20 p-3">
       {/* Kategori */}
-      <div className="min-w-0 flex-1 basis-[200px]">
+      <div className="min-w-0 flex-1 basis-50">
         <Select
           label="Jenis Sampah"
           placeholder="Pilih kategori..."
@@ -692,7 +700,7 @@ function DetailRowInput({
       </div>
 
       {/* Berat */}
-      <div className="w-[140px] shrink-0">
+      <div className="w-35 shrink-0">
         <Input
           label="Berat (kg)"
           type="text"
@@ -705,7 +713,7 @@ function DetailRowInput({
       </div>
 
       {/* Harga (read-only) */}
-      <div className="w-[130px] shrink-0">
+      <div className="w-32.5 shrink-0">
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-foreground">Harga/kg</span>
           <div className="flex h-10 items-center rounded-lg border border-border bg-surface-muted px-3 text-sm text-muted-foreground">
@@ -715,7 +723,7 @@ function DetailRowInput({
       </div>
 
       {/* Subtotal (read-only) */}
-      <div className="w-[130px] shrink-0">
+      <div className="w-32.5 shrink-0">
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-foreground">Subtotal</span>
           <div className="flex h-10 items-center rounded-lg border border-border bg-surface-muted px-3 text-sm font-semibold text-foreground">
@@ -1113,7 +1121,7 @@ export function DepositForm() {
               }}
               loading={submitting}
               disabled={submitting}
-              className="min-w-[160px]"
+              className="min-w-40"
             >
               <Calculator className="size-4" aria-hidden />
               Simpan Setoran

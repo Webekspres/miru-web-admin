@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import useSWR from 'swr'
 import { api, getAccessToken } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
@@ -8,7 +8,7 @@ import { formatDateWIT, formatRupiah, formatWeightKg } from '@/lib/format'
 import { useAuth } from '@/providers/AuthProvider'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { PaginationControls } from '@/components/ui/PaginationControls'
@@ -16,9 +16,8 @@ import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableR
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { Calendar, FileText, User } from 'lucide-react'
-import type { Deposit, DepositDetail } from '@/types/models'
+import type { Deposit } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
-
 // ─── Helpers ──────────────────────────────────────────────────────
 
 function getTodayWIT(): string {
@@ -239,18 +238,15 @@ export function DepositHistory({
   const [selectedDepositId, setSelectedDepositId] = useState<number | null>(null)
   const [showDetail, setShowDetail] = useState(false)
 
-  // ── Build query params ──
-  const params = useMemo(() => {
-    const p: Record<string, string> = {
-      page: String(page),
-      page_size: '20',
-      ordering: '-tanggal',
-    }
-    if (debouncedSearch) p.search = debouncedSearch
-    if (dateFilter) p.tanggal = dateFilter
-    if (filterByPetugas && user?.id) p.petugas = String(user.id)
-    return p
-  }, [page, debouncedSearch, dateFilter, filterByPetugas, user?.id])
+  // ── Build query params (tanpa useMemo — React Compiler) ──
+  const params: Record<string, string> = {
+    page: String(page),
+    page_size: '20',
+    ordering: '-tanggal',
+  }
+  if (debouncedSearch) params.search = debouncedSearch
+  if (dateFilter) params.tanggal = dateFilter
+  if (filterByPetugas && user?.id != null) params.petugas = String(user.id)
 
   // ── Fetch with raw response to get pagination meta ──
   const {
@@ -374,7 +370,7 @@ export function DepositHistory({
               }}
             />
           </div>
-          <div className="w-full sm:w-[200px]">
+          <div className="w-full sm:w-50">
             <Input
               label="Filter Tanggal"
               type="date"

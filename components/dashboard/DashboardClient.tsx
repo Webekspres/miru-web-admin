@@ -110,7 +110,7 @@ const DONUT_COLORS = ['#16a34a', '#0891b2', '#f59e0b', '#dc2626', '#8b5cf6', '#e
 
 function WelcomeBanner({ userName, role }: { userName: string; role?: string }) {
   return (
-    <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-background to-surface-muted">
+    <Card className="border-primary/20 bg-linear-to-r from-primary/5 via-background to-surface-muted">
       <CardHeader variant="default" className="border-b border-border/60">
         <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
           <Sparkles className="size-5 text-primary" aria-hidden />
