@@ -209,8 +209,19 @@ function DetailDepositModal({
 
 // ─── Main Component ───────────────────────────────────────────────
 
-export function DepositHistory() {
+export function DepositHistory({
+  title = 'Riwayat Setoran',
+  description = 'Daftar setoran sampah nasabah.',
+  scopeToCurrentPetugas = false,
+}: {
+  title?: string
+  description?: string
+  /** Jika true (atau role petugas), filter API ke petugas yang login. */
+  scopeToCurrentPetugas?: boolean
+} = {}) {
   const { user } = useAuth()
+  const filterByPetugas =
+    scopeToCurrentPetugas || user?.role === 'petugas'
 
   // ── Filters ──
   const [page, setPage] = useState(1)
@@ -237,8 +248,9 @@ export function DepositHistory() {
     }
     if (debouncedSearch) p.search = debouncedSearch
     if (dateFilter) p.tanggal = dateFilter
+    if (filterByPetugas && user?.id) p.petugas = String(user.id)
     return p
-  }, [page, debouncedSearch, dateFilter])
+  }, [page, debouncedSearch, dateFilter, filterByPetugas, user?.id])
 
   // ── Fetch with raw response to get pagination meta ──
   const {
@@ -295,9 +307,9 @@ export function DepositHistory() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Riwayat Setoran</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Daftar setoran sampah nasabah.
+            {description}
           </p>
         </div>
         <TableSkeleton rows={8} cols={5} />
@@ -310,9 +322,9 @@ export function DepositHistory() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Riwayat Setoran</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Daftar setoran sampah nasabah.
+            {description}
           </p>
         </div>
         <ErrorMessage
@@ -329,9 +341,9 @@ export function DepositHistory() {
       {/* Page Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Riwayat Setoran</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Daftar setoran sampah nasabah.
+            {description}
           </p>
         </div>
         <Button

@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import type { Pickup, PickupStatus, User as UserType } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
+import { ApiError } from '@/types/api'
 
 // ─── Constants ────────────────────────────────────────────────────
 
@@ -409,25 +410,26 @@ export function PickupManagement() {
   }
 
   /**
-   * Single submit: setujui + assign petugas.
-   * Backend belum punya endpoint atomik (T3) — approve lalu assign berurutan.
-   * API tidak dipanggil sebelum petugas dipilih di modal.
+   * Setujui + assign atomik via POST /pickups/{id}/approve/ { petugas_id }.
    */
   async function handleApproveAssign(petugasId: number) {
     if (!assignModal.pickup) return
     const pickupId = assignModal.pickup.id
     setActionLoading(true)
     try {
-      await api.post(`/pickups/${pickupId}/approve/`, {})
-      await api.post(`/pickups/${pickupId}/assign/`, { petugas_id: petugasId })
+      await api.post(`/pickups/${pickupId}/approve/`, { petugas_id: petugasId })
       toastSuccess('Penjemputan disetujui dan petugas ditugaskan.')
       setAssignModal({ open: false, pickup: null, mode: 'approve_assign' })
       setActiveTab('aktif')
       setPage(1)
       await fetchMutate()
       await refreshBadgesAndNotifs()
-    } catch {
-      toastError('Gagal menyetujui penjemputan. Pastikan petugas dipilih dan coba lagi.')
+    } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : 'Gagal menyetujui penjemputan. Pastikan petugas dipilih dan coba lagi.'
+      toastError(msg)
       await fetchMutate()
       await refreshBadgesAndNotifs()
     } finally {
@@ -444,8 +446,12 @@ export function PickupManagement() {
       setAssignModal({ open: false, pickup: null, mode: 'assign' })
       await fetchMutate()
       await refreshBadgesAndNotifs()
-    } catch {
-      toastError('Gagal menugaskan petugas. Coba lagi.')
+    } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : 'Gagal menugaskan petugas. Coba lagi.'
+      toastError(msg)
     } finally {
       setActionLoading(false)
     }

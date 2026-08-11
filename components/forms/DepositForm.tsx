@@ -443,12 +443,15 @@ function NasabahQrInput({
         setSearchError(roleErr)
         return
       }
-      setSearchResult({
+      const option: NasabahOption = {
         id: user.id,
         nama_lengkap: user.nama_lengkap,
         no_hp: user.no_hp,
         alamat: user.alamat,
-      })
+      }
+      setSearchResult(option)
+      // Langsung pilih setelah lookup sukses (scan QR / cari ID).
+      onSelect(option)
     } catch (err) {
       if (err instanceof ApiError) {
         setSearchError(formatLookupError(err))
@@ -458,7 +461,7 @@ function NasabahQrInput({
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [onSelect])
 
   async function handleSearch() {
     const parsed = parseMiruNasabahQr(idInput)
@@ -758,7 +761,10 @@ export function DepositForm() {
   const [nasabahId, setNasabahId] = useState<number | null>(null)
   const [nasabahNama, setNasabahNama] = useState('')
   const [searchMode, setSearchMode] = useState<'name' | 'qr'>('name')
-  const [details, setDetails] = useState<DetailRow[]>([])
+  // Satu baris awal — jangan addRow di useEffect (Strict Mode double-mount → 2 baris).
+  const [details, setDetails] = useState<DetailRow[]>(() => [
+    { id: generateId(), ...EMPTY_DETAIL_ROW },
+  ])
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [rowErrors, setRowErrors] = useState<Record<number, Record<string, string>>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -925,14 +931,6 @@ export function DepositForm() {
       setSubmitting(false)
     }
   }
-
-  // ── Initial row on mount ──
-  useEffect(() => {
-    if (details.length === 0) {
-      addRow()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // ── Loading state ──
   if (catLoading) {
