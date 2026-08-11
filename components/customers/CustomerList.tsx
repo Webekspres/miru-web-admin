@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { api, getAccessToken } from '@/lib/api'
+import { getAccessToken } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatRupiah } from '@/lib/format'
 import { canMutate } from '@/lib/permissions'
@@ -80,6 +80,7 @@ interface CustomerRow {
   saldo?: string
   poin?: number
   is_active: boolean
+  phone_verified?: boolean
 }
 
 // ─── Pagination ───────────────────────────────────────────────────
@@ -172,6 +173,7 @@ export function CustomerList() {
           saldo: u.saldo,
           poin: u.poin,
           is_active: u.is_active,
+          phone_verified: u.phone_verified,
         }))
 
       return {
@@ -213,6 +215,7 @@ export function CustomerList() {
           saldo: u.saldo,
           poin: u.poin,
           is_active: u.is_active,
+          phone_verified: u.phone_verified,
         }))
 
       exportToCSV(allUsers, `nasabah_${new Date().toISOString().split('T')[0]}.csv`)
@@ -361,7 +364,14 @@ export function CustomerList() {
                         <span className="font-medium text-foreground">{customer.nama_lengkap}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{customer.no_hp ?? '—'}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span>{customer.no_hp ?? '—'}</span>
+                        {customer.no_hp && customer.phone_verified === false && (
+                          <Badge variant="warning">Belum Verifikasi</Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-[200px] truncate text-muted-foreground" title={customer.alamat}>
                       {customer.alamat ?? '—'}
                     </TableCell>

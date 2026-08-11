@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import useSWR from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import { api, getAccessToken } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatDateWIT, formatWeightKg } from '@/lib/format'
@@ -10,8 +10,7 @@ import { useAuth } from '@/providers/AuthProvider'
 import { useToast } from '@/components/feedback/Toast'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
+import { Card, CardHeader } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { Select } from '@/components/ui/Select'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
@@ -47,6 +46,9 @@ const TABS: TabDefinition[] = [
   { key: 'selesai', label: 'Selesai', statusFilter: 'selesai' },
   { key: 'ditolak', label: 'Ditolak', statusFilter: 'ditolak' },
 ]
+
+/** Petugas: hide menunggu/ditolak — only work queue + selesai */
+const PETUGAS_TAB_KEYS: TabKey[] = ['aktif', 'selesai']
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -88,16 +90,28 @@ interface PickupAction {
   variant: 'primary' | 'danger' | 'outline'
   icon: typeof ThumbsUp
   nextStatus: PickupStatus
-  requiresModal: 'assign' | 'reject' | 'note' | null
+  requiresModal: 'approve_assign' | 'assign' | 'reject' | null
 }
 
 const ACTIONS_BY_STATUS: Partial<Record<PickupStatus, PickupAction[]>> = {
   menunggu: [
-    { label: 'Setujui', variant: 'primary', icon: ThumbsUp, nextStatus: 'disetujui', requiresModal: null },
+    {
+      label: 'Setujui',
+      variant: 'primary',
+      icon: ThumbsUp,
+      nextStatus: 'dijadwalkan',
+      requiresModal: 'approve_assign',
+    },
     { label: 'Tolak', variant: 'danger', icon: ThumbsDown, nextStatus: 'ditolak', requiresModal: 'reject' },
   ],
   disetujui: [
-    { label: 'Tugaskan Petugas', variant: 'primary', icon: UserPlus, nextStatus: 'dijadwalkan', requiresModal: 'assign' },
+    {
+      label: 'Tugaskan Petugas',
+      variant: 'primary',
+      icon: UserPlus,
+      nextStatus: 'dijadwalkan',
+      requiresModal: 'assign',
+    },
   ],
   dijadwalkan: [
     { label: 'Mulai Penjemputan', variant: 'primary', icon: Truck, nextStatus: 'dalam_perjalanan', requiresModal: null },
@@ -110,15 +124,25 @@ const ACTIONS_BY_STATUS: Partial<Record<PickupStatus, PickupAction[]>> = {
   ],
 }
 
+type AssignModalMode = 'approve_assign' | 'assign'
+
+function formatPetugasOptionLabel(p: UserType): string {
+  const name = p.nama_lengkap || p.username
+  const roleLabel = p.role === 'petugas' ? 'Petugas' : p.role
+  return `${name} · ${roleLabel}`
+}
+
 // ─── Assign Petugas Modal ─────────────────────────────────────────
 
 function AssignPetugasModal({
   open,
+  mode,
   onClose,
   onConfirm,
   loading,
 }: {
   open: boolean
+  mode: AssignModalMode
   onClose: () => void
   onConfirm: (petugasId: number) => void
   loading: boolean
@@ -133,8 +157,16 @@ function AssignPetugasModal({
 
   const options = (petugasList ?? []).map((p) => ({
     value: String(p.id),
-    label: `${p.nama_lengkap}${p.no_hp ? ` (${p.no_hp})` : ''}`,
+    label: formatPetugasOptionLabel(p),
   }))
+
+  const isApproveFlow = mode === 'approve_assign'
+  const title = isApproveFlow ? 'Setujui & Pilih Petugas' : 'Tugaskan Petugas'
+  const description = isApproveFlow
+    ? 'Pilih petugas terlebih dahulu. Penjemputan baru disetujui setelah petugas dipilih.'
+    : 'Pilih petugas yang akan menjemput sampah nasabah ini.'
+  const confirmLabel = isApproveFlow ? 'Setujui & Tugaskan' : 'Tugaskan'
+  const ConfirmIcon = isApproveFlow ? ThumbsUp : UserPlus
 
   function handleConfirm() {
     if (!selectedId) return
@@ -150,8 +182,8 @@ function AssignPetugasModal({
     <Modal
       open={open}
       onClose={handleClose}
-      title="Tugaskan Petugas"
-      description="Pilih petugas yang akan menjemput sampah nasabah ini."
+      title={title}
+      description={description}
       size="sm"
       footer={
         <>
@@ -164,8 +196,8 @@ function AssignPetugasModal({
             loading={loading}
             disabled={!selectedId || loading}
           >
-            <UserPlus className="size-4" aria-hidden />
-            Tugaskan
+            <ConfirmIcon className="size-4" aria-hidden />
+            {confirmLabel}
           </Button>
         </>
       }
@@ -300,27 +332,37 @@ function PaginationControls({
 export function PickupManagement() {
   const { user } = useAuth()
   const { success: toastSuccess, error: toastError } = useToast()
+  const { mutate: globalMutate } = useSWRConfig()
 
-  const [activeTab, setActiveTab] = useState<TabKey>('menunggu')
+  const role = user?.role ?? 'admin'
+  const isReadOnly = role === 'nasabah' || !canMutate(role as 'admin' | 'petugas' | 'koordinator' | 'pemerintah')
+  const isPetugas = user?.role === 'petugas'
+  const visibleTabs = useMemo(
+    () => (isPetugas ? TABS.filter((t) => PETUGAS_TAB_KEYS.includes(t.key)) : TABS),
+    [isPetugas],
+  )
+
+  const [activeTab, setActiveTab] = useState<TabKey>(isPetugas ? 'aktif' : 'menunggu')
   const [page, setPage] = useState(1)
   const [actionLoading, setActionLoading] = useState(false)
 
   // Modal state
-  const [assignModal, setAssignModal] = useState<{ open: boolean; pickup: Pickup | null }>({
+  const [assignModal, setAssignModal] = useState<{
+    open: boolean
+    pickup: Pickup | null
+    mode: AssignModalMode
+  }>({
     open: false,
     pickup: null,
+    mode: 'approve_assign',
   })
   const [tolakModal, setTolakModal] = useState<{ open: boolean; pickup: Pickup | null }>({
     open: false,
     pickup: null,
   })
 
-  const role = user?.role ?? 'admin'
-  const isReadOnly = role === 'nasabah' || !canMutate(role as 'admin' | 'petugas' | 'koordinator' | 'pemerintah')
-  const isPetugas = user?.role === 'petugas'
-
   // ── Build query params ──
-  const activeTabDef = TABS.find((t) => t.key === activeTab)!
+  const activeTabDef = visibleTabs.find((t) => t.key === activeTab) ?? visibleTabs[0]
   const params = useMemo(() => {
     const p: Record<string, string> = {
       page: String(page),
@@ -335,13 +377,13 @@ export function PickupManagement() {
       p.status = statusFilter
     }
 
-    // Petugas: only see assigned pickups
+    // Petugas: only see assigned pickups (backend also filters; keep explicit)
     if (isPetugas && user?.id) {
       p.petugas = String(user.id)
     }
 
     return p
-  }, [page, activeTab, isPetugas, user?.id])
+  }, [page, activeTabDef, isPetugas, user?.id])
 
   // ── Fetch data ──
   const {
@@ -377,10 +419,23 @@ export function PickupManagement() {
   const pickups = fetchResult?.pickups ?? []
   const paginationMeta = fetchResult?.pagination
 
+  async function refreshBadgesAndNotifs() {
+    await Promise.all([
+      globalMutate((key) => Array.isArray(key) && key[0] === 'sidebar-badges'),
+      user?.id
+        ? globalMutate((key) => Array.isArray(key) && key[0] === 'notifications' && key[1] === user.id)
+        : Promise.resolve(),
+    ])
+  }
+
   // ── Actions ──
   async function handleAction(pickup: Pickup, action: PickupAction) {
+    if (action.requiresModal === 'approve_assign') {
+      setAssignModal({ open: true, pickup, mode: 'approve_assign' })
+      return
+    }
     if (action.requiresModal === 'assign') {
-      setAssignModal({ open: true, pickup })
+      setAssignModal({ open: true, pickup, mode: 'assign' })
       return
     }
     if (action.requiresModal === 'reject') {
@@ -388,56 +443,90 @@ export function PickupManagement() {
       return
     }
 
-    // Direct action (no modal) — e.g. Setujui / update status petugas
-    const ok = await executeAction(pickup.id, { status: action.nextStatus })
-    if (!ok) return
-
-    // Setelah setujui: pindah ke tab Aktif + buka modal tugaskan petugas
-    if (action.nextStatus === 'disetujui') {
-      setActiveTab('aktif')
-      setPage(1)
-      setAssignModal({
-        open: true,
-        pickup: { ...pickup, status: 'disetujui' },
-      })
+    const ok = await executeStatusUpdate(pickup.id, action.nextStatus)
+    if (ok) {
+      await refreshBadgesAndNotifs()
     }
   }
 
-  async function handleAssign(petugasId: number) {
+  /**
+   * Single submit: setujui + assign petugas.
+   * Backend belum punya endpoint atomik (T3) — approve lalu assign berurutan.
+   * API tidak dipanggil sebelum petugas dipilih di modal.
+   */
+  async function handleApproveAssign(petugasId: number) {
     if (!assignModal.pickup) return
-    const ok = await executeAction(assignModal.pickup.id, {
-      status: 'dijadwalkan',
-      petugas: petugasId,
-    })
-    if (ok) {
-      setAssignModal({ open: false, pickup: null })
-    }
-  }
-
-  async function handleTolak(alasan: string) {
-    if (!tolakModal.pickup) return
-    const ok = await executeAction(tolakModal.pickup.id, {
-      status: 'ditolak',
-      catatan: alasan,
-    })
-    if (ok) {
-      setTolakModal({ open: false, pickup: null })
-    }
-  }
-
-  async function executeAction(
-    pickupId: number,
-    body: Record<string, unknown>,
-  ): Promise<boolean> {
+    const pickupId = assignModal.pickup.id
     setActionLoading(true)
     try {
-      await api.patch(`/pickups/${pickupId}/`, body)
+      await api.post(`/pickups/${pickupId}/approve/`, {})
+      await api.post(`/pickups/${pickupId}/assign/`, { petugas_id: petugasId })
+      toastSuccess('Penjemputan disetujui dan petugas ditugaskan.')
+      setAssignModal({ open: false, pickup: null, mode: 'approve_assign' })
+      setActiveTab('aktif')
+      setPage(1)
+      await fetchMutate()
+      await refreshBadgesAndNotifs()
+    } catch {
+      toastError('Gagal menyetujui penjemputan. Pastikan petugas dipilih dan coba lagi.')
+      await fetchMutate()
+      await refreshBadgesAndNotifs()
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handleAssignOnly(petugasId: number) {
+    if (!assignModal.pickup) return
+    setActionLoading(true)
+    try {
+      await api.post(`/pickups/${assignModal.pickup.id}/assign/`, { petugas_id: petugasId })
+      toastSuccess('Petugas berhasil ditugaskan.')
+      setAssignModal({ open: false, pickup: null, mode: 'assign' })
+      await fetchMutate()
+      await refreshBadgesAndNotifs()
+    } catch {
+      toastError('Gagal menugaskan petugas. Coba lagi.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handleTolak(_alasan: string) {
+    if (!tolakModal.pickup) return
+    setActionLoading(true)
+    try {
+      // Backend reject action belum menerima alasan; modal tetap minta alasan untuk UX.
+      await api.post(`/pickups/${tolakModal.pickup.id}/reject/`, {})
+      toastSuccess('Penjemputan berhasil ditolak.')
+      setTolakModal({ open: false, pickup: null })
+      await fetchMutate()
+      await refreshBadgesAndNotifs()
+    } catch {
+      toastError('Gagal menolak penjemputan. Coba lagi.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function executeStatusUpdate(pickupId: number, nextStatus: PickupStatus): Promise<boolean> {
+    setActionLoading(true)
+    try {
+      await api.post(`/pickups/${pickupId}/update-status/`, { status: nextStatus })
       toastSuccess('Status penjemputan berhasil diperbarui.')
       await fetchMutate()
       return true
     } catch {
-      toastError('Gagal memperbarui status. Coba lagi.')
-      return false
+      // Fallback ke PATCH untuk kompatibilitas
+      try {
+        await api.patch(`/pickups/${pickupId}/`, { status: nextStatus })
+        toastSuccess('Status penjemputan berhasil diperbarui.')
+        await fetchMutate()
+        return true
+      } catch {
+        toastError('Gagal memperbarui status. Coba lagi.')
+        return false
+      }
     } finally {
       setActionLoading(false)
     }
@@ -497,14 +586,14 @@ export function PickupManagement() {
       <Card>
         <CardHeader className="border-b border-border pb-0">
           <div className="flex gap-1" role="tablist" aria-label="Filter status penjemputan">
-            {TABS.map((tab) => (
+            {visibleTabs.map((tab) => (
               <button
                 key={tab.key}
                 type="button"
                 role="tab"
                 aria-selected={activeTab === tab.key}
                 onClick={() => handleTabChange(tab.key)}
-                className={`rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                className={`rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
                   activeTab === tab.key
                     ? 'bg-background text-primary border-b-2 border-primary'
                     : 'text-muted-foreground hover:text-foreground hover:bg-surface-muted'
@@ -596,9 +685,11 @@ export function PickupManagement() {
 
       {/* Assign Petugas Modal */}
       <AssignPetugasModal
+        key={assignModal.pickup ? `${assignModal.mode}-${assignModal.pickup.id}` : assignModal.mode}
         open={assignModal.open}
-        onClose={() => setAssignModal({ open: false, pickup: null })}
-        onConfirm={handleAssign}
+        mode={assignModal.mode}
+        onClose={() => setAssignModal({ open: false, pickup: null, mode: assignModal.mode })}
+        onConfirm={assignModal.mode === 'approve_assign' ? handleApproveAssign : handleAssignOnly}
         loading={actionLoading}
       />
 

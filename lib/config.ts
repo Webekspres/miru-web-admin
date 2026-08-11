@@ -3,8 +3,6 @@ export const API_BASE_URL =
 
 export const API_PREFIX = `${API_BASE_URL}/api`
 
-export const API_DOCS_URL = `${API_BASE_URL}/api/docs/`
-
 export const APP_NAME =
   process.env.NEXT_PUBLIC_APP_NAME ?? 'MIRU Bank Sampah'
 

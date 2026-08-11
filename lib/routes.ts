@@ -17,7 +17,8 @@ export const LANDING_PATH_BY_ROLE: Record<WebAdminRole, string> = {
   admin: '/dashboard',
   koordinator: '/dashboard',
   pemerintah: '/reports',
-  petugas: '/transactions/add',
+  // W9: petugas punya dashboard sendiri (bukan redirect ke input setoran)
+  petugas: '/dashboard',
 }
 
 const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
@@ -38,6 +39,9 @@ const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
     '/balance',
     '/reward',
     '/warehouse',
+    '/waste',
+    '/education',
+    '/announcements',
     '/complaints',
     '/reports',
     '/settings',
@@ -68,11 +72,24 @@ export function canAccessRoute(role: WebAdminRole, pathname: string): boolean {
   )
 }
 
+/** `from` query hanya untuk path app — abaikan aset statis / manifest. */
+function isAppNavigationPath(from: string): boolean {
+  if (!from.startsWith('/')) return false
+  if (from.startsWith('//')) return false
+  if (from.startsWith('/brand/')) return false
+  if (from.includes('.')) return false
+  return true
+}
+
 export function resolvePostLoginPath(
   role: WebAdminRole,
   from: string | null,
 ): string {
-  if (from && from.startsWith('/') && canAccessRoute(role, from)) {
+  if (
+    from &&
+    isAppNavigationPath(from) &&
+    canAccessRoute(role, from)
+  ) {
     return from
   }
 

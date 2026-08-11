@@ -11,16 +11,20 @@ import { Modal } from '@/components/ui/Modal'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
+import Link from 'next/link'
 import {
   AlertTriangle,
   Archive,
   ArrowDownToLine,
+  ArrowRight,
   ArrowUpFromLine,
   BarChart3,
+  Building2,
   FileText,
   History,
   Package,
   Scale,
+  ShoppingCart,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react'
@@ -232,6 +236,41 @@ export function WarehouseStock() {
           <FileText className="size-4" aria-hidden />
           Muat Ulang
         </Button>
+      </div>
+
+      {/* CTA ke Penjualan & Mitra (W8) */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Link
+          href="/warehouse/sales"
+          className="group flex items-center gap-4 rounded-xl border border-border bg-background p-4 transition-colors hover:border-primary/40 hover:bg-primary/5"
+        >
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <ShoppingCart className="size-5 text-primary" aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground">Penjualan ke Mitra</p>
+            <p className="text-xs text-muted-foreground">
+              Catat penjualan sampah ke mitra/pengepul.
+            </p>
+          </div>
+          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden />
+        </Link>
+
+        <Link
+          href="/warehouse/partners"
+          className="group flex items-center gap-4 rounded-xl border border-border bg-background p-4 transition-colors hover:border-primary/40 hover:bg-primary/5"
+        >
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-warning/10">
+            <Building2 className="size-5 text-warning" aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground">Kelola Mitra Pengepul</p>
+            <p className="text-xs text-muted-foreground">
+              Tambah, ubah, atau hapus data mitra pengepul.
+            </p>
+          </div>
+          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden />
+        </Link>
       </div>
 
       {/* Summary Cards */}

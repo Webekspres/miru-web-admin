@@ -12,6 +12,7 @@ export interface User {
   nama_lengkap: string
   nik?: string
   no_hp?: string
+  phone_verified?: boolean
   alamat?: string
   saldo?: string
   poin?: number
@@ -140,6 +141,7 @@ export type ComplaintType =
   | 'petugas_tidak_datang'
   | 'kesalahan_data'
   | 'bukti_tidak_muncul'
+  | 'lainnya'
 
 export type ComplaintStatus = 'terbuka' | 'ditutup'
 
@@ -161,7 +163,21 @@ export interface InstitutionSettings {
   email: string
   logo_url?: string | null
   jam_operasional: string
+  jam_buka?: string | null
+  jam_tutup?: string | null
   pengumuman: string
+}
+
+export interface KontenEdukasi {
+  id: number
+  judul: string
+  isi: string
+  kategori_terkait: number | null
+  kategori_terkait_nama?: string | null
+  aktif: boolean
+  urutan: number
+  created_at: string
+  updated_at: string
 }
 
 export interface Announcement {

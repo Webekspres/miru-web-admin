@@ -174,6 +174,11 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                   <Badge variant={profile.is_active ? 'success' : 'default'}>
                     {profile.is_active ? 'Aktif' : 'Nonaktif'}
                   </Badge>
+                  {profile.no_hp && profile.phone_verified === false && (
+                    <Badge variant="warning" title="Nomor HP akan diverifikasi saat user login di aplikasi mobile">
+                      HP Belum Verifikasi
+                    </Badge>
+                  )}
                   <Badge variant="default">Nasabah</Badge>
                   {profile.date_joined && (
                     <span className="text-xs text-muted-foreground">
@@ -253,6 +258,11 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                 No. HP
               </div>
               <p className="mt-1 text-sm text-foreground">{profile.no_hp ?? '—'}</p>
+              {profile.no_hp && profile.phone_verified === false && (
+                <p className="mt-1 text-xs text-warning">
+                  Belum verifikasi — akan diverifikasi saat login mobile.
+                </p>
+              )}
             </div>
             {profile.nik && (
               <div className="rounded-lg bg-surface-muted p-3">

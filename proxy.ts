@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import {
   AUTH_ROUTES,
+  PUBLIC_ASSET_PREFIXES,
   PUBLIC_FILE,
   PUBLIC_ROUTES,
   ROLE_COOKIE_KEY,
@@ -24,10 +25,19 @@ function isPublicRoute(pathname: string): boolean {
   )
 }
 
+function isPublicAsset(pathname: string): boolean {
+  if (PUBLIC_FILE.test(pathname)) return true
+  return PUBLIC_ASSET_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  )
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (PUBLIC_FILE.test(pathname)) {
+  // Manifest/favicon/logo: jangan auth-gate — request ini sering tanpa cookie
+  // dan dulu me-redirect petugas ke /transactions/add (loop).
+  if (isPublicAsset(pathname)) {
     return NextResponse.next()
   }
 
@@ -62,6 +72,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|brand/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest|json)$).*)',
   ],
 }

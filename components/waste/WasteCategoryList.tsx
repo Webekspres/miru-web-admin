@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
 import { api, ApiError } from '@/lib/api'
 import { formatDateWIT, formatRupiah, formatWeightKg } from '@/lib/format'
@@ -17,6 +17,7 @@ import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
   AlertTriangle,
+  CalendarClock,
   DollarSign,
   Edit,
   FileText,
@@ -46,12 +47,38 @@ interface FormState {
   id: number | null
   nama: string
   harga_beli_per_kg: string
+  harga_lama: string
+  tanggal_berlaku: string
 }
 
 interface FormErrors {
   nama?: string
   harga_beli_per_kg?: string
+  tanggal_berlaku?: string
   _general?: string
+}
+
+/** H+3: tanggal_berlaku minimal 3 hari ke depan dari sekarang (W7). */
+function getMinTanggalBerlaku(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 3)
+  return d.toISOString().slice(0, 10)
+}
+
+function validateTanggalBerlaku(value: string): string | null {
+  const min = getMinTanggalBerlaku()
+  if (value && value < min) {
+    return `Tanggal berlaku minimal H+3 (paling cepat ${new Date(min + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}).`
+  }
+  return null
+}
+
+/** Preview pengumuman otomatis yang akan dibuat backend saat harga berubah. */
+function buildPriceAnnouncementPreview(nama: string, hargaLama: string, hargaBaru: string, tanggalBerlaku: string): string {
+  const tanggal = tanggalBerlaku
+    ? new Date(tanggalBerlaku + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
+    : `H+3 (${new Date(getMinTanggalBerlaku() + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })})`
+  return `Diberitahukan kepada seluruh nasabah, bahwa harga ${nama} akan berubah dari ${formatRupiah(hargaLama)} menjadi ${formatRupiah(hargaBaru)} per kg. Perubahan mulai berlaku pada ${tanggal}.`
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -66,6 +93,91 @@ function getStockLabel(stokKg: number): string {
   if (stokKg === 0) return 'Habis'
   if (stokKg < LOW_STOCK_THRESHOLD_KG) return 'Menipis'
   return 'Tersedia'
+}
+
+// ─── Banner: Harga Terjadwal Belum Aktif (W7) ───────────────────
+
+function ScheduledPriceBanner({ categories }: { categories: WasteCategory[] }) {
+  const [scheduled, setScheduled] = useState<{
+    kategoriId: number
+    nama: string
+    hargaBaru: string
+    tanggalBerlaku: string
+  }[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function check() {
+      if (categories.length === 0) return
+      setLoading(true)
+      const now = Date.now()
+      const results = await Promise.all(
+        categories.map(async (cat) => {
+          try {
+            const history = await api.get<PriceHistoryItem[]>(
+              `/waste-categories/${cat.id}/price-history/`,
+            )
+            return history ?? []
+          } catch {
+            return []
+          }
+        }),
+      )
+      if (cancelled) return
+
+      const upcoming: typeof scheduled = []
+      categories.forEach((cat, idx) => {
+        const history = results[idx] ?? []
+        for (const entry of history) {
+          const berlaku = new Date(entry.tanggal_berlaku).getTime()
+          if (berlaku > now) {
+            upcoming.push({
+              kategoriId: cat.id,
+              nama: cat.nama,
+              hargaBaru: entry.harga_baru,
+              tanggalBerlaku: entry.tanggal_berlaku,
+            })
+            break
+          }
+        }
+      })
+      setScheduled(upcoming)
+      setLoading(false)
+    }
+
+    void check()
+    return () => {
+      cancelled = true
+    }
+  }, [categories])
+
+  if (loading || scheduled.length === 0) return null
+
+  return (
+    <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
+      <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <CalendarClock className="size-4 text-warning" aria-hidden />
+        Harga Terjadwal Belum Aktif
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Perubahan harga berikut dijadwalkan dan belum berlaku:
+      </p>
+      <ul className="mt-2 space-y-1">
+        {scheduled.map((item) => (
+          <li key={item.kategoriId} className="flex flex-wrap items-center gap-x-2 text-sm">
+            <span className="font-medium text-foreground">{item.nama}</span>
+            <span className="text-muted-foreground">→</span>
+            <span className="font-semibold text-foreground">{formatRupiah(item.hargaBaru)}/kg</span>
+            <span className="text-xs text-muted-foreground">
+              berlaku {formatDateWIT(item.tanggalBerlaku, { dateStyle: 'medium' })}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
 }
 
 // ─── Price History Modal ──────────────────────────────────────────
@@ -181,6 +293,8 @@ export function WasteCategoryList() {
     id: null,
     nama: '',
     harga_beli_per_kg: '',
+    harga_lama: '',
+    tanggal_berlaku: '',
   })
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
@@ -192,7 +306,7 @@ export function WasteCategoryList() {
 
   // ── Open modal for add ──
   function handleAdd() {
-    setFormData({ id: null, nama: '', harga_beli_per_kg: '' })
+    setFormData({ id: null, nama: '', harga_beli_per_kg: '', harga_lama: '', tanggal_berlaku: '' })
     setFormErrors({})
     setModalOpen(true)
   }
@@ -203,6 +317,8 @@ export function WasteCategoryList() {
       id: cat.id,
       nama: cat.nama,
       harga_beli_per_kg: cat.harga_beli_per_kg,
+      harga_lama: cat.harga_beli_per_kg,
+      tanggal_berlaku: '',
     })
     setFormErrors({})
     setModalOpen(true)
@@ -224,6 +340,15 @@ export function WasteCategoryList() {
       valid = false
     }
 
+    // W7: validasi H+3 hanya saat mengubah harga pada kategori yang sudah ada
+    if (formData.id && formData.tanggal_berlaku) {
+      const tanggalError = validateTanggalBerlaku(formData.tanggal_berlaku)
+      if (tanggalError) {
+        errs.tanggal_berlaku = tanggalError
+        valid = false
+      }
+    }
+
     setFormErrors(errs)
     return valid
   }
@@ -234,16 +359,25 @@ export function WasteCategoryList() {
 
     setSubmitting(true)
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       nama: formData.nama.trim(),
       harga_beli_per_kg: parseFloat(formData.harga_beli_per_kg),
+    }
+
+    // W7: kirim tanggal_berlaku jika diisi saat ubah harga
+    if (formData.id && formData.tanggal_berlaku) {
+      payload.tanggal_berlaku = `${formData.tanggal_berlaku}T00:00:00`
     }
 
     try {
       if (formData.id) {
         // Edit existing
         await api.patch(`/waste-categories/${formData.id}/`, payload)
-        toastSuccess('Kategori berhasil diperbarui.')
+        toastSuccess(
+          formData.tanggal_berlaku
+            ? 'Perubahan harga dijadwalkan dan pengumuman akan dibuat.'
+            : 'Kategori berhasil diperbarui.',
+        )
       } else {
         // Create new
         await api.post('/waste-categories/', payload)
@@ -260,6 +394,7 @@ export function WasteCategoryList() {
             const msg = messages.join(', ')
             if (field === 'nama') apiErrs.nama = msg
             else if (field === 'harga_beli_per_kg') apiErrs.harga_beli_per_kg = msg
+            else if (field === 'tanggal_berlaku') apiErrs.tanggal_berlaku = msg
             else apiErrs._general = msg
           }
           setFormErrors(apiErrs)
@@ -347,6 +482,9 @@ export function WasteCategoryList() {
           </Button>
         </div>
       </div>
+
+      {/* Banner harga terjadwal */}
+      <ScheduledPriceBanner categories={categoryList} />
 
       {/* Table */}
       <Card>
@@ -505,6 +643,43 @@ export function WasteCategoryList() {
             }}
             error={formErrors.harga_beli_per_kg}
           />
+
+          {formData.id && (
+            <Input
+              label="Tanggal Berlaku (H+3)"
+              type="date"
+              min={getMinTanggalBerlaku()}
+              value={formData.tanggal_berlaku}
+              onChange={(e) => {
+                setFormData((prev) => ({ ...prev, tanggal_berlaku: e.target.value }))
+                setFormErrors((prev) => {
+                  const next = { ...prev }; delete next.tanggal_berlaku; return next
+                })
+              }}
+              error={formErrors.tanggal_berlaku}
+              hint={
+                formData.tanggal_berlaku
+                  ? undefined
+                  : 'Kosongkan untuk default H+3. Harga baru dijadwalkan & pengumuman dibuat otomatis.'
+              }
+            />
+          )}
+
+          {formData.id && formData.tanggal_berlaku && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Preview Pengumuman
+              </p>
+              <p className="text-sm text-foreground">
+                {buildPriceAnnouncementPreview(
+                  formData.nama || 'kategori ini',
+                  formData.harga_lama || '0',
+                  formData.harga_beli_per_kg || '0',
+                  formData.tanggal_berlaku,
+                )}
+              </p>
+            </div>
+          )}
 
           <div className="rounded-lg border border-border bg-surface-muted/50 p-3">
             <p className="text-xs text-muted-foreground">

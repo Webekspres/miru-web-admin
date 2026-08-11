@@ -1,8 +1,8 @@
 'use client'
 
-import { BookOpen, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import { APP_NAME, API_DOCS_URL } from '@/lib/config'
+import { APP_NAME } from '@/lib/config'
 import { NotificationBell } from '@/components/layout/NotificationBell'
 import { ProfileDropdown } from '@/components/layout/ProfileDropdown'
 import { Button } from '@/components/ui/Button'
@@ -66,17 +66,6 @@ export function Header({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        <a
-          href={API_DOCS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground md:inline-flex"
-          title="Dokumentasi API"
-        >
-          <BookOpen className="size-4" aria-hidden />
-          <span className="hidden lg:inline">Dokumentasi</span>
-        </a>
-
         <NotificationBell userId={user.id} />
 
         <ProfileDropdown user={user} onLogout={onLogout} />

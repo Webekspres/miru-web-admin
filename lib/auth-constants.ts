@@ -13,5 +13,9 @@ export const AUTH_ROUTES = ['/login'] as const
 /** Rute publik yang tidak memerlukan autentikasi */
 export const PUBLIC_ROUTES = ['/', '/login'] as const
 
+/** Aset statis di `public/` — jangan di-gate auth (termasuk PWA manifest). */
 export const PUBLIC_FILE =
-  /\.(?:svg|png|jpg|jpeg|gif|webp|ico)$/
+  /\.(?:svg|png|jpg|jpeg|gif|webp|ico|webmanifest|json|txt|map|woff2?|ttf)$/i
+
+/** Prefix folder publik (logo, manifest, favicon) — selalu lewat tanpa login. */
+export const PUBLIC_ASSET_PREFIXES = ['/brand'] as const

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import { formatRupiah, formatWeightKg } from '@/lib/format'
+import { formatDateWIT, formatRupiah, formatWeightKg } from '@/lib/format'
 import { useAuth } from '@/providers/AuthProvider'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -47,6 +47,13 @@ interface DashboardOverview {
   penjemputan_menunggu: number
   pengaduan_terbuka: number
   stok_per_kategori: { nama: string; stok: string }[]
+}
+
+/** Ringkasan widget untuk role petugas (T9 / W9). */
+interface PetugasOverview {
+  role: 'petugas'
+  jemput_ditugaskan_hari_ini: number
+  antrian_aktif: number
 }
 
 interface ChartDay {
@@ -189,7 +196,7 @@ function DepositChartView({ bulan, tahun }: { bulan: number; tahun: number }) {
   const chartData = useMemo(() => {
     if (!data?.data) return []
     return data.data.map((day) => {
-      const [_, month, date] = day.tanggal.split('-')
+      const [, , date] = day.tanggal.split('-')
       return {
         date: `${parseInt(date)}`,
         nilai: parseFloat(day.total_nilai),
@@ -421,10 +428,138 @@ function StockMiniSummary() {
   )
 }
 
-// ─── Main Component ────────────────────────────────────────────────
+// ─── Petugas Dashboard (W9) ───────────────────────────────────────
 
-export function DashboardClient() {
-  const { user } = useAuth()
+const PETUGAS_TASK_STATUSES = 'dijadwalkan,dalam_perjalanan,dijemput'
+
+interface PetugasTask {
+  id: number
+  nasabah?: number
+  nasabah_nama?: string
+  alamat_jemput: string
+  jadwal: string
+  status: string
+}
+
+function PetugasDashboard({ user }: { user: { id: number; nama_lengkap: string } }) {
+  const { data: overview, error, isLoading, mutate } = useSWR(
+    '/dashboard/overview/',
+    (path) => api.get<PetugasOverview>(path),
+    { revalidateOnFocus: true },
+  )
+
+  const { data: tasks, isLoading: tasksLoading } = useSWR(
+    `/pickups/?petugas=${user.id}&status__in=${PETUGAS_TASK_STATUSES}&page_size=20&ordering=jadwal`,
+    (path) => api.get<PetugasTask[]>(path),
+    { revalidateOnFocus: true },
+  )
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <GreetingBanner name={user.nama_lengkap} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[1, 2].map((i) => (
+            <Card key={i}><CardContent className="p-6"><div className="h-20 animate-pulse rounded-lg bg-surface-muted" /></CardContent></Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <GreetingBanner name={user.nama_lengkap} />
+        <ErrorMessage title="Gagal memuat data dashboard" message="Tidak dapat memuat ringkasan dashboard petugas." onRetry={() => mutate()} />
+      </div>
+    )
+  }
+
+  const taskList = tasks ?? []
+  const taskStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      dijadwalkan: 'Dijadwalkan',
+      dalam_perjalanan: 'Dalam Perjalanan',
+      dijemput: 'Dijemput',
+    }
+    return labels[status] ?? status
+  }
+
+  return (
+    <div className="space-y-6">
+      <GreetingBanner name={user.nama_lengkap} />
+
+      {/* Widget petugas */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+        <StatCard
+          title="Jemput Ditugaskan Hari Ini"
+          value={String(overview?.jemput_ditugaskan_hari_ini ?? 0)}
+          subtitle="Penjemputan yang harus dikerjakan hari ini"
+          icon={<Truck className="size-5" aria-hidden />}
+        />
+        <StatCard
+          title="Antrian Aktif"
+          value={String(overview?.antrian_aktif ?? 0)}
+          subtitle="Total tugas yang belum selesai"
+          icon={<Users className="size-5" aria-hidden />}
+          variant={overview && overview.antrian_aktif > 0 ? 'warning' : 'default'}
+        />
+      </div>
+
+      {/* Tugas hari ini */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Truck className="size-5 text-primary" aria-hidden />
+            Tugas Penjemputan Saya
+          </CardTitle>
+          <Link href="/pickups">
+            <Button type="button" variant="ghost" size="sm">
+              Lihat Semua
+              <ArrowRight className="ml-1 size-3.5" aria-hidden />
+            </Button>
+          </Link>
+        </CardHeader>
+        <CardContent className="p-0">
+          {tasksLoading ? (
+            <div className="px-4 pb-4"><TableSkeleton rows={4} cols={3} /></div>
+          ) : taskList.length === 0 ? (
+            <p className="px-4 pb-4 text-sm text-muted-foreground">
+              Tidak ada penjemputan yang ditugaskan saat ini.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {taskList.map((task) => (
+                <li key={task.id} className="flex items-center gap-3 px-4 py-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Truck className="size-4 text-primary" aria-hidden />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {task.nasabah_nama ?? `Nasabah #${task.nasabah}`}
+                    </p>
+                    <p className="line-clamp-1 text-xs text-muted-foreground">{task.alamat_jemput}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDateWIT(task.jadwal, { dateStyle: 'medium', timeStyle: 'short' })}
+                    </p>
+                  </div>
+                  <Badge variant={task.status === 'dijemput' ? 'primary' : task.status === 'dalam_perjalanan' ? 'warning' : 'default'}>
+                    {taskStatusLabel(task.status)}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// ─── Admin / Koordinator / Pemerintah Dashboard ──────────────────
+
+function AdminDashboardContent({ userName }: { userName: string }) {
   const now = new Date()
   const currentMonth = now.getMonth() + 1
   const currentYear = now.getFullYear()
@@ -454,7 +589,7 @@ export function DashboardClient() {
   if (overviewLoading) {
     return (
       <div className="space-y-6">
-        <GreetingBanner name={user?.nama_lengkap ?? 'User'} />
+        <GreetingBanner name={userName} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i}><CardContent className="p-6"><div className="h-20 animate-pulse rounded-lg bg-surface-muted" /></CardContent></Card>
@@ -472,7 +607,7 @@ export function DashboardClient() {
   if (overviewError) {
     return (
       <div className="space-y-6">
-        <GreetingBanner name={user?.nama_lengkap ?? 'User'} />
+        <GreetingBanner name={userName} />
         <ErrorMessage title="Gagal memuat data dashboard" message="Tidak dapat memuat ringkasan dashboard." onRetry={() => mutateOverview()} />
       </div>
     )
@@ -480,7 +615,7 @@ export function DashboardClient() {
 
   return (
     <div className="space-y-6">
-      <GreetingBanner name={user?.nama_lengkap ?? 'User'} />
+      <GreetingBanner name={userName} />
 
       {/* Overview Cards */}
       {overview && <OverviewCards data={overview} />}
@@ -505,4 +640,22 @@ export function DashboardClient() {
       </div>
     </div>
   )
+}
+
+// ─── Main Component ────────────────────────────────────────────────
+
+export function DashboardClient() {
+  const { user } = useAuth()
+  const userName = user?.nama_lengkap ?? 'User'
+
+  // W9: petugas dapat dashboard khusus (widget jemput ditugaskan / antrian)
+  if (user?.role === 'petugas' && user.id) {
+    return (
+      <PetugasDashboard
+        user={{ id: user.id, nama_lengkap: userName }}
+      />
+    )
+  }
+
+  return <AdminDashboardContent userName={userName} />
 }

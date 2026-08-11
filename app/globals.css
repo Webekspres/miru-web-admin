@@ -33,6 +33,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -45,6 +50,31 @@ body {
 
 :focus-visible {
   outline-color: var(--primary);
+}
+
+/* ── W0: cursor pointer pada semua elemen klikabel ───────────── */
+button:not(:disabled),
+[role='button']:not(:disabled),
+[role='tab'],
+[role='menuitem'],
+[role='switch'],
+[role='option'],
+select:not(:disabled),
+summary,
+a[href],
+label[for],
+input[type='checkbox']:not(:disabled),
+input[type='radio']:not(:disabled),
+input[type='date']:not(:disabled),
+input[type='time']:not(:disabled),
+.cursor-pointer {
+  cursor: pointer;
+}
+
+button:disabled,
+[role='button']:disabled,
+select:disabled {
+  cursor: not-allowed;
 }
 
 /* ── Print-friendly styles ───────────────────────────────── */

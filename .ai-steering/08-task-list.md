@@ -42,12 +42,12 @@
 | 3 | Profil Nasabah | `/customers/{id}` | ✅ | Lihat KTP penarikan besar; field RT/RW |
 | 4 | Edukasi Sampah | `/education` | ⚠️ Placeholder | CRUD + Markdown (temuan) |
 | 5 | Katalog & Harga | `/waste/categories` | ✅ | Menu sidebar + form H-3 (temuan) |
-| 6 | Setor Langsung | `/transactions/add` | ✅ | Fix lookup ID; scan QR; notif nilai |
+| 6 | Setor Langsung | `/transactions/add` | ✅ | Lookup ID+QR JSON + scan kamera ✅; notif Rp0 = blocker backend T1 |
 | 7 | Penjemputan | `/pickups` | ✅ | Approve+assign; filter petugas; notif |
 | 8 | Penimbangan | (form setoran) | ✅ | — |
 | 9 | Saldo & Riwayat | `/customers/{id}`, `/transactions` | ✅ | Notifikasi in-app ✅ |
 | 10 | Penarikan Saldo | `/balance` | ✅ | Tanda terima PDF; KTP penarikan besar |
-| 11 | Poin & Reward | `/reward` | ✅ | Tab pengajuan dulu; notif (temuan) |
+| 11 | Poin & Reward | `/reward` | ✅ | Tab pengajuan dulu ✅; notif admin blocked (backend T4) |
 | 12 | Stok Gudang | `/warehouse` | ✅ | Link ke sales (temuan) |
 | 13 | Penjualan Mitra | `/warehouse/sales`, partners | ✅ | CRUD mitra discoverable (temuan) |
 | 14 | Pengaduan | `/complaints` | ✅ | Alert tindak lanjut; notif (temuan) |
@@ -80,85 +80,107 @@
 
 ### W0. UX umum web
 
-- [ ] **`cursor-pointer`** pada semua button, link, dan elemen klikabel (termasuk yang styled sebagai button)
-- [ ] **Toast/popup hasil aksi edit/create/delete** di semua form mutate
+- [x] **`cursor-pointer`** pada semua button, link, dan elemen klikabel (termasuk yang styled sebagai button)
+  - Global `button/select/a/[role=…]` di `globals.css`; komponen `Button` ikut
+- [x] **Toast/popup hasil aksi edit/create/delete** di semua form mutate
   - Sukses: singkat BI (“Perubahan berhasil disimpan.”)
   - Gagal: tampilkan `message` + field errors dari envelope, bukan silent fail
+  - Audit: WasteCategoryList, RewardManagement, ComplaintManagement, Customer/StaffForm, PartnerManagement, PartnerSalesView, WithdrawalManagement, PickupManagement, DepositForm, SettingsClient, AnnouncementManagement — semua pakai `useToast`
 
 ### W1. Modul 2 — Login
 
-- [ ] **Disable tombol Login** jika username atau password kosong (jangan submit)
+- [x] **Disable tombol Login** jika username atau password kosong (jangan submit)
   - Hapus perilaku: klik kosong → “username/password salah”
-- [ ] **Pesan rate-limit BI** — jangan tampilkan teks Inggris throttle mentah; map ke kalimat ramah + sisa detik jika ada
-- [ ] **Pesan login gagal BI** selaras backend (username tidak ada / password salah)
+- [x] **Pesan rate-limit BI** — jangan tampilkan teks Inggris throttle mentah; map ke kalimat ramah + sisa detik jika ada
+- [x] **Pesan login gagal BI** selaras backend (username tidak ada / password salah)
 
 ### W2. Modul 6 — Input setoran
 
-- [ ] **Perbaiki bug “ID nasabah tidak ditemukan”** padahal ID benar
+- [x] **Perbaiki bug “ID nasabah tidak ditemukan”** padahal ID benar
   - Samakan format ID dengan QR / API lookup; tampilkan error envelope yang spesifik
-- [ ] **Scan QR dari kamera** di form setoran (izin kamera + parse payload QR MIRU → isi nasabah)
+  - Root cause FE: petugas lookup tanpa field `role` ditolak client; QR mobile = JSON `{id,nama_lengkap,no_hp}` bukan angka saja
+- [x] **Scan QR dari kamera** di form setoran (izin kamera + parse payload QR MIRU → isi nasabah)
   - Fallback: input manual tetap ada
-- [ ] **Pastikan notifikasi / feedback nilai setoran** menampilkan Rupiah benar (koordinasi backend notif Rp0)
-- [ ] Multi-jenis sampah di web **tetap** didukung (regresi); mobile multi-jenis adalah task mobile terpisah / out-of-scope nasabah input
+- [x] **Pastikan notifikasi / feedback nilai setoran** menampilkan Rupiah benar (koordinasi backend notif Rp0)
+  - FE toast/konfirmasi memakai `formatRupiah` + `total_nilai` response ✅
+  - **BLOCKER backend T1:** signal `_notif_setoran` fire saat create sebelum `total_nilai` di-set → notif in-app nasabah bisa Rp0 (bukan bug FE)
+- [x] Multi-jenis sampah di web **tetap** didukung (regresi); mobile multi-jenis adalah task mobile terpisah / out-of-scope nasabah input
 
 ### W3. Modul 7 — Penjemputan (web)
 
-- [ ] **Setujui jangan fire API dulu** sebelum petugas dipilih
+- [x] **Setujui jangan fire API dulu** sebelum petugas dipilih
   - UX: modal/flow “Setujui + pilih petugas” → satu submit; cegah jemput aktif tanpa petugas
-  - Selaras backend T3 (approve+assign atomik)
-- [ ] **Dropdown assign petugas: jangan tampilkan nomor HP** — cukup nama (dan role/kode jika perlu)
-- [ ] **Filter list untuk petugas (non-admin):** sembunyikan `menunggu` & `ditolak`; hanya jemput yang harus dikerjakan petugas login
-- [ ] **Notifikasi lonceng / badge** untuk jemput baru (admin) dan jemput selesai (petugas+admin) — andalkan API notif backend T3; pastikan UI refresh badge
+  - Selaras backend T3 (approve+assign atomik) — web: approve+assign berurutan sampai endpoint atomik ada
+- [x] **Dropdown assign petugas: jangan tampilkan nomor HP** — cukup nama (dan role/kode jika perlu)
+- [x] **Filter list untuk petugas (non-admin):** sembunyikan `menunggu` & `ditolak`; hanya jemput yang harus dikerjakan petugas login
+- [x] **Notifikasi lonceng / badge** untuk jemput baru (admin) dan jemput selesai (petugas+admin) — andalkan API notif backend T3; pastikan UI refresh badge
+  - UI: refresh `sidebar-badges` + `notifications` setelah aksi jemput; badge petugas = tugas aktif (bukan menunggu)
 
 ### W4. Modul 11 — Reward & penukaran
 
-- [ ] **Susunan halaman `/reward`:** tab/default **Pengajuan penukaran** (tabel siapa mengajukan) dulu → tab kedua **Katalog reward**
-- [ ] **Notifikasi admin** saat ada pengajuan tukar poin baru (lonceng)
-- [ ] Saat approve gagal karena poin tidak cukup setelah harga berubah: tampilkan pesan server BI; jangan toast generik
+- [x] **Susunan halaman `/reward`:** tab/default **Pengajuan penukaran** (tabel siapa mengajukan) dulu → tab kedua **Katalog reward**
+- [x] **Notifikasi admin** saat ada pengajuan tukar poin baru (lonceng)
+  - Backend T4 selesai: `_notif_penukaran` → `notify_roles(('admin',))` saat create. UI lonceng poll `/api/notifications/` ✅ (diverifikasi)
+- [x] Saat approve gagal karena poin tidak cukup setelah harga berubah: tampilkan pesan server BI; jangan toast generik
+  - `handleApprove` memakai `ApiError.errors` (`non_field_errors` / field errors) sebelum fallback `message` generik.
 
 ### W5. Modul 14 — Pengaduan
 
-- [ ] **Sebelum tutup:** jika `tindak_lanjut` kosong → alert/dialog “Isi tindak lanjut dulu” (client-side), jangan sampai request gagal tanpa penjelasan
-- [ ] **Notifikasi admin** saat pengaduan baru
-- [ ] Opsi jenis **Lainnya** muncul di filter/detail jika backend sudah menambah choice
+- [x] **Sebelum tutup:** jika `tindak_lanjut` kosong → alert/dialog “Isi tindak lanjut dulu” (client-side), jangan sampai request gagal tanpa penjelasan
+- [x] **Notifikasi admin** saat pengaduan baru
+  - Backend T7 selesai: `_notif_pengaduan` → `notify_admins` saat create. UI lonceng sudah ada ✅ (diverifikasi)
+- [x] Opsi jenis **Lainnya** muncul di filter/detail
+  - Backend T7 selesai (`lainnya` di `Pengaduan.JENIS_CHOICES` + migration 0022); label `Lainnya` ditambahkan di `COMPLAINT_TYPE_LABELS` web; fallback raw value tetap
 
 ### W6. Modul 4 — Edukasi
 
-- [ ] **Menu sidebar “Edukasi”** mengarah ke CRUD (bukan placeholder)
-- [ ] Halaman CRUD penuh: list + form; **editor/preview Markdown** untuk isi artikel
-- [ ] Role mutate: admin/koordinator; read-only sesuai matriks
+- [x] **Menu sidebar “Edukasi”** mengarah ke CRUD (bukan placeholder)
+  - Menu sidebar admin/koordinator → `/education`; koordinator diizinkan via `routes.ts`
+- [x] Halaman CRUD penuh: list + form; **editor/preview Markdown** untuk isi artikel
+  - `EducationManagement` — list (judul, kategori, urutan, status, updated), form create/edit, `MarkdownContent` preview, hapus; empty state + skeleton
+- [x] Role mutate: admin/koordinator; read-only sesuai matriks
+  - `canMutate` guard — admin/koordinator mutate; pemerintah/petugas lihat (read-only)
 
 ### W7. Modul 5 — Katalog & harga
 
-- [ ] **Menu sidebar jelas** ke katalog harga (label ramah; route `/waste/categories` atau redirect `/waste` → categories)
-  - Dokumentasikan di UI mengapa tidak ada index `/waste` kosong (atau buat hub sederhana: Kategori | Riwayat harga)
-- [ ] **Form ubah harga + `tanggal_berlaku`** dengan validasi client **H+3**
-  - Preview pengumuman; banner “harga terjadwal belum aktif” di halaman kategori/dashboard
+- [x] **Menu sidebar jelas** ke katalog harga (label ramah; route `/waste/categories` atau redirect `/waste` → categories)
+  - Menu sidebar admin/koordinator: “Katalog & Harga” → `/waste/categories`; redirect `/waste` → categories (hub, bukan index kosong)
+- [x] **Form ubah harga + `tanggal_berlaku`** dengan validasi client **H+3**
+  - Input date min H+3 + error BI; kirim `tanggal_berlaku` ke API; preview pengumuman di modal; banner “Harga Terjadwal Belum Aktif” di halaman kategori (dari price-history)
 
 ### W8. Modul 12–13 — Gudang & mitra
 
-- [ ] **Dari `/warehouse`:** CTA/tab/link jelas ke **`/warehouse/sales`** (penjualan ke mitra)
-- [ ] **CRUD mitra discoverable:** halaman atau section “Kelola mitra” (bukan hanya dropdown tanpa jalan menambah)
-  - Route mis. `/warehouse/partners` atau modal manage dari sales — pastikan ada di nav/sidebar atau tombol di sales
+- [x] **Dari `/warehouse`:** CTA/tab/link jelas ke **`/warehouse/sales`** (penjualan ke mitra)
+  - Dua CTA cards di `/warehouse`: “Penjualan ke Mitra” → `/warehouse/sales`, “Kelola Mitra Pengepul” → `/warehouse/partners`
+- [x] **CRUD mitra discoverable:** halaman atau section “Kelola mitra” (bukan hanya dropdown tanpa jalan menambah)
+  - `/warehouse/partners` (CRUD penuh) — link CTA dari `/warehouse`; sidebar “Gudang & Mitra” tetap
 
 ### W9. Modul 15 — Dashboard per role
 
-- [ ] **Petugas punya dashboard** (bukan kosong / redirect tanpa ringkasan)
-  - Widget: jemput ditugaskan, tugas hari ini, dll. sesuai API T9
-- [ ] **Widget per role** (admin / koordinator / petugas / pemerintah) hanya tampilkan yang role boleh lihat
+- [x] **Petugas punya dashboard** (bukan kosong / redirect tanpa ringkasan)
+  - Landing petugas → `/dashboard` (routes.ts); `PetugasDashboard` — widget “Jemput Ditugaskan Hari Ini”, “Antrian Aktif”, daftar “Tugas Penjemputan Saya” (API T9 `get_petugas_overview`)
+- [x] **Widget per role** (admin / koordinator / petugas / pemerintah) hanya tampilkan yang role boleh lihat
+  - Petugas → widget petugas; admin/koordinator/pemerintah → overview penuh (permission backend tetap guard)
 
 ### W10. Modul 1 — Nasabah & staff
 
-- [ ] Setelah admin isi/ubah nomor HP: tampilkan status **belum verifikasi**; dokumentasikan bahwa user akan diverifikasi saat login mobile
-- [ ] **Icon mata show/hide password** di form set/reset password nasabah & staff
+- [x] Setelah admin isi/ubah nomor HP: tampilkan status **belum verifikasi**; dokumentasikan bahwa user akan diverifikasi saat login mobile
+  - Badge “HP Belum Verifikasi” di list & detail nasabah (`phone_verified=false`); hint di form “akan diverifikasi saat login mobile” (backend T10 set unverified otomatis)
+- [x] **Icon mata show/hide password** di form set/reset password nasabah & staff
+  - `PasswordInput` (Eye/EyeOff) dipakai di CustomerForm & StaffForm
 
 ### W11. Modul 17 — Pengaturan (restruktur)
 
-- [ ] **Jam operasional:** input tipe waktu (buka/tutup), bukan textarea bebas — selaras backend TimeField
-- [ ] **Hapus input logo** institusi (pakai ikon app tetap)
-- [ ] **Pindahkan Pengumuman** dari settings → **menu sidebar** + halaman kelola khusus
-- [ ] **Pindahkan Audit log** dari settings → **menu sidebar** + halaman khusus
-- [ ] **`/settings` hanya berisi:** data institusi + kebijakan data + tentang MIRU
+- [x] **Jam operasional:** input tipe waktu (buka/tutup), bukan textarea bebas — selaras backend TimeField
+  - Input `type=time` untuk `jam_buka`/`jam_tutup`; backend sinkron `jam_operasional` otomatis
+- [x] **Hapus input logo** institusi (pakai ikon app tetap)
+  - Field logo dihapus dari form; backend `logo_url` read-only (T8)
+- [x] **Pindahkan Pengumuman** dari settings → **menu sidebar** + halaman kelola khusus
+  - Menu sidebar “Pengumuman” → `/announcements` (banner mobile + riwayat)
+- [x] **Pindahkan Audit log** dari settings → **menu sidebar** + halaman khusus
+  - Menu sidebar “Audit Log” → `/audit-log` (filter + tabel; admin only)
+- [x] **`/settings` hanya berisi:** data institusi + kebijakan data + tentang MIRU
+  - Tab Institusi (jam time input, tanpa logo) + Kebijakan Data (`/privacy-policy/`) + Tentang MIRU
 
 ---
 
@@ -172,12 +194,12 @@
 > **Sumber:** Proposal §4 modul 4; `07-modules` CRUD artikel.
 > **API:** `GET/POST/PATCH/DELETE /api/edukasi/` — siap.
 
-- [ ] **Ganti `ModulePlaceholder` di `/education`** dengan halaman CRUD artikel edukasi
+- [x] **Ganti `ModulePlaceholder` di `/education`** dengan halaman CRUD artikel edukasi
   - List: judul, status aktif, urutan, kategori terkait, aksi edit/nonaktifkan
-  - Form create/edit: judul, isi/panduan (rich text atau textarea), kategori terkait (opsional), `aktif`, `urutan`
+  - Form create/edit: judul, isi/panduan (Markdown), kategori terkait (opsional), `aktif`, `urutan`
   - Role: admin/koordinator mutate; pemerintah/petugas sesuai guard sidebar
-- [ ] **Preview konten** sebelum simpan + badge status aktif/nonaktif di list
-- [ ] **Integrasi penuh ke API** — envelope error BI; empty state jika belum ada artikel; skeleton saat loading
+- [x] **Preview konten** sebelum simpan + badge status aktif/nonaktif di list
+- [x] **Integrasi penuh ke API** — envelope error BI; empty state jika belum ada artikel; skeleton saat loading
 
 ### 9.2 Modul 1 / 3 / 7 — Wilayah layanan
 
@@ -200,10 +222,10 @@
 > **API:** `tanggal_berlaku` min H+3 + pengumuman otomatis — siap.
 > Riwayat harga sudah ditampilkan di UI; **form edit belum kirim `tanggal_berlaku`**.
 
-- [ ] **Form edit harga kategori:** input `tanggal_berlaku` (date) dengan validasi client min H+3
+- [x] **Form edit harga kategori:** input `tanggal_berlaku` (date) dengan validasi client min H+3
   - Kirim ke API bersama harga baru; tampilkan error envelope jika server tolak
-- [ ] **Preview teks pengumuman** perubahan harga (yang akan/ sudah dibuat backend) sebelum/sesudah simpan
-- [ ] **Banner admin** di halaman kategori atau dashboard: ada harga terjadwal belum aktif
+- [x] **Preview teks pengumuman** perubahan harga (yang akan/ sudah dibuat backend) sebelum/sesudah simpan
+- [x] **Banner admin** di halaman kategori atau dashboard: ada harga terjadwal belum aktif
   - Tampilkan nama kategori, harga baru, tanggal berlaku
 
 ### 9.4 Modul 6 / 10 — Bukti digital & verifikasi KTP
@@ -427,8 +449,8 @@
 | Tukar poin | Approve ✅ | Ajukan ✅ | ✅ |
 | Pengaduan | Tindak lanjut ✅ | Ajukan ✅ | ✅ |
 | Dashboard / laporan | UI ✅ | — | ✅ |
-| Edukasi artikel | CRUD 🔲 | Baca ✅ | API ✅ |
-| Harga H-3 | Form 🔲 | Banner 🔲 | API ✅ |
+| Edukasi artikel | CRUD ✅ (W6) | Baca ✅ | API ✅ |
+| Harga H-3 | Form ✅ (W7) | Banner 🔲 | API ✅ |
 | PDF bukti / KTP | UI 🔲 | Share/unduh 🔲 | API ✅ |
 
 ---

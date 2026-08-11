@@ -64,8 +64,9 @@ export function useSidebarBadges(role: WebAdminRole) {
       }
 
       if (role === 'petugas') {
+        // Petugas tidak melihat menunggu/ditolak — badge = tugas aktif yang ditugaskan
         badges.pickups = await fetchCount('/pickups/', {
-          status: 'menunggu',
+          status__in: 'dijadwalkan,dalam_perjalanan,dijemput',
           page_size: '1',
         })
       }

@@ -7,7 +7,7 @@ import { useToast } from '@/components/feedback/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
-import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 import { UserPlus, ArrowLeft, Save } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -210,9 +210,8 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
                 error={fieldErrors.username}
                 disabled={isEdit}
               />
-              <Input
+              <PasswordInput
                 label={isEdit ? 'Password (biarkan kosong jika tidak diubah)' : 'Password'}
-                type="password"
                 placeholder={isEdit ? 'Kosongkan jika tidak diubah' : 'Minimal 6 karakter'}
                 value={formData.password}
                 onChange={(e) => updateField('password', e.target.value)}
@@ -236,6 +235,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
                 value={formData.no_hp}
                 onChange={(e) => updateField('no_hp', e.target.value)}
                 error={fieldErrors.no_hp}
+                hint="Nomor HP baru berstatus belum terverifikasi dan akan diverifikasi saat user login di aplikasi mobile."
               />
             </div>
 

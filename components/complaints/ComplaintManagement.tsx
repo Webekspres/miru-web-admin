@@ -10,7 +10,7 @@ import { useAuth } from '@/providers/AuthProvider'
 import { useToast } from '@/components/feedback/Toast'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Card, CardHeader } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
@@ -51,6 +51,7 @@ const COMPLAINT_TYPE_LABELS: Record<ComplaintTypeEnum, string> = {
   petugas_tidak_datang: 'Petugas Tidak Datang',
   kesalahan_data: 'Kesalahan Data Nasabah',
   bukti_tidak_muncul: 'Bukti Transaksi Tidak Muncul',
+  lainnya: 'Lainnya',
 }
 
 /** Target SLA dalam hari kerja */
@@ -142,6 +143,7 @@ function DetailPengaduanModal({
   tindakLanjutValue,
   onTindakLanjutChange,
   isReadOnly,
+  tindakLanjutInvalid,
 }: {
   complaint: Complaint | null
   open: boolean
@@ -150,6 +152,7 @@ function DetailPengaduanModal({
   tindakLanjutValue: string
   onTindakLanjutChange: (value: string) => void
   isReadOnly: boolean
+  tindakLanjutInvalid: boolean
 }) {
   const sla = complaint ? getSLAStatus(complaint.tanggal) : null
 
@@ -232,14 +235,26 @@ function DetailPengaduanModal({
                 {complaint.tindak_lanjut}
               </div>
             ) : complaint.status === 'terbuka' ? (
-              <textarea
-                rows={3}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
-                placeholder={isReadOnly ? 'Belum ada tindak lanjut.' : 'Isi tindak lanjut untuk pengaduan ini...'}
-                value={tindakLanjutValue}
-                onChange={(e) => onTindakLanjutChange(e.target.value)}
-                readOnly={isReadOnly}
-              />
+              <div className="space-y-1.5">
+                <textarea
+                  id="tindak-lanjut-input"
+                  rows={3}
+                  aria-invalid={tindakLanjutInvalid}
+                  aria-describedby={tindakLanjutInvalid ? 'tindak-lanjut-error' : undefined}
+                  className={`w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary ${
+                    tindakLanjutInvalid ? 'border-danger' : 'border-border'
+                  }`}
+                  placeholder={isReadOnly ? 'Belum ada tindak lanjut.' : 'Isi tindak lanjut untuk pengaduan ini...'}
+                  value={tindakLanjutValue}
+                  onChange={(e) => onTindakLanjutChange(e.target.value)}
+                  readOnly={isReadOnly}
+                />
+                {tindakLanjutInvalid && (
+                  <p id="tindak-lanjut-error" className="text-xs text-danger">
+                    Isi tindak lanjut dulu
+                  </p>
+                )}
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground">—</p>
             )}
@@ -262,6 +277,8 @@ export function ComplaintManagement() {
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null)
   const [showDetail, setShowDetail] = useState(false)
   const [tindakLanjutValue, setTindakLanjutValue] = useState('')
+  const [tindakLanjutInvalid, setTindakLanjutInvalid] = useState(false)
+  const [showTindakLanjutAlert, setShowTindakLanjutAlert] = useState(false)
 
   const isReadOnly = !canMutate(authRole ?? 'admin')
 
@@ -315,6 +332,7 @@ export function ComplaintManagement() {
   function handleRowClick(complaint: Complaint) {
     setSelectedComplaint(complaint)
     setTindakLanjutValue(complaint.tindak_lanjut ?? '')
+    setTindakLanjutInvalid(false)
     setShowDetail(true)
   }
 
@@ -322,20 +340,27 @@ export function ComplaintManagement() {
     setShowDetail(false)
     setSelectedComplaint(null)
     setTindakLanjutValue('')
+    setTindakLanjutInvalid(false)
   }
 
   async function handleTutupPengaduan() {
     if (!selectedComplaint) return
+    if (!tindakLanjutValue.trim()) {
+      setTindakLanjutInvalid(true)
+      setShowTindakLanjutAlert(true)
+      return
+    }
     setActionLoading(true)
     try {
       await api.patch(`/complaints/${selectedComplaint.id}/`, {
         status: 'ditutup',
-        tindak_lanjut: tindakLanjutValue || undefined,
+        tindak_lanjut: tindakLanjutValue.trim(),
       })
       toastSuccess('Pengaduan berhasil ditutup.')
       setShowDetail(false)
       setSelectedComplaint(null)
       setTindakLanjutValue('')
+      setTindakLanjutInvalid(false)
       fetchMutate()
     } catch {
       toastError('Gagal menutup pengaduan. Coba lagi.')
@@ -346,6 +371,17 @@ export function ComplaintManagement() {
 
   function handleTindakLanjutChange(value: string) {
     setTindakLanjutValue(value)
+    if (tindakLanjutInvalid && value.trim()) {
+      setTindakLanjutInvalid(false)
+    }
+  }
+
+  function handleDismissTindakLanjutAlert() {
+    setShowTindakLanjutAlert(false)
+    // Fokus kembali ke textarea setelah dialog ditutup
+    window.setTimeout(() => {
+      document.getElementById('tindak-lanjut-input')?.focus()
+    }, 0)
   }
 
   function handleTabChange(tab: TabKey) {
@@ -485,7 +521,26 @@ export function ComplaintManagement() {
         tindakLanjutValue={tindakLanjutValue}
         onTindakLanjutChange={handleTindakLanjutChange}
         isReadOnly={isReadOnly}
+        tindakLanjutInvalid={tindakLanjutInvalid}
       />
+
+      {/* Alert: tindak lanjut wajib sebelum tutup */}
+      <Modal
+        open={showTindakLanjutAlert}
+        onClose={handleDismissTindakLanjutAlert}
+        title="Tindak lanjut wajib"
+        description="Isi tindak lanjut dulu sebelum menutup pengaduan."
+        size="sm"
+        footer={
+          <Button type="button" variant="primary" onClick={handleDismissTindakLanjutAlert}>
+            Mengerti
+          </Button>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          Pengaduan tidak dapat ditutup tanpa catatan tindak lanjut.
+        </p>
+      </Modal>
     </div>
   )
 }

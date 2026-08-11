@@ -7,6 +7,7 @@ import { useToast } from '@/components/feedback/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 import { Select } from '@/components/ui/Select'
 import { ArrowLeft, Save, UserCog } from 'lucide-react'
 import type { UserRole } from '@/types/models'
@@ -233,9 +234,8 @@ export function StaffForm({ initialData, isEdit = false }: StaffFormProps) {
                 error={fieldErrors.username}
                 disabled={isEdit}
               />
-              <Input
+              <PasswordInput
                 label={isEdit ? 'Password (biarkan kosong jika tidak diubah)' : 'Password'}
-                type="password"
                 placeholder={isEdit ? 'Kosongkan jika tidak diubah' : 'Minimal 6 karakter'}
                 value={formData.password}
                 onChange={(e) => updateField('password', e.target.value)}

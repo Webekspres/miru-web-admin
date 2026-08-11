@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ApiError } from '@/lib/api'
-import { WebAdminAccessError } from '@/lib/auth'
+import { mapLoginError, WebAdminAccessError } from '@/lib/auth'
 import { resolvePostLoginPath } from '@/lib/routes'
 import { useAuth } from '@/providers/AuthProvider'
 import { Button } from '@/components/ui/Button'
@@ -31,10 +31,14 @@ export function LoginForm() {
   const [formError, setFormError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
-  const isDisabled = loading || status === 'loading'
+  const hasEmptyCredentials =
+    username.trim().length === 0 || password.length === 0
+  const isDisabled = loading || status === 'loading' || hasEmptyCredentials
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (hasEmptyCredentials) return
+
     setFormError(null)
     setFieldErrors({})
     setLoading(true)
@@ -44,7 +48,7 @@ export function LoginForm() {
       router.replace(resolvePostLoginPath(role, searchParams.get('from')))
     } catch (error) {
       if (error instanceof ApiError) {
-        setFormError(error.message)
+        setFormError(mapLoginError(error))
         setFieldErrors(mapFieldErrors(error.errors))
       } else if (error instanceof WebAdminAccessError) {
         setFormError(error.message)
@@ -77,7 +81,7 @@ export function LoginForm() {
         value={username}
         onChange={(event) => setUsername(event.target.value)}
         error={fieldErrors.username}
-        disabled={isDisabled}
+        disabled={loading || status === 'loading'}
         required
       />
 
@@ -90,7 +94,7 @@ export function LoginForm() {
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         error={fieldErrors.password}
-        disabled={isDisabled}
+        disabled={loading || status === 'loading'}
         required
       />
 

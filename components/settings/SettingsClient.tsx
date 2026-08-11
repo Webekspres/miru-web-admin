@@ -5,47 +5,44 @@ import useSWR from 'swr'
 import { api } from '@/lib/api'
 import { useAuth } from '@/providers/AuthProvider'
 import { canMutate } from '@/lib/permissions'
+import { useToast } from '@/components/feedback/Toast'
 import { Button } from '@/components/ui/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
-import { Badge } from '@/components/ui/Badge'
-import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
   Building2,
-  Eye,
+  Clock,
   FileText,
-  Filter,
-  History,
-  Megaphone,
+  MapPin,
   Save,
-  Search,
   Shield,
 } from 'lucide-react'
-import type { Announcement, AuditLog, InstitutionSettings } from '@/types/models'
+import type { InstitutionSettings } from '@/types/models'
 
 // ─── Types ────────────────────────────────────────────────────────
 
-type TabKey = 'institution' | 'announcement' | 'audit'
+type TabKey = 'institution' | 'privacy' | 'about'
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'institution', label: 'Institusi', icon: Building2 },
-  { key: 'announcement', label: 'Pengumuman', icon: Megaphone },
-  { key: 'audit', label: 'Audit Log', icon: History },
+  { key: 'privacy', label: 'Kebijakan Data', icon: Shield },
+  { key: 'about', label: 'Tentang MIRU', icon: FileText },
 ]
 
-const ACTION_LABELS: Record<string, string> = {
-  create: 'Buat',
-  update: 'Ubah',
-  delete: 'Hapus',
+// ─── Helpers ──────────────────────────────────────────────────────
+
+/** "HH:MM:SS" → "HH:MM" untuk input type="time" */
+function toTimeInput(value: string | null | undefined): string {
+  if (!value) return ''
+  return value.slice(0, 5)
 }
 
-const ACTION_COLORS: Record<string, 'success' | 'warning' | 'danger'> = {
-  create: 'success',
-  update: 'warning',
-  delete: 'danger',
+/** "HH:MM" → "HH:MM:SS" untuk API (TimeField backend) */
+function toApiTime(value: string): string | null {
+  if (!value) return null
+  return `${value}:00`
 }
 
 // ─── Tab 1: Institution Settings ──────────────────────────────────
@@ -53,8 +50,8 @@ const ACTION_COLORS: Record<string, 'success' | 'warning' | 'danger'> = {
 function InstitutionTab() {
   const { role } = useAuth()
   const isReadOnly = !canMutate(role!)
+  const { success: toastSuccess, error: toastError } = useToast()
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
 
   const { data, error, isLoading, mutate } = useSWR(
     '/settings/',
@@ -62,33 +59,59 @@ function InstitutionTab() {
     { revalidateOnFocus: false },
   )
 
-  const [form, setForm] = useState<Partial<InstitutionSettings>>({})
+  const [form, setForm] = useState<Partial<InstitutionSettings> & {
+    jam_buka_input?: string
+    jam_tutup_input?: string
+  }>({})
   const formInitialized = useRef(false)
 
   // Sync form when data loads only on initial load
   useEffect(() => {
     if (data && !formInitialized.current) {
-      setForm(data)
+      setForm({
+        ...data,
+        jam_buka_input: toTimeInput(data.jam_buka),
+        jam_tutup_input: toTimeInput(data.jam_tutup),
+      })
       formInitialized.current = true
     }
   }, [data])
 
-  const handleChange = (field: keyof InstitutionSettings, value: string) => {
+  const handleChange = (
+    field: keyof InstitutionSettings,
+    value: string,
+  ) => {
     setForm((prev) => ({ ...prev, [field]: value }))
-    setSaved(false)
   }
 
   async function handleSave() {
     if (!form || isReadOnly) return
     setSaving(true)
-    setSaved(false)
     try {
-      await api.patch('/settings/', form)
+      const jamBuka = toApiTime(form.jam_buka_input ?? '')
+      const jamTutup = toApiTime(form.jam_tutup_input ?? '')
+      const payload: Record<string, unknown> = {
+        nama_institusi: form.nama_institusi,
+        email: form.email,
+        kontak: form.kontak,
+        alamat: form.alamat,
+        // W11: jam operasional dikirim sebagai jam_buka/jam_tutup (TimeField),
+        // bukan free-text. `jam_operasional` disinkron otomatis di backend.
+        jam_buka: jamBuka,
+        jam_tutup: jamTutup,
+      }
+      await api.patch('/settings/', payload)
+      // Sinkronkan label jam_operasional yang ditampilkan agar tidak stale
+      if (jamBuka && jamTutup) {
+        setForm((prev) => ({
+          ...prev,
+          jam_operasional: `${jamBuka.slice(0, 5).replace(':', '.')}–${jamTutup.slice(0, 5).replace(':', '.')} WIT`,
+        }))
+      }
       await mutate()
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      toastSuccess('Pengaturan berhasil disimpan.')
     } catch {
-      // Error handled by API client
+      toastError('Gagal menyimpan pengaturan. Coba lagi.')
     } finally {
       setSaving(false)
     }
@@ -119,19 +142,31 @@ function InstitutionTab() {
           onChange={(e) => handleChange('kontak', e.target.value)}
           disabled={isReadOnly}
         />
-        <Input
-          label="Jam Operasional"
-          value={form.jam_operasional ?? ''}
-          onChange={(e) => handleChange('jam_operasional', e.target.value)}
-          disabled={isReadOnly}
-        />
-        <div className="md:col-span-2">
-          <Input
-            label="Logo URL"
-            value={form.logo_url ?? ''}
-            onChange={(e) => handleChange('logo_url', e.target.value)}
-            disabled={isReadOnly}
-          />
+        {/* W11: input waktu buka/tutup — bukan textarea bebas */}
+        <div className="flex items-end gap-3">
+          <div className="min-w-0 flex-1">
+            <Input
+              label="Jam Buka"
+              type="time"
+              value={form.jam_buka_input ?? ''}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, jam_buka_input: e.target.value }))
+              }
+              disabled={isReadOnly}
+            />
+          </div>
+          <span className="pb-2.5 text-sm text-muted-foreground">–</span>
+          <div className="min-w-0 flex-1">
+            <Input
+              label="Jam Tutup"
+              type="time"
+              value={form.jam_tutup_input ?? ''}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, jam_tutup_input: e.target.value }))
+              }
+              disabled={isReadOnly}
+            />
+          </div>
         </div>
       </div>
 
@@ -144,22 +179,24 @@ function InstitutionTab() {
         />
       </div>
 
+      {form.jam_operasional && (
+        <div className="flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 text-sm text-muted-foreground">
+          <Clock className="size-4 shrink-0" aria-hidden />
+          Tampilan untuk nasabah: <span className="font-medium text-foreground">{form.jam_operasional}</span>
+        </div>
+      )}
+
       {!isReadOnly && (
         <div className="flex items-center gap-3">
           <Button type="button" onClick={handleSave} disabled={saving}>
             <Save className="size-4" aria-hidden />
             {saving ? 'Menyimpan...' : 'Simpan Pengaturan'}
           </Button>
-          {saved && (
-            <span className="text-sm text-success font-medium">
-              ✓ Pengaturan berhasil disimpan.
-            </span>
-          )}
         </div>
       )}
 
       {isReadOnly && (
-        <p className="text-sm text-muted-foreground flex items-center gap-2">
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Shield className="size-4" />
           Anda hanya dapat melihat pengaturan. Hubungi admin untuk perubahan.
         </p>
@@ -168,294 +205,113 @@ function InstitutionTab() {
   )
 }
 
-// ─── Tab 2: Pengumuman ────────────────────────────────────────────
+// ─── Tab 2: Kebijakan Data ────────────────────────────────────────
 
-function AnnouncementTab() {
-  const { role } = useAuth()
-  const isReadOnly = !canMutate(role!)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
+interface PrivacyPolicyData {
+  versi: string
+  terakhir_diperbarui?: string
+  data_yang_disimpan?: string[] | Record<string, unknown>
+  retensi?: { masa_tahun?: number }
+  hak_pengguna?: string[]
+  kebijakan?: string
+}
 
-  const { data: settings, error: settingsError, isLoading: settingsLoading, mutate: mutateSettings } = useSWR(
+function PrivacyTab() {
+  const { data, error, isLoading, mutate } = useSWR(
+    '/privacy-policy/',
+    (path) => api.get<PrivacyPolicyData>(path),
+    { revalidateOnFocus: false },
+  )
+
+  if (isLoading) return <TableSkeleton rows={4} cols={1} />
+  if (error) return <ErrorMessage title="Gagal memuat data" message="Tidak dapat memuat kebijakan data." onRetry={() => mutate()} />
+
+  const items = Array.isArray(data?.data_yang_disimpan)
+    ? data!.data_yang_disimpan
+    : []
+
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-primary">
+        <Shield className="size-4 shrink-0" aria-hidden />
+        <span>
+          Kebijakan Data Pribadi (UU PDP) — versi {data?.versi ?? '1.0'}
+          {data?.retensi?.masa_tahun
+            ? ` · retensi ${data.retensi.masa_tahun} tahun`
+            : ''}
+        </span>
+      </div>
+
+      {items.length > 0 && (
+        <div>
+          <h4 className="mb-1.5 font-semibold text-foreground">Data yang Disimpan</h4>
+          <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+            {items.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {data?.hak_pengguna && data.hak_pengguna.length > 0 && (
+        <div>
+          <h4 className="mb-1.5 font-semibold text-foreground">Hak Pengguna</h4>
+          <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+            {data.hak_pengguna.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <p className="text-muted-foreground">
+        Dokumen lengkap tersedia di endpoint publik{' '}
+        <code className="rounded bg-surface-muted px-1.5 py-0.5 font-mono text-xs">/api/privacy-policy/</code>.
+      </p>
+    </div>
+  )
+}
+
+// ─── Tab 3: Tentang MIRU ──────────────────────────────────────────
+
+function AboutTab() {
+  const { data: settings } = useSWR(
     '/settings/',
     (path) => api.get<InstitutionSettings>(path),
     { revalidateOnFocus: false },
   )
 
-  const { data: announcements, error: annError, isLoading: annLoading } = useSWR(
-    '/pengumuman/',
-    (path) => api.get<Announcement[]>(path),
-    { revalidateOnFocus: false },
-  )
-
-  const [pengumumanText, setPengumumanText] = useState('')
-  const announcementInitialized = useRef(false)
-
-  // Sync pengumuman text when settings load only on initial load
-  useEffect(() => {
-    if (settings?.pengumuman && !announcementInitialized.current) {
-      setPengumumanText(settings.pengumuman)
-      announcementInitialized.current = true
-    }
-  }, [settings])
-
-  async function handleSave() {
-    if (isReadOnly) return
-    setSaving(true)
-    setSaved(false)
-    try {
-      await api.patch('/settings/', { pengumuman: pengumumanText })
-      await mutateSettings()
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
-    } catch {
-      // Error handled by API client
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  if (settingsLoading || annLoading) return <TableSkeleton rows={4} cols={2} />
-  if (settingsError || annError) return <ErrorMessage title="Gagal memuat data" message="Tidak dapat memuat pengumuman." onRetry={() => mutateSettings()} />
-
   return (
-    <div className="space-y-6">
-      {/* Banner pengumuman dari settings */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Megaphone className="size-5 text-primary" aria-hidden />
-            Banner Pengumuman (Aplikasi Mobile)
-          </CardTitle>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowPreview(!showPreview)}
-          >
-            <Eye className="size-4" aria-hidden />
-            {showPreview ? 'Tutup Preview' : 'Preview'}
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <textarea
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            rows={4}
-            value={pengumumanText}
-            onChange={(e) => { setPengumumanText(e.target.value); setSaved(false) }}
-            disabled={isReadOnly}
-            placeholder="Tulis pengumuman yang akan ditampilkan di aplikasi mobile nasabah..."
-          />
+    <div className="space-y-4 text-sm">
+      <div className="flex items-center gap-3 rounded-lg bg-surface-muted p-4">
+        <Building2 className="size-8 shrink-0 text-primary" aria-hidden />
+        <div>
+          <p className="font-semibold text-foreground">
+            {settings?.nama_institusi ?? 'MIRU Bank Sampah'}
+          </p>
+          <p className="text-muted-foreground">Distrik Mimika Baru, Kabupaten Mimika, Papua Tengah</p>
+        </div>
+      </div>
 
-          {showPreview && (
-            <div className="rounded-lg border border-border bg-primary/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                Preview — Tampilan di Mobile
-              </p>
-              <div className="rounded-lg bg-primary p-4 text-primary-foreground">
-                <p className="text-sm font-medium">
-                  {pengumumanText || 'Tidak ada pengumuman.'}
-                </p>
-              </div>
-            </div>
-          )}
+      <div className="space-y-3">
+        <div className="flex items-start gap-2">
+          <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+          <p className="text-muted-foreground">{settings?.alamat ?? '—'}</p>
+        </div>
+        <div className="flex items-start gap-2">
+          <Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+          <p className="text-muted-foreground">
+            Jam operasional: {settings?.jam_operasional || 'Senin–Sabtu, 08.00–17.00 WIT'}
+          </p>
+        </div>
+      </div>
 
-          {!isReadOnly && (
-            <div className="flex items-center gap-3">
-              <Button type="button" onClick={handleSave} disabled={saving}>
-                <Save className="size-4" aria-hidden />
-                {saving ? 'Menyimpan...' : 'Simpan Banner'}
-              </Button>
-              {saved && (
-                <span className="text-sm text-success font-medium">
-                  ✓ Banner pengumuman berhasil disimpan.
-                </span>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Daftar Pengumuman */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FileText className="size-5 text-primary" aria-hidden />
-            Riwayat Pengumuman
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {announcements && announcements.length > 0 ? (
-            <ul className="divide-y divide-border">
-              {announcements.map((ann) => (
-                <li key={ann.id} className="px-4 py-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">{ann.judul}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{ann.isi}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {new Date(ann.tanggal).toLocaleDateString('id-ID', {
-                          year: 'numeric', month: 'long', day: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                    <Badge variant={ann.aktif ? 'success' : 'default'}>
-                      {ann.aktif ? 'Aktif' : 'Nonaktif'}
-                    </Badge>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="px-4 pb-4 text-sm text-muted-foreground">Belum ada pengumuman.</p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-// ─── Tab 3: Audit Log ─────────────────────────────────────────────
-
-function AuditLogTab() {
-  const [filterUser, setFilterUser] = useState('')
-  const [filterModel, setFilterModel] = useState('')
-  const [filterAction, setFilterAction] = useState('')
-  const [filterDateAfter, setFilterDateAfter] = useState('')
-
-  const params = new URLSearchParams()
-  if (filterUser) params.set('user', filterUser)
-  if (filterModel) params.set('model', filterModel)
-  if (filterAction) params.set('action', filterAction)
-  if (filterDateAfter) params.set('date_after', filterDateAfter)
-
-  const queryString = params.toString()
-  const { data, error, isLoading, mutate } = useSWR(
-    `/audit-log/${queryString ? `?${queryString}` : ''}`,
-    (path) => api.get<AuditLog[]>(path),
-    { revalidateOnFocus: false },
-  )
-
-  return (
-    <div className="space-y-6">
-      {/* Filters */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Filter className="size-5 text-primary" aria-hidden />
-            Filter
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Input
-              type="number"
-              placeholder="ID User"
-              value={filterUser}
-              onChange={(e) => setFilterUser(e.target.value)}
-            />
-            <Input
-              placeholder="Model (contoh: TransaksiSetoran)"
-              value={filterModel}
-              onChange={(e) => setFilterModel(e.target.value)}
-            />
-            <Select
-              value={filterAction}
-              onChange={(e) => setFilterAction(e.target.value)}
-              placeholder="Semua Aksi"
-              options={[
-                { value: 'create', label: 'Buat' },
-                { value: 'update', label: 'Ubah' },
-                { value: 'delete', label: 'Hapus' },
-              ]}
-            />
-            <Input
-              type="date"
-              label="Dari Tanggal"
-              value={filterDateAfter}
-              onChange={(e) => setFilterDateAfter(e.target.value)}
-            />
-          </div>
-          <div className="mt-3 flex gap-2">
-            <Button type="button" size="sm" onClick={() => mutate()}>
-              <Search className="size-4" aria-hidden /> Terapkan Filter
-            </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={() => {
-              setFilterUser(''); setFilterModel(''); setFilterAction(''); setFilterDateAfter('')
-            }}>
-              Reset
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <History className="size-5 text-primary" aria-hidden />
-            Riwayat Audit
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4"><TableSkeleton rows={6} cols={5} /></div>
-          ) : error ? (
-            <div className="p-4">
-              <ErrorMessage title="Gagal memuat data" message="Tidak dapat memuat audit log." onRetry={() => mutate()} />
-            </div>
-          ) : data && data.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Waktu</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Aksi</TableHead>
-                    <TableHead>Model</TableHead>
-                    <TableHead>Objek ID</TableHead>
-                    <TableHead>IP Address</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(log.timestamp).toLocaleString('id-ID', {
-                          year: 'numeric', month: '2-digit', day: '2-digit',
-                          hour: '2-digit', minute: '2-digit',
-                        })}
-                      </TableCell>
-                      <TableCell className="text-sm text-foreground">
-                        {log.user_nama ?? `User #${log.user}`}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={ACTION_COLORS[log.action] ?? 'default'}>
-                          {ACTION_LABELS[log.action] ?? log.action}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-foreground font-mono text-xs">
-                        {log.model_name}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground font-mono text-xs">
-                        {log.object_id ?? '-'}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground font-mono">
-                        {log.ip_address ?? '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="p-4">
-              <TableEmpty colSpan={6} message="Belum ada data audit log." />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <p className="leading-relaxed text-muted-foreground">
+        MIRU (Mimika Recycle Unit) adalah aplikasi bank sampah untuk Distrik Mimika Baru.
+        Aplikasi ini membantu nasabah menyetor sampah terpilah, menjadwalkan penjemputan,
+        memantau saldo &amp; poin, serta mendukung pengelolaan bank sampah oleh petugas,
+        koordinator, dan pemerintah distrik.
+      </p>
     </div>
   )
 }
@@ -470,7 +326,7 @@ export function SettingsClient() {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Pengaturan</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Profil institusi, pengumuman, dan audit log viewer.
+          Data institusi, kebijakan data, dan informasi tentang MIRU.
         </p>
       </div>
 
@@ -502,8 +358,8 @@ export function SettingsClient() {
 
         <div className="p-4">
           {activeTab === 'institution' && <InstitutionTab />}
-          {activeTab === 'announcement' && <AnnouncementTab />}
-          {activeTab === 'audit' && <AuditLogTab />}
+          {activeTab === 'privacy' && <PrivacyTab />}
+          {activeTab === 'about' && <AboutTab />}
         </div>
       </Card>
     </div>

@@ -1,16 +1,16 @@
-# Graph Report - web-admin  (2026-07-21)
+# Graph Report - web-admin  (2026-08-11)
 
 ## Corpus Check
-- 120 files · ~52,064 words
+- 130 files · ~97,476 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 766 nodes · 1781 edges · 44 communities (37 shown, 7 thin omitted)
+- 835 nodes · 1987 edges · 51 communities (47 shown, 4 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4237d694`
+- Built from commit: `395416b4`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -50,54 +50,60 @@
 - [[_COMMUNITY_Community 34|Community 34]]
 - [[_COMMUNITY_Community 35|Community 35]]
 - [[_COMMUNITY_Community 36|Community 36]]
-- [[_COMMUNITY_Community 37|Community 37]]
 - [[_COMMUNITY_Community 38|Community 38]]
 - [[_COMMUNITY_Community 39|Community 39]]
 - [[_COMMUNITY_Community 40|Community 40]]
-- [[_COMMUNITY_Community 41|Community 41]]
+- [[_COMMUNITY_Community 42|Community 42]]
 - [[_COMMUNITY_Community 43|Community 43]]
 - [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 45|Community 45]]
+- [[_COMMUNITY_Community 46|Community 46]]
+- [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 49|Community 49]]
+- [[_COMMUNITY_Community 51|Community 51]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 53|Community 53]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `cn()` - 44 edges
-2. `useAuth()` - 37 edges
-3. `useToast()` - 28 edges
-4. `Button` - 27 edges
-5. `formatRupiah()` - 26 edges
-6. `api` - 24 edges
-7. `Card()` - 23 edges
-8. `canMutate()` - 23 edges
-9. `ErrorMessage()` - 20 edges
-10. `CardHeader()` - 20 edges
+1. `cn()` - 48 edges
+2. `useAuth()` - 40 edges
+3. `useToast()` - 34 edges
+4. `Button` - 30 edges
+5. `api` - 27 edges
+6. `formatRupiah()` - 27 edges
+7. `Card()` - 26 edges
+8. `canMutate()` - 26 edges
+9. `ErrorMessage()` - 23 edges
+10. `TableSkeleton()` - 22 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `SetujuiModal()` --calls--> `formatRupiah()`  [EXTRACTED]
   components/balance/WithdrawalManagement.tsx → lib/format.ts
 - `StockMiniSummary()` --calls--> `formatRupiah()`  [EXTRACTED]
   components/dashboard/DashboardClient.tsx → lib/format.ts
-- `fetchCount()` --calls--> `getAccessToken()`  [EXTRACTED]
-  hooks/useSidebarBadges.ts → lib/api.ts
-- `CanWrite()` --calls--> `useAuth()`  [EXTRACTED]
-  components/auth/CanWrite.tsx → providers/AuthProvider.tsx
-- `useCanWrite()` --calls--> `useAuth()`  [EXTRACTED]
-  components/auth/CanWrite.tsx → providers/AuthProvider.tsx
+- `ToastCard()` --calls--> `cn()`  [EXTRACTED]
+  components/feedback/Toast.tsx → lib/cn.ts
+- `DetailRowInput()` --calls--> `formatRupiah()`  [EXTRACTED]
+  components/forms/DepositForm.tsx → lib/format.ts
+- `StockHistoryModal()` --calls--> `formatWeightKg()`  [EXTRACTED]
+  components/warehouse/WarehouseStock.tsx → lib/format.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (44 total, 7 thin omitted)
+## Communities (51 total, 4 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.15
-Nodes (7): LoginForm(), LoginSessionSync(), PickupManagement(), useAuth(), AnnouncementTab(), StaffList(), WasteCategoryList()
+Cohesion: 0.22
+Nodes (6): parseEnvelope(), ApiEnvelope, ApiError, EnvelopeMeta, LoginResponse, RefreshResponse
 
 ### Community 1 - "Community 1"
 Cohesion: 0.11
 Nodes (18): 10. Mapping Task List, 11. Aturan untuk AI / Engineer, 11 — Security & Privacy (Web Admin), 1. Ruang Lingkup, 2. Autentikasi & Penyimpanan Token, 3. Otorisasi di Client (RBAC UI), 4. Perlindungan Data di UI (PDP), 5. Komunikasi ke API (+10 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.06
-Nodes (39): 08 — Task List: Web Admin Development Roadmap, 1.1 Dependencies & Environment ✅, 1.2 API Client & Types ✅, 1.3 Layout Shell & Shared UI ✅, 1.4 Routing ✅, 3.1–3.2 Setoran ✅, 3.3 Penjemputan ✅, 3.4 Penarikan ✅ (+31 more)
+Cohesion: 0.05
+Nodes (46): 08 — Task List: Web Admin Development Roadmap, 7.0 Keamanan Client — sisa, 7.1 Testing — sisa, 7.2 UX & Accessibility — sisa, 7.3 Error & Edge Cases — sisa, 9.1 Modul 4 — Edukasi sampah, 9.2 Modul 1 / 3 / 7 — Wilayah layanan, 9.3 Modul 5 — Perubahan harga H-3 (+38 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.10
@@ -105,7 +111,7 @@ Nodes (19): 10 — Integration & Roles (Web Admin), 1. Role di Web Admin, 2. Mat
 
 ### Community 4 - "Community 4"
 Cohesion: 0.06
-Nodes (34): dependencies, date-fns, @hookform/resolvers, lucide-react, next, react, react-dom, react-hook-form (+26 more)
+Nodes (35): dependencies, date-fns, @hookform/resolvers, html5-qrcode, lucide-react, next, react, react-dom (+27 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.10
@@ -140,8 +146,8 @@ Cohesion: 0.17
 Nodes (11): 00 — System Prompt & Clean Code Rules (Web Admin), 1. Struktur Folder, 2. Komponen, 3. State Management, 4. Styling, 5. TypeScript, 6. Data Fetching, 7. Error Handling (+3 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.06
-Nodes (61): SetujuiModal(), TabDefinition, TabKey, TABS, calculateSLADays(), COMPLAINT_TYPE_LABELS, DetailPengaduanModal(), getComplaintTypeLabel() (+53 more)
+Cohesion: 0.17
+Nodes (20): ACTION_COLORS, ACTION_LABELS, CustomerRow, TabDef, TabKey, TABS, Reward, RewardRedemption (+12 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.20
@@ -156,8 +162,8 @@ Cohesion: 0.29
 Nodes (6): 02 — Architecture & Stack (Web Admin), Alur Data, Arsitektur, Environment Variables, Struktur Folder yang Diharapkan, Tech Stack
 
 ### Community 17 - "Community 17"
-Cohesion: 0.07
-Nodes (19): TabDefinition, TabKey, TABS, CustomerEditClient(), PickupAction, StaffEditClient(), Announcement, ComplaintStatus (+11 more)
+Cohesion: 0.20
+Nodes (4): TabDefinition, TabKey, TABS, Deposit
 
 ### Community 18 - "Community 18"
 Cohesion: 0.33
@@ -172,80 +178,116 @@ Cohesion: 0.33
 Nodes (5): graphify, Hook-Based Usage, Installation Verification, Meta Commands (always use rtk directly), RTK - Rust Token Killer
 
 ### Community 21 - "Community 21"
-Cohesion: 0.31
-Nodes (6): fetchNotifications(), useNotifications(), NotificationBell(), NotificationBellProps, getAccessToken(), Notification
+Cohesion: 0.13
+Nodes (10): CustomerEditClient(), ErrorMessage(), ErrorMessageProps, LoadingSkeletonProps, TableSkeleton(), api, StaffEditClient(), FormErrors (+2 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.08
-Nodes (31): EMPTY_BADGES, fetchCount(), SidebarBadgeCounts, useSidebarBadges(), DashboardLayout(), DashboardLayoutProps, Header(), HeaderProps (+23 more)
+Cohesion: 0.07
+Nodes (44): MiruLogo(), MiruLogoProps, MiruLogoVariant, VARIANTS, EmptyState(), EmptyStateProps, useNotifications(), useSidebarBadges() (+36 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.20
-Nodes (10): fetchWithTimeout(), parseEnvelope(), RequestOptions, toNetworkError(), AUTH, ApiEnvelope, ApiError, EnvelopeMeta (+2 more)
+Cohesion: 0.29
+Nodes (7): fetchNotifications(), EMPTY_BADGES, fetchCount(), SidebarBadgeCounts, getAccessToken(), AUTH, PaginationMeta
 
 ### Community 29 - "Community 29"
-Cohesion: 0.06
-Nodes (32): CustomerDetail(), OverviewCards(), useToast(), DepositForm(), DetailRowInput(), formatRupiah(), formatWeightKg(), rupiahFormatter (+24 more)
+Cohesion: 0.11
+Nodes (12): DailyReport, getCurrentWeek(), MonthlyReport, MONTHS, Periode, ReportsClient(), TabKey, TABS (+4 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.12
-Nodes (10): ACTIVITY_ICONS, ACTIVITY_LABELS, ActivityItem, ChartDay, DashboardOverview, DepositChart, MONTHS, StatCardProps (+2 more)
+Nodes (13): SetujuiModal(), TabDefinition, TabKey, TABS, Withdrawal, Button, ButtonProps, ButtonSize (+5 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.18
-Nodes (8): ACTION_COLORS, ACTION_LABELS, InstitutionTab(), SettingsClient(), TabKey, TABS, AuditLog, InstitutionSettings
+Cohesion: 0.17
+Nodes (7): PrivacyPolicyData, TabKey, TABS, AuditLog, Select, SelectOption, SelectProps
 
 ### Community 32 - "Community 32"
-Cohesion: 0.05
-Nodes (51): MiruLogo(), MiruLogoProps, MiruLogoVariant, VARIANTS, CustomerForm(), CustomerFormData, CustomerFormProps, FormErrors (+43 more)
+Cohesion: 0.06
+Nodes (27): CustomerForm(), CustomerFormData, CustomerFormProps, FormErrors, LoadingSkeleton(), DetailRow, DetailRowInput(), EMPTY_DETAIL_ROW (+19 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.24
-Nodes (12): PUBLIC_ROUTES, ALLOWED_PREFIXES, canAccessRoute(), getLandingPathForRole(), isWebAdminRoleValue(), LANDING_PATH_BY_ROLE, resolvePostLoginPath(), WEB_ADMIN_ROLES (+4 more)
+Cohesion: 0.11
+Nodes (11): ACTIVITY_ICONS, ACTIVITY_LABELS, ActivityItem, ChartDay, DashboardOverview, DepositChart, MONTHS, PetugasOverview (+3 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.22
-Nodes (12): setAccessToken(), setTokens(), AUTH_ROUTES, TOKEN_KEYS, clearRoleCookie(), setAccessTokenCookie(), setRoleCookie(), WebAdminRole (+4 more)
+Cohesion: 0.19
+Nodes (15): CardSkeleton(), DashboardAuthShell(), DashboardAuthShellProps, clearTokens(), RequestOptions, setAccessToken(), setTokens(), TOKEN_KEYS (+7 more)
 
 ### Community 35 - "Community 35"
-Cohesion: 0.24
-Nodes (4): DashboardClient(), ModulePlaceholder(), ModulePlaceholderProps, RewardManagement()
+Cohesion: 0.05
+Nodes (32): AnnouncementManagement(), CanWrite(), CanWriteProps, useCanWrite(), LoginForm(), LoginSessionSync(), WithdrawalManagement(), ComplaintManagement() (+24 more)
 
-### Community 36 - "Community 36"
-Cohesion: 0.46
-Nodes (5): CanWrite(), CanWriteProps, useCanWrite(), canMutate(), isReadOnlyRole()
+### Community 38 - "Community 38"
+Cohesion: 0.20
+Nodes (12): calculateSLADays(), COMPLAINT_TYPE_LABELS, DetailPengaduanModal(), getComplaintTypeLabel(), getSLAStatus(), getStatusBadgeVariant(), getStatusLabel(), TabDefinition (+4 more)
+
+### Community 39 - "Community 39"
+Cohesion: 0.25
+Nodes (13): OverviewCards(), DepositForm(), formatRupiah(), formatWeightKg(), rupiahFormatter, toNumber(), weightFormatter, DailyReportView() (+5 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.33
-Nodes (3): ApiClient, getRefreshToken(), refreshAccessToken()
+Cohesion: 0.26
+Nodes (5): ApiClient, fetchWithTimeout(), getRefreshToken(), refreshAccessToken(), toNetworkError()
+
+### Community 42 - "Community 42"
+Cohesion: 0.17
+Nodes (16): AUTH_ROUTES, PUBLIC_ASSET_PREFIXES, PUBLIC_ROUTES, ALLOWED_PREFIXES, canAccessRoute(), getLandingPathForRole(), isAppNavigationPath(), isWebAdminRoleValue() (+8 more)
 
 ### Community 43 - "Community 43"
-Cohesion: 0.38
-Nodes (4): DashboardAuthShell(), DashboardAuthShellProps, clearTokens(), clearAccessTokenCookie()
+Cohesion: 0.14
+Nodes (8): ACTIONS_BY_STATUS, AssignModalMode, PETUGAS_TAB_KEYS, PickupAction, TabDefinition, TabKey, TABS, PickupStatus
 
 ### Community 44 - "Community 44"
-Cohesion: 0.15
-Nodes (12): geistMono, geistSans, metadata, ToastProvider(), clearApiErrorHandlers(), ForbiddenHandler, notifyForbidden(), notifyUnauthorized() (+4 more)
+Cohesion: 0.12
+Nodes (13): geistMono, geistSans, metadata, ToastCard(), ToastContext, ToastContextValue, ToastItem, ToastProvider() (+5 more)
+
+### Community 45 - "Community 45"
+Cohesion: 0.40
+Nodes (7): collectErrorText(), extractThrottleWaitSeconds(), isRateLimitError(), mapLoginError(), validateWebAdminRole(), WebAdminAccessError, isWebAdminRole()
+
+### Community 46 - "Community 46"
+Cohesion: 0.18
+Nodes (6): AuthContextValue, ROLE_BADGE_VARIANTS, ROLE_TABS, StaffRole, StaffTab, User
+
+### Community 47 - "Community 47"
+Cohesion: 0.29
+Nodes (5): CustomerDetail(), formatDateWIT(), DetailDepositModal(), getStatusBadgeVariant(), getStatusLabel()
+
+### Community 49 - "Community 49"
+Cohesion: 0.11
+Nodes (17): EMPTY_FORM, FormErrors, FormState, ComplaintStatus, DepositDetail, KontenEdukasi, Notification, Partner (+9 more)
+
+### Community 51 - "Community 51"
+Cohesion: 0.18
+Nodes (5): InventoryItem, InventorySummary, StockHistoryData, StockHistoryEntry, StockHistoryModal()
+
+### Community 52 - "Community 52"
+Cohesion: 0.60
+Nodes (5): InlineNode, MarkdownContent(), MarkdownListItem(), parseInline(), renderInline()
+
+### Community 53 - "Community 53"
+Cohesion: 0.32
+Nodes (6): clearApiErrorHandlers(), ForbiddenHandler, notifyForbidden(), notifyUnauthorized(), setApiErrorHandlers(), UnauthorizedHandler
 
 ## Knowledge Gaps
-- **324 isolated node(s):** `geistSans`, `geistMono`, `metadata`, `CanWriteProps`, `TabKey` (+319 more)
+- **347 isolated node(s):** `geistSans`, `geistMono`, `metadata`, `ACTION_LABELS`, `ACTION_COLORS` (+342 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useAuth()` connect `Community 0` to `Community 32`, `Community 33`, `Community 34`, `Community 35`, `Community 36`, `Community 37`, `Community 38`, `Community 39`, `Community 41`, `Community 43`, `Community 44`, `Community 13`, `Community 17`, `Community 23`, `Community 29`, `Community 30`, `Community 31`?**
+- **Why does `cn()` connect `Community 23` to `Community 32`, `Community 34`, `Community 44`, `Community 13`, `Community 21`, `Community 30`, `Community 31`?**
+  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `useAuth()` connect `Community 35` to `Community 32`, `Community 33`, `Community 34`, `Community 38`, `Community 42`, `Community 43`, `Community 44`, `Community 13`, `Community 46`, `Community 47`, `Community 17`, `Community 49`, `Community 53`, `Community 21`, `Community 30`, `Community 31`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `cn()` connect `Community 32` to `Community 21`, `Community 13`, `Community 23`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `Button` connect `Community 13` to `Community 32`, `Community 17`, `Community 21`, `Community 23`, `Community 29`, `Community 30`, `Community 31`?**
+- **Why does `Button` connect `Community 30` to `Community 32`, `Community 33`, `Community 35`, `Community 38`, `Community 42`, `Community 43`, `Community 13`, `Community 46`, `Community 17`, `Community 49`, `Community 51`, `Community 21`, `Community 23`, `Community 29`, `Community 31`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **What connects `geistSans`, `geistMono`, `metadata` to the rest of the system?**
-  _324 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _347 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.05641025641025641 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.04717853839037928 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
   _Cohesion score 0.1 - nodes in this community are weakly interconnected._
