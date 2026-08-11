@@ -46,7 +46,7 @@ describe('resolvePostLoginPath', () => {
 
   it('ignores static asset from paths (manifest/favicon)', () => {
     expect(
-      resolvePostLoginPath('petugas', '/brand/site.webmanifest'),
+      resolvePostLoginPath('petugas', '/brand/favicon/site.webmanifest'),
     ).toBe('/dashboard')
     expect(resolvePostLoginPath('admin', '/brand/logo.svg')).toBe('/dashboard')
     expect(resolvePostLoginPath('admin', '/favicon.ico')).toBe('/dashboard')

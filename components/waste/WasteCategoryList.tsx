@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
 import { api, ApiError } from '@/lib/api'
-import { formatDateWIT, formatRupiah, formatWeightKg } from '@/lib/format'
+import { formatDateWIT, formatRupiah, formatWeightKg, getStockLabel, LOW_STOCK_THRESHOLD_KG } from '@/lib/format'
 import { canMutate } from '@/lib/permissions'
 import { useAuth } from '@/providers/AuthProvider'
 import { useToast } from '@/components/feedback/Toast'
@@ -30,8 +30,6 @@ import {
 import type { WasteCategory } from '@/types/models'
 
 // ─── Constants ────────────────────────────────────────────────────
-
-const LOW_STOCK_THRESHOLD_KG = 10
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -87,12 +85,6 @@ function getStockBadge(stokKg: number) {
   if (stokKg === 0) return 'danger' as const
   if (stokKg < LOW_STOCK_THRESHOLD_KG) return 'warning' as const
   return 'success' as const
-}
-
-function getStockLabel(stokKg: number): string {
-  if (stokKg === 0) return 'Habis'
-  if (stokKg < LOW_STOCK_THRESHOLD_KG) return 'Menipis'
-  return 'Tersedia'
 }
 
 // ─── Banner: Harga Terjadwal Belum Aktif (W7) ───────────────────

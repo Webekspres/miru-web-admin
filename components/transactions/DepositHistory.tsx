@@ -11,10 +11,11 @@ import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { PaginationControls } from '@/components/ui/PaginationControls'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
-import { Calendar, ChevronLeft, ChevronRight, FileText, User } from 'lucide-react'
+import { Calendar, FileText, User } from 'lucide-react'
 import type { Deposit, DepositDetail } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
 
@@ -205,49 +206,6 @@ function DetailDepositModal({
   )
 }
 
-// ─── Pagination Controls ──────────────────────────────────────────
-
-function PaginationControls({
-  meta,
-  page,
-  onPageChange,
-}: {
-  meta: PaginationMeta | undefined
-  page: number
-  onPageChange: (p: number) => void
-}) {
-  if (!meta || meta.total_pages <= 1) return null
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Menampilkan halaman {meta.page} dari {meta.total_pages} ({meta.count} total)
-      </p>
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!meta.previous}
-          onClick={() => onPageChange(page - 1)}
-        >
-          <ChevronLeft className="size-4" aria-hidden />
-          Sebelumnya
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!meta.next}
-          onClick={() => onPageChange(page + 1)}
-        >
-          Selanjutnya
-          <ChevronRight className="size-4" aria-hidden />
-        </Button>
-      </div>
-    </div>
-  )
-}
 
 // ─── Main Component ───────────────────────────────────────────────
 

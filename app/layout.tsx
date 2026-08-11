@@ -4,6 +4,7 @@ import { ToastProvider } from '@/components/feedback/Toast'
 import { APP_NAME } from '@/lib/config'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { ApiErrorBridge } from '@/providers/ApiErrorBridge'
+import { PublicSiteLayout } from '@/components/layout/PublicSiteLayout'
 import './globals.css'
 
 const geistSans = Geist({
@@ -24,10 +25,24 @@ export const metadata: Metadata = {
   description:
     'Panel administrasi MIRU Bank Sampah — kelola nasabah, transaksi setoran, penjemputan, dan laporan.',
   applicationName: 'MIRU',
-  manifest: '/brand/site.webmanifest',
+  manifest: '/brand/favicon/site.webmanifest',
   icons: {
-    icon: [{ url: '/brand/favicon.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/brand/favicon.svg', type: 'image/svg+xml' }],
+    icon: [
+      { url: '/brand/favicon/favicon.ico', sizes: 'any' },
+      { url: '/brand/favicon/favicon.svg', type: 'image/svg+xml' },
+      {
+        url: '/brand/favicon/favicon-96x96.png',
+        sizes: '96x96',
+        type: 'image/png',
+      },
+    ],
+    apple: [
+      {
+        url: '/brand/favicon/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
   },
   openGraph: {
     title: APP_NAME,
@@ -51,7 +66,7 @@ export default function RootLayout({
         <ToastProvider>
           <AuthProvider>
             <ApiErrorBridge />
-            {children}
+            <PublicSiteLayout>{children}</PublicSiteLayout>
           </AuthProvider>
         </ToastProvider>
       </body>

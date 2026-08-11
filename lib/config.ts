@@ -16,4 +16,8 @@ export const AUTH = {
   login: `${API_PREFIX}/auth/login/`,
   refresh: `${API_PREFIX}/auth/refresh/`,
   me: `${API_PREFIX}/auth/me/`,
+  forgotPassword: `${API_PREFIX}/auth/forgot-password/`,
+  resetPasswordRequestOtp: `${API_PREFIX}/auth/reset-password/request-otp/`,
+  resetPasswordVerifyOtp: `${API_PREFIX}/auth/reset-password/verify-otp/`,
+  resetPassword: `${API_PREFIX}/auth/reset-password/`,
 } as const

@@ -32,7 +32,7 @@ export function Header({
   return (
     <header
       className={cn(
-        'print-hidden fixed top-0 right-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-4 transition-[left] duration-200 ease-in-out sm:px-6',
+        'print-hidden fixed top-0 right-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-4 shadow-sm transition-[left] duration-200 ease-in-out sm:px-6',
         'left-0',
         sidebarOpen && 'lg:left-64',
         className,
@@ -47,20 +47,21 @@ export function Header({
           aria-label={sidebarOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
           aria-expanded={sidebarOpen}
           aria-controls="app-sidebar"
+          className="border-border/80 hover:bg-surface-muted"
         >
           {sidebarOpen ? (
-            <X className="size-4" aria-hidden />
+            <X className="size-4 text-foreground" aria-hidden />
           ) : (
-            <Menu className="size-4" aria-hidden />
+            <Menu className="size-4 text-foreground" aria-hidden />
           )}
         </Button>
 
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">
+          <p className="truncate text-sm font-bold tracking-tight text-foreground">
             {APP_NAME}
           </p>
-          <p className="truncate text-xs text-muted-foreground">
-            Panel administrasi
+          <p className="truncate text-xs text-muted-foreground font-medium">
+            Panel Administrasi
           </p>
         </div>
       </div>
@@ -73,3 +74,4 @@ export function Header({
     </header>
   )
 }
+

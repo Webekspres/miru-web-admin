@@ -1,17 +1,8 @@
 import type { UserRole } from '@/types/models'
-import { getNavSectionsForRole } from '@/lib/navigation'
+import { getNavSectionsForRole, WEB_ADMIN_ROLES } from '@/lib/navigation'
+import type { WebAdminRole } from '@/lib/navigation'
 
-export type WebAdminRole = Extract<
-  UserRole,
-  'admin' | 'petugas' | 'koordinator' | 'pemerintah'
->
-
-const WEB_ADMIN_ROLES: WebAdminRole[] = [
-  'admin',
-  'petugas',
-  'koordinator',
-  'pemerintah',
-]
+export type { WebAdminRole }
 
 export const LANDING_PATH_BY_ROLE: Record<WebAdminRole, string> = {
   admin: '/dashboard',

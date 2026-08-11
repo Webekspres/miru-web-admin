@@ -11,13 +11,13 @@ import { Fragment, type ReactNode } from 'react'
  */
 
 interface InlineNode {
-  type: 'text' | 'strong' | 'em' | 'code' | 'link'
+  type: 'text' | 'strong' | 'em' | 'code' | 'link' | 'image'
   content: string
   href?: string
 }
 
 const INLINE_TOKEN_RE =
-  /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g
+  /(!\[[^\]]*\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g
 
 function parseInline(text: string): InlineNode[] {
   const parts = text.split(INLINE_TOKEN_RE)
@@ -25,7 +25,10 @@ function parseInline(text: string): InlineNode[] {
 
   for (const part of parts) {
     if (!part) continue
-    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+    const imgMatch = part.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
+    if (imgMatch) {
+      nodes.push({ type: 'image', content: imgMatch[1] || 'Gambar', href: imgMatch[2] })
+    } else if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
       nodes.push({ type: 'strong', content: part.slice(2, -2) })
     } else if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
       nodes.push({ type: 'em', content: part.slice(1, -1) })
@@ -72,6 +75,16 @@ function renderInline(nodes: InlineNode[], keyPrefix: string): ReactNode[] {
           >
             {node.content}
           </a>
+        )
+      case 'image':
+        return (
+          <img
+            key={key}
+            src={node.href}
+            alt={node.content}
+            className="my-3 max-h-96 w-full rounded-xl border border-border object-cover shadow-sm"
+            loading="lazy"
+          />
         )
       default:
         return <Fragment key={key}>{node.content}</Fragment>

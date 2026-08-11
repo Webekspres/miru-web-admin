@@ -8,10 +8,10 @@ export const ROLE_COOKIE_KEY = 'miru_role'
 /** Max-age cookie session (detik) — dipakai proxy edge guard */
 export const ACCESS_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24
 
-export const AUTH_ROUTES = ['/login'] as const
+export const AUTH_ROUTES = ['/login', '/forgot-password'] as const
 
 /** Rute publik yang tidak memerlukan autentikasi */
-export const PUBLIC_ROUTES = ['/', '/login'] as const
+export const PUBLIC_ROUTES = ['/', '/login', '/forgot-password'] as const
 
 /** Aset statis di `public/` — jangan di-gate auth (termasuk PWA manifest). */
 export const PUBLIC_FILE =

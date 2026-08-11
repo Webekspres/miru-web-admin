@@ -5,7 +5,7 @@ import { api } from '@/lib/api'
 import { StaffForm } from '@/components/staff/StaffForm'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
-import type { User } from '@/types/models'
+import type { StaffRole, User } from '@/types/models'
 
 export function StaffEditClient({ staffId }: { staffId: number }) {
   const {
@@ -36,8 +36,7 @@ export function StaffEditClient({ staffId }: { staffId: number }) {
   }
 
   // Validate role is a staff role
-  const staffRoles = ['petugas', 'admin', 'koordinator'] as const
-  type StaffRole = (typeof staffRoles)[number]
+  const staffRoles: StaffRole[] = ['petugas', 'admin', 'koordinator']
 
   if (!staffRoles.includes(user.role as StaffRole)) {
     return (

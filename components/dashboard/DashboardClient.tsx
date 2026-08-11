@@ -4,30 +4,40 @@ import { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import { formatDateWIT, formatRupiah, formatWeightKg } from '@/lib/format'
+import { cn } from '@/lib/cn'
+import { formatDateWIT, formatRupiah, formatWeightKg, MONTHS } from '@/lib/format'
 import { useAuth } from '@/providers/AuthProvider'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
+import { ROLE_LABELS } from '@/lib/navigation'
 import {
   AlertTriangle,
   ArrowRight,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   DollarSign,
   MessageSquare,
   Package,
-  Recycle,
+  PieChart as PieChartIcon,
+  Plus,
   Scale,
+  Sparkles,
   TrendingUp,
   Truck,
+  UserPlus,
   Users,
 } from 'lucide-react'
 import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -49,7 +59,6 @@ interface DashboardOverview {
   stok_per_kategori: { nama: string; stok: string }[]
 }
 
-/** Ringkasan widget untuk role petugas (T9 / W9). */
 interface PetugasOverview {
   role: 'petugas'
   jemput_ditugaskan_hari_ini: number
@@ -79,12 +88,9 @@ interface ActivityItem {
   status: string
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────
+// ─── Constants & Helpers ─────────────────────────────────────────
 
-const MONTHS = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-]
+
 
 const ACTIVITY_LABELS: Record<string, string> = {
   setoran: 'Setoran',
@@ -98,91 +104,113 @@ const ACTIVITY_ICONS: Record<string, typeof TrendingUp> = {
   penjemputan: Truck,
 }
 
-// ─── Sub-Component: Greeting ──────────────────────────────────────
+const DONUT_COLORS = ['#16a34a', '#0891b2', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899', '#64748b']
 
-function GreetingBanner({ name }: { name: string }) {
+// ─── Sub-Component: Welcome Card (Matching Reference Design) ─────
+
+function WelcomeBanner({ userName, role }: { userName: string; role?: string }) {
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-foreground">
-        Selamat datang, <span className="text-primary">{name}</span>
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Ringkasan program bank sampah hari ini.
-      </p>
-    </div>
-  )
-}
-
-// ─── Sub-Component: Stat Card ─────────────────────────────────────
-
-interface StatCardProps {
-  title: string
-  value: string
-  subtitle?: string
-  icon: React.ReactNode
-  variant?: 'default' | 'warning' | 'danger'
-}
-
-function StatCard({ title, value, subtitle, icon, variant = 'default' }: StatCardProps) {
-  const valueColor = {
-    default: 'text-foreground',
-    warning: 'text-warning',
-    danger: 'text-danger',
-  }[variant]
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <div className="text-primary">{icon}</div>
+    <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-background to-surface-muted">
+      <CardHeader variant="default" className="border-b border-border/60">
+        <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
+          <Sparkles className="size-5 text-primary" aria-hidden />
+          Selamat Datang
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <p className={`text-2xl font-bold ${valueColor}`}>{value}</p>
-        {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
+      <CardContent className="py-4">
+        <p className="text-sm leading-relaxed text-foreground">
+          Halo, <strong className="font-semibold text-primary">{userName}</strong>. Selamat bekerja! Akses Anda:{' '}
+          <strong className="font-semibold text-foreground">{role ? ROLE_LABELS[role as keyof typeof ROLE_LABELS] ?? role : 'Administrator'}</strong>.
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Kelola data nasabah, pantau transaksi setoran sampah, dan tindak lanjuti penjemputan hari ini.
+        </p>
       </CardContent>
     </Card>
   )
 }
 
-// ─── Sub-Component: Overview Cards ────────────────────────────────
+// ─── Sub-Component: Themed Stat Block (Matching Reference Design) ──
 
-function OverviewCards({ data }: { data: DashboardOverview }) {
+interface StatBlockProps {
+  title: string
+  value: string
+  subtitle?: string
+  icon: React.ReactNode
+  bgClass: string
+  href: string
+}
+
+function StatBlock({ title, value, subtitle, icon, bgClass, href }: StatBlockProps) {
+  return (
+    <div className={`overflow-hidden rounded-xl shadow-md ${bgClass} text-white flex flex-col justify-between transition-transform duration-200 hover:-translate-y-0.5`}>
+      <div className="p-5 flex items-start justify-between">
+        <div>
+          <p className="text-3xl font-extrabold tracking-tight">{value}</p>
+          <p className="mt-1 text-sm font-semibold opacity-95">{title}</p>
+          {subtitle && <p className="mt-1 text-xs opacity-80">{subtitle}</p>}
+        </div>
+        <div className="rounded-lg bg-white/20 p-2.5 backdrop-blur-xs text-white">
+          {icon}
+        </div>
+      </div>
+
+      {/* Bottom strip "More info ->" matching reference design */}
+      <Link
+        href={href}
+        className="flex items-center justify-center gap-1.5 bg-black/25 py-2 px-4 text-xs font-semibold text-white/95 transition-colors hover:bg-black/35 hover:text-white"
+      >
+        <span>Lihat detail</span>
+        <ArrowRight className="size-3.5" aria-hidden />
+      </Link>
+    </div>
+  )
+}
+
+// ─── Sub-Component: Overview Stat Cards Grid ──────────────────────
+
+function OverviewStatCards({ data }: { data: DashboardOverview }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <StatCard
-        title="Total Nasabah"
+      <StatBlock
+        title="Nasabah Terdaftar"
         value={data.total_nasabah.toLocaleString('id-ID')}
-        subtitle={`${data.nasabah_aktif_30_hari} aktif 30 hari`}
-        icon={<Users className="size-5" aria-hidden />}
+        subtitle={`${data.nasabah_aktif_30_hari} aktif 30 hari terakhir`}
+        icon={<Users className="size-6" aria-hidden />}
+        bgClass="bg-gradient-to-br from-cyan-600 to-cyan-700"
+        href="/customers"
       />
-      <StatCard
-        title="Sampah Terkumpul"
-        value={formatWeightKg(data.total_sampah_kg)}
-        subtitle={`Nilai: ${formatRupiah(data.total_nilai_setoran)}`}
-        icon={<Recycle className="size-5" aria-hidden />}
+      <StatBlock
+        title="Nilai Setoran Sampah"
+        value={formatRupiah(data.total_nilai_setoran)}
+        subtitle={`Total Sampah: ${formatWeightKg(data.total_sampah_kg)}`}
+        icon={<DollarSign className="size-6" aria-hidden />}
+        bgClass="bg-gradient-to-br from-emerald-600 to-emerald-700"
+        href="/transactions"
       />
-      <StatCard
+      <StatBlock
         title="Penjemputan Menunggu"
         value={data.penjemputan_menunggu.toLocaleString('id-ID')}
-        subtitle="Perlu diproses admin"
-        icon={<Truck className="size-5" aria-hidden />}
-        variant={data.penjemputan_menunggu > 0 ? 'warning' : 'default'}
+        subtitle="Perlu penanganan petugas"
+        icon={<Truck className="size-6" aria-hidden />}
+        bgClass="bg-gradient-to-br from-amber-500 to-amber-600"
+        href="/pickups"
       />
-      <StatCard
+      <StatBlock
         title="Pengaduan Terbuka"
         value={data.pengaduan_terbuka.toLocaleString('id-ID')}
-        subtitle="Menunggu tindak lanjut"
-        icon={<MessageSquare className="size-5" aria-hidden />}
-        variant={data.pengaduan_terbuka > 0 ? 'danger' : 'default'}
+        subtitle="Perlu tindak lanjut segera"
+        icon={<MessageSquare className="size-6" aria-hidden />}
+        bgClass="bg-gradient-to-br from-rose-600 to-rose-700"
+        href="/complaints"
       />
     </div>
   )
 }
 
-// ─── Sub-Component: Deposit Chart ─────────────────────────────────
+// ─── Sub-Component: Deposit Chart View (Green Header Bar) ─────────
 
 function DepositChartView({ bulan, tahun }: { bulan: number; tahun: number }) {
-  // Navigation for prev/next month
   const [viewMonth, setViewMonth] = useState(bulan)
   const [viewYear, setViewYear] = useState(tahun)
 
@@ -192,7 +220,6 @@ function DepositChartView({ bulan, tahun }: { bulan: number; tahun: number }) {
     { revalidateOnFocus: false },
   )
 
-  // Format chart data
   const chartData = useMemo(() => {
     if (!data?.data) return []
     return data.data.map((day) => {
@@ -216,51 +243,58 @@ function DepositChartView({ bulan, tahun }: { bulan: number; tahun: number }) {
     else { setViewMonth(viewMonth + 1) }
   }
 
-  if (isLoading) return <div className="h-64"><TableSkeleton rows={4} cols={1} /></div>
-  if (error) return <ErrorMessage title="Gagal memuat grafik" message="Tidak dapat memuat data chart setoran." />
-
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <BarChart3 className="size-5 text-primary" aria-hidden />
-          Setoran {MONTHS[viewMonth - 1]} {viewYear}
+      {/* Header bar matching reference green banner */}
+      <CardHeader variant="emerald" className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2 text-base font-bold text-white">
+          <BarChart3 className="size-5 text-white/90" aria-hidden />
+          Grafik Setoran Sampah ({MONTHS[viewMonth - 1]} {viewYear})
         </CardTitle>
-        <div className="flex items-center gap-1">
-          <Button type="button" variant="ghost" size="sm" onClick={prevMonth}>&larr;</Button>
-          <span className="text-sm text-muted-foreground min-w-20 text-center">{MONTHS[viewMonth - 1]}</span>
-          <Button type="button" variant="ghost" size="sm" onClick={nextMonth}>&rarr;</Button>
+        <div className="flex items-center gap-1 rounded-lg bg-black/20 p-1 text-white">
+          <Button type="button" variant="ghost" size="sm" onClick={prevMonth} className="h-7 w-7 p-0 text-white hover:bg-white/20">
+            <ChevronLeft className="size-4" aria-hidden />
+          </Button>
+          <span className="min-w-20 text-center text-xs font-semibold">{MONTHS[viewMonth - 1]} {viewYear}</span>
+          <Button type="button" variant="ghost" size="sm" onClick={nextMonth} className="h-7 w-7 p-0 text-white hover:bg-white/20">
+            <ChevronRight className="size-4" aria-hidden />
+          </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        {chartData.length === 0 ? (
-          <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+      <CardContent className="pt-4">
+        {isLoading ? (
+          <div className="h-64"><TableSkeleton rows={4} cols={1} /></div>
+        ) : error ? (
+          <ErrorMessage title="Gagal memuat grafik" message="Tidak dapat memuat data chart setoran." />
+        ) : chartData.length === 0 ? (
+          <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
             Belum ada data setoran untuk bulan ini.
           </div>
         ) : (
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} className="text-muted-foreground" />
                 <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'var(--color-surface)',
+                    backgroundColor: 'var(--color-background)',
                     border: '1px solid var(--color-border)',
                     borderRadius: '8px',
                     fontSize: '13px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                   }}
-                  labelFormatter={(label) => `${MONTHS[viewMonth - 1]} ${label}, ${viewYear}`}
+                  labelFormatter={(label) => `Tanggal ${label} ${MONTHS[viewMonth - 1]} ${viewYear}`}
                   formatter={(value, name) => {
                     const v = Number(value)
                     if (name === 'nilai') return [formatRupiah(v), 'Nilai Setoran']
-                    if (name === 'berat') return [formatWeightKg(v), 'Berat']
-                    if (name === 'transaksi') return [v, 'Transaksi']
+                    if (name === 'berat') return [formatWeightKg(v), 'Berat Sampah']
+                    if (name === 'transaksi') return [v, 'Jumlah Transaksi']
                     return [v, name]
                   }}
                 />
-                <Bar dataKey="berat" name="berat" fill="#16a34a" radius={[4, 4, 0, 0]} maxBarSize={24} />
+                <Bar dataKey="berat" name="berat" fill="#16a34a" radius={[4, 4, 0, 0]} maxBarSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -270,40 +304,152 @@ function DepositChartView({ bulan, tahun }: { bulan: number; tahun: number }) {
   )
 }
 
-// ─── Sub-Component: Recent Activity ────────────────────────────────
+// ─── Sub-Component: Waste Breakdown Donut Chart (Cyan Header Bar) ─
 
-function RecentActivity({ items, isLoading }: { items: ActivityItem[]; isLoading: boolean }) {
-  if (isLoading) return <TableSkeleton rows={5} cols={3} />
+function StockDistributionChart() {
+  const { data: inventory, isLoading } = useSWR(
+    '/inventory/',
+    (path) => api.get<{
+      total_stok_kg: string
+      total_estimasi_nilai: string
+      kategori: { nama: string; stok_terkini_kg: string; estimasi_nilai: string }[]
+    }>(path),
+    { revalidateOnFocus: false },
+  )
+
+  const pieData = useMemo(() => {
+    if (!inventory?.kategori) return []
+    return inventory.kategori
+      .map((cat) => ({
+        name: cat.nama,
+        value: parseFloat(cat.stok_terkini_kg),
+      }))
+      .filter((item) => item.value > 0)
+      .sort((a, b) => b.value - a.value)
+  }, [inventory])
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
+      {/* Header bar matching reference cyan/teal banner */}
+      <CardHeader variant="cyan" className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2 text-base font-bold text-white">
+          <PieChartIcon className="size-5 text-white/90" aria-hidden />
+          Distribusi Stok Sampah
+        </CardTitle>
+        <Link href="/warehouse">
+          <Button type="button" variant="ghost" size="sm" className="h-7 text-xs text-white hover:bg-white/20">
+            Detail Gudang
+          </Button>
+        </Link>
+      </CardHeader>
+      <CardContent className="pt-4">
+        {isLoading ? (
+          <div className="h-64"><TableSkeleton rows={4} cols={2} /></div>
+        ) : pieData.length === 0 ? (
+          <div className="flex h-64 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Package className="size-8 text-muted-foreground/50" aria-hidden />
+            <p>Belum ada stok sampah tercatat.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center sm:flex-row sm:items-center sm:justify-around gap-4 py-2">
+            <div className="h-48 w-48 shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {pieData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(val) => [formatWeightKg(val ? Number(val) : 0), 'Stok']}
+                    contentStyle={{
+                      backgroundColor: 'var(--color-background)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="min-w-0 flex-1 space-y-2">
+              {pieData.slice(0, 5).map((item, idx) => (
+                <div key={item.name} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <span
+                      className="size-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: DONUT_COLORS[idx % DONUT_COLORS.length] }}
+                    />
+                    <span className="truncate font-medium text-foreground">{item.name}</span>
+                  </div>
+                  <span className="ml-2 font-semibold text-foreground shrink-0">{formatWeightKg(item.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ─── Sub-Component: Recent Activity ────────────────────────────────
+
+function RecentActivity({
+  items,
+  isLoading,
+  className,
+}: {
+  items: ActivityItem[]
+  isLoading: boolean
+  className?: string
+}) {
+  return (
+    <Card className={cn('flex h-full flex-col', className)}>
+      <CardHeader variant="default" className="flex flex-row items-center justify-between border-b border-border shrink-0">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
           <TrendingUp className="size-5 text-primary" aria-hidden />
           Aktivitas Terbaru
         </CardTitle>
+        <Link href="/transactions">
+          <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+            Lihat Semua
+            <ArrowRight className="ml-1 size-3.5" aria-hidden />
+          </Button>
+        </Link>
       </CardHeader>
-      <CardContent className="p-0">
-        {items.length === 0 ? (
-          <p className="px-4 pb-4 text-sm text-muted-foreground">Belum ada aktivitas.</p>
+      <CardContent className="flex flex-1 flex-col justify-between p-0">
+        {isLoading ? (
+          <div className="p-4"><TableSkeleton rows={6} cols={3} /></div>
+        ) : items.length === 0 ? (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">Belum ada aktivitas transaksi.</p>
         ) : (
-          <ul className="divide-y divide-border">
-            {items.map((item, idx) => {
+          <ul className="flex-1 divide-y divide-border">
+            {items.slice(0, 10).map((item, idx) => {
               const Icon = ACTIVITY_ICONS[item.type] ?? TrendingUp
               const label = ACTIVITY_LABELS[item.type] ?? item.type
               return (
-                <li key={`${item.type}-${item.id}-${idx}`} className="flex items-center gap-3 px-4 py-3">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Icon className="size-4 text-primary" aria-hidden />
+                <li key={`${item.type}-${item.id}-${idx}`} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/50 transition-colors">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Icon className="size-4" aria-hidden />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
                       {label}
-                      {item.nasabah && <span className="text-muted-foreground"> — {item.nasabah}</span>}
+                      {item.nasabah && <span className="font-normal text-muted-foreground"> — {item.nasabah}</span>}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {item.nominal && `${formatRupiah(item.nominal)}`}
-                      {item.estimasi_berat_kg && `${formatWeightKg(item.estimasi_berat_kg)}`}
+                      {item.nominal && `${formatRupiah(item.nominal)} `}
+                      {item.estimasi_berat_kg && `(${formatWeightKg(item.estimasi_berat_kg)})`}
                     </p>
                   </div>
                   <Badge variant={item.status === 'selesai' ? 'success' : item.status === 'menunggu' ? 'warning' : 'default'}>
@@ -322,31 +468,31 @@ function RecentActivity({ items, isLoading }: { items: ActivityItem[]; isLoading
 // ─── Sub-Component: Open Complaints ──────────────────────────────
 
 function OpenComplaints({ complaints, isLoading }: { complaints: Complaint[]; isLoading: boolean }) {
-  if (isLoading) return <TableSkeleton rows={4} cols={2} />
-
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <MessageSquare className="size-5 text-primary" aria-hidden />
+      <CardHeader variant="default" className="flex flex-row items-center justify-between border-b border-border">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+          <MessageSquare className="size-5 text-rose-600" aria-hidden />
           Pengaduan Terbuka
         </CardTitle>
         <Link href="/complaints">
-          <Button type="button" variant="ghost" size="sm">
+          <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
             Lihat Semua
             <ArrowRight className="ml-1 size-3.5" aria-hidden />
           </Button>
         </Link>
       </CardHeader>
       <CardContent className="p-0">
-        {complaints.length === 0 ? (
-          <p className="px-4 pb-4 text-sm text-muted-foreground">Tidak ada pengaduan terbuka.</p>
+        {isLoading ? (
+          <div className="p-4"><TableSkeleton rows={3} cols={2} /></div>
+        ) : complaints.length === 0 ? (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">Tidak ada pengaduan terbuka saat ini.</p>
         ) : (
           <ul className="divide-y divide-border">
             {complaints.map((c) => (
-              <li key={c.id} className="flex items-start gap-3 px-4 py-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-danger/10">
-                  <AlertTriangle className="size-4 text-danger" aria-hidden />
+              <li key={c.id} className="flex items-start gap-3 px-4 py-3 hover:bg-surface-muted/50 transition-colors">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-rose-500/10 text-rose-600">
+                  <AlertTriangle className="size-4" aria-hidden />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">
@@ -354,9 +500,9 @@ function OpenComplaints({ complaints, isLoading }: { complaints: Complaint[]; is
                   </p>
                   <p className="line-clamp-1 text-xs text-muted-foreground">{c.keluhan}</p>
                 </div>
-                <Link href={`/complaints`} className="shrink-0">
-                  <Button type="button" variant="ghost" size="sm">
-                    <ArrowRight className="size-3.5" aria-hidden />
+                <Link href="/complaints" className="shrink-0">
+                  <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <ArrowRight className="size-3.5 text-muted-foreground" aria-hidden />
                   </Button>
                 </Link>
               </li>
@@ -368,7 +514,7 @@ function OpenComplaints({ complaints, isLoading }: { complaints: Complaint[]; is
   )
 }
 
-// ─── Sub-Component: Stock Summary ──────────────────────────────────
+// ─── Sub-Component: Stock Summary Table ───────────────────────────
 
 function StockMiniSummary() {
   const { data: inventory, isLoading } = useSWR(
@@ -389,23 +535,23 @@ function StockMiniSummary() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
+      <CardHeader variant="default" className="flex flex-row items-center justify-between border-b border-border">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
           <Package className="size-5 text-primary" aria-hidden />
-          Ringkasan Stok
+          Stok Sampah Terkini
         </CardTitle>
         <Link href="/warehouse">
-          <Button type="button" variant="ghost" size="sm">
-            Lihat Semua
+          <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+            Lihat Stok
             <ArrowRight className="ml-1 size-3.5" aria-hidden />
           </Button>
         </Link>
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
-          <div className="px-4 pb-4"><TableSkeleton rows={4} cols={2} /></div>
+          <div className="p-4"><TableSkeleton rows={4} cols={2} /></div>
         ) : topCategories.length === 0 ? (
-          <p className="px-4 pb-4 text-sm text-muted-foreground">Belum ada data stok.</p>
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">Belum ada data stok.</p>
         ) : (
           <ul className="divide-y divide-border">
             {topCategories.map((cat) => (
@@ -417,8 +563,8 @@ function StockMiniSummary() {
             ))}
             {inventory && (
               <li className="flex items-center justify-between bg-surface-muted/50 px-4 py-2.5 text-xs text-muted-foreground">
-                <span>Total nilai stok</span>
-                <span className="font-semibold">{formatRupiah(inventory.total_estimasi_nilai)}</span>
+                <span>Total estimasi nilai stok:</span>
+                <span className="font-semibold text-foreground">{formatRupiah(inventory.total_estimasi_nilai)}</span>
               </li>
             )}
           </ul>
@@ -428,7 +574,7 @@ function StockMiniSummary() {
   )
 }
 
-// ─── Petugas Dashboard (W9) ───────────────────────────────────────
+// ─── Petugas Dashboard ───────────────────────────────────────────
 
 const PETUGAS_TASK_STATUSES = 'dijadwalkan,dalam_perjalanan,dijemput'
 
@@ -457,7 +603,7 @@ function PetugasDashboard({ user }: { user: { id: number; nama_lengkap: string }
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <GreetingBanner name={user.nama_lengkap} />
+        <WelcomeBanner userName={user.nama_lengkap} role="petugas" />
         <div className="grid gap-4 sm:grid-cols-2">
           {[1, 2].map((i) => (
             <Card key={i}><CardContent className="p-6"><div className="h-20 animate-pulse rounded-lg bg-surface-muted" /></CardContent></Card>
@@ -470,7 +616,7 @@ function PetugasDashboard({ user }: { user: { id: number; nama_lengkap: string }
   if (error) {
     return (
       <div className="space-y-6">
-        <GreetingBanner name={user.nama_lengkap} />
+        <WelcomeBanner userName={user.nama_lengkap} role="petugas" />
         <ErrorMessage title="Gagal memuat data dashboard" message="Tidak dapat memuat ringkasan dashboard petugas." onRetry={() => mutate()} />
       </div>
     )
@@ -488,59 +634,61 @@ function PetugasDashboard({ user }: { user: { id: number; nama_lengkap: string }
 
   return (
     <div className="space-y-6">
-      <GreetingBanner name={user.nama_lengkap} />
+      <WelcomeBanner userName={user.nama_lengkap} role="petugas" />
 
-      {/* Widget petugas */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-        <StatCard
-          title="Jemput Ditugaskan Hari Ini"
+      {/* Overview Stat Blocks */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <StatBlock
+          title="Penjemputan Hari Ini"
           value={String(overview?.jemput_ditugaskan_hari_ini ?? 0)}
-          subtitle="Penjemputan yang harus dikerjakan hari ini"
-          icon={<Truck className="size-5" aria-hidden />}
+          subtitle="Tugas penjemputan ditugaskan"
+          icon={<Truck className="size-6" aria-hidden />}
+          bgClass="bg-gradient-to-br from-cyan-600 to-cyan-700"
+          href="/pickups"
         />
-        <StatCard
+        <StatBlock
           title="Antrian Aktif"
           value={String(overview?.antrian_aktif ?? 0)}
-          subtitle="Total tugas yang belum selesai"
-          icon={<Users className="size-5" aria-hidden />}
-          variant={overview && overview.antrian_aktif > 0 ? 'warning' : 'default'}
+          subtitle="Tugas yang belum selesai"
+          icon={<Users className="size-6" aria-hidden />}
+          bgClass="bg-gradient-to-br from-amber-500 to-amber-600"
+          href="/pickups"
         />
       </div>
 
-      {/* Tugas hari ini */}
+      {/* Task list */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Truck className="size-5 text-primary" aria-hidden />
+        <CardHeader variant="emerald" className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base font-bold text-white">
+            <Truck className="size-5 text-white/90" aria-hidden />
             Tugas Penjemputan Saya
           </CardTitle>
           <Link href="/pickups">
-            <Button type="button" variant="ghost" size="sm">
+            <Button type="button" variant="ghost" size="sm" className="h-7 text-xs text-white hover:bg-white/20">
               Lihat Semua
-              <ArrowRight className="ml-1 size-3.5" aria-hidden />
             </Button>
           </Link>
         </CardHeader>
         <CardContent className="p-0">
           {tasksLoading ? (
-            <div className="px-4 pb-4"><TableSkeleton rows={4} cols={3} /></div>
+            <div className="p-4"><TableSkeleton rows={4} cols={3} /></div>
           ) : taskList.length === 0 ? (
-            <p className="px-4 pb-4 text-sm text-muted-foreground">
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
               Tidak ada penjemputan yang ditugaskan saat ini.
             </p>
           ) : (
             <ul className="divide-y divide-border">
               {taskList.map((task) => (
-                <li key={task.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Truck className="size-4 text-primary" aria-hidden />
+                <li key={task.id} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/50 transition-colors">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Truck className="size-4" aria-hidden />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
+                    <p className="truncate text-sm font-semibold text-foreground">
                       {task.nasabah_nama ?? `Nasabah #${task.nasabah}`}
                     </p>
                     <p className="line-clamp-1 text-xs text-muted-foreground">{task.alamat_jemput}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground font-medium">
                       {formatDateWIT(task.jadwal, { dateStyle: 'medium', timeStyle: 'short' })}
                     </p>
                   </div>
@@ -559,40 +707,36 @@ function PetugasDashboard({ user }: { user: { id: number; nama_lengkap: string }
 
 // ─── Admin / Koordinator / Pemerintah Dashboard ──────────────────
 
-function AdminDashboardContent({ userName }: { userName: string }) {
+function AdminDashboardContent({ userName, role }: { userName: string; role?: string }) {
   const now = new Date()
   const currentMonth = now.getMonth() + 1
   const currentYear = now.getFullYear()
 
-  // ── Fetch overview ──
   const { data: overview, error: overviewError, isLoading: overviewLoading, mutate: mutateOverview } = useSWR(
     '/dashboard/overview/',
     (path) => api.get<DashboardOverview>(path),
     { revalidateOnFocus: true },
   )
 
-  // ── Fetch recent activity ──
   const { data: activity, isLoading: activityLoading } = useSWR(
     '/dashboard/recent-activity/?limit=10',
     (path) => api.get<ActivityItem[]>(path),
     { revalidateOnFocus: true },
   )
 
-  // ── Fetch open complaints ──
   const { data: complaints, isLoading: complaintsLoading } = useSWR(
     '/complaints/?status=terbuka&page_size=5',
     (path) => api.get<Complaint[]>(path),
     { revalidateOnFocus: true },
   )
 
-  // ── Global loading ──
   if (overviewLoading) {
     return (
       <div className="space-y-6">
-        <GreetingBanner name={userName} />
+        <WelcomeBanner userName={userName} role={role} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i}><CardContent className="p-6"><div className="h-20 animate-pulse rounded-lg bg-surface-muted" /></CardContent></Card>
+            <Card key={i}><CardContent className="p-6"><div className="h-24 animate-pulse rounded-lg bg-surface-muted" /></CardContent></Card>
           ))}
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
@@ -603,11 +747,10 @@ function AdminDashboardContent({ userName }: { userName: string }) {
     )
   }
 
-  // ── Error ──
   if (overviewError) {
     return (
       <div className="space-y-6">
-        <GreetingBanner name={userName} />
+        <WelcomeBanner userName={userName} role={role} />
         <ErrorMessage title="Gagal memuat data dashboard" message="Tidak dapat memuat ringkasan dashboard." onRetry={() => mutateOverview()} />
       </div>
     )
@@ -615,47 +758,72 @@ function AdminDashboardContent({ userName }: { userName: string }) {
 
   return (
     <div className="space-y-6">
-      <GreetingBanner name={userName} />
+      {/* Top Header section with Quick Actions */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            Ringkasan data operasional dan performa Bank Sampah MIRU.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/transactions/add">
+            <Button type="button" size="sm" className="gap-1.5 font-semibold">
+              <Plus className="size-4" aria-hidden />
+              Input Setoran
+            </Button>
+          </Link>
+          <Link href="/customers/add">
+            <Button type="button" variant="outline" size="sm" className="gap-1.5 font-semibold">
+              <UserPlus className="size-4" aria-hidden />
+              Tambah Nasabah
+            </Button>
+          </Link>
+        </div>
+      </div>
 
-      {/* Overview Cards */}
-      {overview && <OverviewCards data={overview} />}
+      {/* Overview Stat Blocks Grid (Matching reference design top) */}
+      {overview && <OverviewStatCards data={overview} />}
 
-      {/* Chart + Side Panels */}
+      {/* Main Charts Row */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <DepositChartView bulan={currentMonth} tahun={currentYear} />
         </div>
-        <div className="space-y-6">
-          <RecentActivity items={activity ?? []} isLoading={activityLoading} />
+        <div>
+          <StockDistributionChart />
         </div>
       </div>
 
-      {/* Bottom Row */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <OpenComplaints
-          complaints={complaints ?? []}
-          isLoading={complaintsLoading}
-        />
-        <StockMiniSummary />
+      {/* Data Grids Row */}
+      <div className="grid gap-6 lg:grid-cols-3 items-stretch">
+        <div className="flex flex-col lg:col-span-2">
+          <RecentActivity items={activity ?? []} isLoading={activityLoading} className="h-full" />
+        </div>
+        <div className="flex flex-col justify-between space-y-6">
+          <OpenComplaints
+            complaints={complaints ?? []}
+            isLoading={complaintsLoading}
+          />
+          <StockMiniSummary />
+        </div>
       </div>
+
+      {/* Bottom Welcome Banner Card (Matching reference design bottom placement) */}
+      <WelcomeBanner userName={userName} role={role} />
     </div>
   )
 }
 
-// ─── Main Component ────────────────────────────────────────────────
+// ─── Main Export Component ─────────────────────────────────────────
 
 export function DashboardClient() {
   const { user } = useAuth()
   const userName = user?.nama_lengkap ?? 'User'
 
-  // W9: petugas dapat dashboard khusus (widget jemput ditugaskan / antrian)
   if (user?.role === 'petugas' && user.id) {
-    return (
-      <PetugasDashboard
-        user={{ id: user.id, nama_lengkap: userName }}
-      />
-    )
+    return <PetugasDashboard user={{ id: user.id, nama_lengkap: userName }} />
   }
 
-  return <AdminDashboardContent userName={userName} />
+  return <AdminDashboardContent userName={userName} role={user?.role} />
 }

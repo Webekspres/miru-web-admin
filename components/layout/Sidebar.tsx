@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { X } from 'lucide-react'
+import { User, X } from 'lucide-react'
 import { MiruLogo } from '@/components/brand/MiruLogo'
 import { cn } from '@/lib/cn'
 import { APP_NAME } from '@/lib/config'
 import { useSidebarBadges } from '@/hooks/useSidebarBadges'
 import {
-  getNavSectionsForRole,
+  getGroupedNavForRole,
+  ROLE_LABELS,
   type NavItem,
   type SidebarBadgeKey,
   type WebAdminRole,
@@ -17,6 +18,10 @@ import { Button } from '@/components/ui/Button'
 
 export interface SidebarProps {
   role: WebAdminRole
+  user?: {
+    nama_lengkap: string
+    role: WebAdminRole
+  }
   open: boolean
   onClose: () => void
   className?: string
@@ -61,14 +66,14 @@ function NavList({
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
                 active
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
                   : 'text-muted-foreground hover:bg-surface-muted hover:text-foreground',
               )}
               aria-current={active ? 'page' : undefined}
             >
-              <Icon className="size-4 shrink-0" aria-hidden />
+              <Icon className={cn('size-4 shrink-0', active ? 'text-primary-foreground' : 'text-muted-foreground')} aria-hidden />
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
               {badgeCount > 0 && (
                 <span
@@ -91,9 +96,9 @@ function NavList({
   )
 }
 
-export function Sidebar({ role, open, onClose, className }: SidebarProps) {
+export function Sidebar({ role, user, open, onClose, className }: SidebarProps) {
   const pathname = usePathname()
-  const { main, settings } = getNavSectionsForRole(role)
+  const groups = getGroupedNavForRole(role)
   const badges = useSidebarBadges(role)
 
   function handleNavigate() {
@@ -102,27 +107,31 @@ export function Sidebar({ role, open, onClose, className }: SidebarProps) {
     }
   }
 
+  const roleLabel = ROLE_LABELS[role]
+  const displayName = user?.nama_lengkap ?? roleLabel
+
   return (
     <aside
       id="app-sidebar"
       className={cn(
-        'print-hidden fixed inset-y-0 left-0 z-40 flex h-screen w-64 flex-col border-r border-border bg-background transition-transform duration-200 ease-in-out',
+        'print-hidden fixed inset-y-0 left-0 z-40 flex h-screen w-64 flex-col border-r border-border bg-background text-foreground transition-transform duration-200 ease-in-out shadow-sm',
         open ? 'translate-x-0' : '-translate-x-full pointer-events-none',
         className,
       )}
       aria-hidden={!open}
     >
-      <div className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-4">
+      {/* Brand Header */}
+      <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-4 bg-background">
         <MiruLogo variant="icon" height={36} className="rounded-lg" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-foreground">MIRU</p>
+          <p className="truncate text-sm font-bold tracking-tight text-foreground">MIRU</p>
           <p className="truncate text-xs text-muted-foreground">{APP_NAME}</p>
         </div>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="shrink-0 lg:hidden"
+          className="shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
           onClick={onClose}
           aria-label="Tutup menu"
         >
@@ -130,30 +139,41 @@ export function Sidebar({ role, open, onClose, className }: SidebarProps) {
         </Button>
       </div>
 
-      <nav className="flex min-h-0 flex-1 flex-col p-3" aria-label="Menu utama">
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <NavList
-            items={main}
-            pathname={pathname}
-            onNavigate={handleNavigate}
-            badges={badges}
-          />
-        </div>
-
-        {settings.length > 0 && (
-          <div className="mt-auto shrink-0 border-t border-border pt-3">
-            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Pengaturan
-            </p>
-            <NavList
-              items={settings}
-              pathname={pathname}
-              onNavigate={handleNavigate}
-              badges={badges}
-            />
+      {/* User Profile Box (matching design tokens) */}
+      <div className="shrink-0 border-b border-border px-4 py-3.5 bg-surface-muted/60">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/20">
+            <User className="size-5" aria-hidden />
           </div>
-        )}
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
+            <p className="truncate text-xs font-medium text-muted-foreground">{roleLabel}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Sections */}
+      <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3" aria-label="Menu utama">
+        <div className="space-y-4">
+          {groups.map((group, idx) => (
+            <div key={group.title || `group-${idx}`}>
+              {group.title && (
+                <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {group.title}
+                </p>
+              )}
+              <NavList
+                items={group.items}
+                pathname={pathname}
+                onNavigate={handleNavigate}
+                badges={badges}
+              />
+            </div>
+          ))}
+        </div>
       </nav>
     </aside>
   )
 }
+
+

@@ -11,12 +11,11 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { PaginationControls } from '@/components/ui/PaginationControls'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
-  ChevronLeft,
-  ChevronRight,
   Edit,
   FileText,
   Plus,
@@ -26,12 +25,11 @@ import {
   UserCheck,
   UserX,
 } from 'lucide-react'
-import type { User } from '@/types/models'
+import type { StaffRole, User } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
 
 // ─── Constants ────────────────────────────────────────────────────
 
-type StaffRole = 'petugas' | 'admin' | 'koordinator'
 
 interface StaffTab {
   key: StaffRole
@@ -69,37 +67,7 @@ function getRoleLabel(role: StaffRole): string {
   return labels[role] ?? role
 }
 
-// ─── Pagination ───────────────────────────────────────────────────
 
-function PaginationControls({
-  meta,
-  page,
-  onPageChange,
-}: {
-  meta: PaginationMeta | undefined
-  page: number
-  onPageChange: (p: number) => void
-}) {
-  if (!meta || meta.total_pages <= 1) return null
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Menampilkan halaman {meta.page} dari {meta.total_pages} ({meta.count} total)
-      </p>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" disabled={!meta.previous} onClick={() => onPageChange(page - 1)}>
-          <ChevronLeft className="size-4" aria-hidden />
-          Sebelumnya
-        </Button>
-        <Button type="button" variant="outline" size="sm" disabled={!meta.next} onClick={() => onPageChange(page + 1)}>
-          Selanjutnya
-          <ChevronRight className="size-4" aria-hidden />
-        </Button>
-      </div>
-    </div>
-  )
-}
 
 // ─── Main Component ───────────────────────────────────────────────
 

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ApiError } from '@/lib/api'
@@ -85,18 +86,28 @@ export function LoginForm() {
         required
       />
 
-      <Input
-        label="Kata sandi"
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        placeholder="Masukkan kata sandi"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        error={fieldErrors.password}
-        disabled={loading || status === 'loading'}
-        required
-      />
+      <div className="space-y-1.5">
+        <Input
+          label="Kata sandi"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Masukkan kata sandi"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          error={fieldErrors.password}
+          disabled={loading || status === 'loading'}
+          required
+        />
+        <div className="flex justify-center">
+          <Link
+            href="/forgot-password"
+            className="text-xs font-semibold text-primary transition hover:underline"
+          >
+            Lupa kata sandi?
+          </Link>
+        </div>
+      </div>
 
       <Button
         type="submit"

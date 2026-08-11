@@ -5,6 +5,10 @@ export type UserRole =
   | 'koordinator'
   | 'pemerintah'
 
+/** Roles yang termasuk staff (bukan nasabah/pemerintah). */
+export type StaffRole = Extract<UserRole, 'petugas' | 'admin' | 'koordinator'>
+
+
 export interface User {
   id: number
   username: string
@@ -172,6 +176,8 @@ export interface KontenEdukasi {
   id: number
   judul: string
   isi: string
+  featured_image?: string | null
+  gambar_url?: string | null
   kategori_terkait: number | null
   kategori_terkait_nama?: string | null
   aktif: boolean

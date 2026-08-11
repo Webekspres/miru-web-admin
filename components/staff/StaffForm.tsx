@@ -10,11 +10,9 @@ import { Input } from '@/components/ui/Input'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 import { Select } from '@/components/ui/Select'
 import { ArrowLeft, Save, UserCog } from 'lucide-react'
-import type { UserRole } from '@/types/models'
+import type { StaffRole } from '@/types/models'
 
 // ─── Types ────────────────────────────────────────────────────────
-
-type StaffRole = Extract<UserRole, 'petugas' | 'admin' | 'koordinator'>
 
 interface StaffFormData {
   username: string

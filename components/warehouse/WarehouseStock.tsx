@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { api } from '@/lib/api'
-import { formatDateWIT, formatRupiah, formatWeightKg } from '@/lib/format'
+import { formatDateWIT, formatRupiah, formatWeightKg, getStockLabel, LOW_STOCK_THRESHOLD_KG } from '@/lib/format'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -63,7 +63,6 @@ interface StockHistoryData {
 
 // ─── Constants ────────────────────────────────────────────────────
 
-const LOW_STOCK_THRESHOLD_KG = 10
 const CRITICAL_STOCK_THRESHOLD_KG = 2
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -74,11 +73,8 @@ function getStockVariant(stokKg: number): 'success' | 'warning' | 'danger' {
   return 'success'
 }
 
-function getStockLabel(stokKg: number): string {
-  if (stokKg === 0) return 'Habis'
-  if (stokKg <= CRITICAL_STOCK_THRESHOLD_KG) return 'Kritis'
-  if (stokKg < LOW_STOCK_THRESHOLD_KG) return 'Menipis'
-  return 'Aman'
+function getStockLabelLocal(stokKg: number): string {
+  return getStockLabel(stokKg, { criticalThreshold: CRITICAL_STOCK_THRESHOLD_KG, defaultLabel: 'Aman' })
 }
 
 function getSumberLabel(sumber: string): string {
@@ -372,7 +368,7 @@ export function WarehouseStock() {
                           {variant === 'danger' && <AlertTriangle className="mr-1 inline size-3" aria-hidden />}
                           {variant === 'warning' && <TrendingDown className="mr-1 inline size-3" aria-hidden />}
                           {variant === 'success' && <TrendingUp className="mr-1 inline size-3" aria-hidden />}
-                          {getStockLabel(stokKg)}
+                          {getStockLabelLocal(stokKg)}
                         </Badge>
                       </TableCell>
                       <TableCell>

@@ -41,3 +41,37 @@ export function formatDateWIT(
 export function formatWeightKg(value: string | number): string {
   return `${weightFormatter.format(toNumber(value))} kg`
 }
+
+/** Nama bulan dalam Bahasa Indonesia (0-indexed: Januari = 0). */
+export const MONTHS = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+] as const
+
+/** Default threshold for "low stock" label (kg). */
+export const LOW_STOCK_THRESHOLD_KG = 10
+
+/**
+ * Label stok berdasarkan berat:
+ * - 0 → 'Habis'
+ * - ≤ criticalThreshold → 'Kritis' (hanya jika criticalThreshold diberikan)
+ * - < lowThreshold → 'Menipis'
+ * - sisanya → defaultLabel ('Aman' atau 'Tersedia')
+ */
+export function getStockLabel(
+  stokKg: number,
+  opts: {
+    lowThreshold?: number
+    criticalThreshold?: number
+    defaultLabel?: string
+  } = {},
+): string {
+  const low = opts.lowThreshold ?? LOW_STOCK_THRESHOLD_KG
+  const critical = opts.criticalThreshold
+  const label = opts.defaultLabel ?? 'Tersedia'
+
+  if (stokKg === 0) return 'Habis'
+  if (critical != null && stokKg <= critical) return 'Kritis'
+  if (stokKg < low) return 'Menipis'
+  return label
+}

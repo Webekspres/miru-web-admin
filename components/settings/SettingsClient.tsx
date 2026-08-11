@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { api } from '@/lib/api'
+import { cn } from '@/lib/cn'
 import { useAuth } from '@/providers/AuthProvider'
 import { canMutate } from '@/lib/permissions'
 import { useToast } from '@/components/feedback/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { MarkdownContent } from '@/components/ui/MarkdownContent'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
@@ -207,13 +209,32 @@ function InstitutionTab() {
 
 // ─── Tab 2: Kebijakan Data ────────────────────────────────────────
 
+interface PrivacyDataStoredItem {
+  kategori?: string
+  field?: string
+  tujuan?: string
+  [key: string]: unknown
+}
+
 interface PrivacyPolicyData {
   versi: string
   terakhir_diperbarui?: string
-  data_yang_disimpan?: string[] | Record<string, unknown>
+  data_yang_disimpan?: (string | PrivacyDataStoredItem)[]
   retensi?: { masa_tahun?: number }
   hak_pengguna?: string[]
   kebijakan?: string
+}
+
+function renderPrivacyItem(item: string | PrivacyDataStoredItem): string {
+  if (typeof item === 'string') return item
+  if (typeof item === 'object' && item !== null) {
+    const parts: string[] = []
+    if (item.kategori) parts.push(`[${item.kategori}]`)
+    if (item.field) parts.push(String(item.field))
+    if (item.tujuan) parts.push(`— ${item.tujuan}`)
+    return parts.length > 0 ? parts.join(' ') : JSON.stringify(item)
+  }
+  return String(item)
 }
 
 function PrivacyTab() {
@@ -242,12 +263,19 @@ function PrivacyTab() {
         </span>
       </div>
 
+      {data?.kebijakan && (
+        <div className="rounded-xl border border-border p-4 bg-background space-y-2">
+          <h4 className="font-semibold text-foreground">Dokumen Kebijakan &amp; Ketentuan</h4>
+          <MarkdownContent source={data.kebijakan} />
+        </div>
+      )}
+
       {items.length > 0 && (
         <div>
           <h4 className="mb-1.5 font-semibold text-foreground">Data yang Disimpan</h4>
           <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
             {items.map((item, idx) => (
-              <li key={idx}>{item}</li>
+              <li key={idx}>{renderPrivacyItem(item)}</li>
             ))}
           </ul>
         </div>
@@ -258,7 +286,7 @@ function PrivacyTab() {
           <h4 className="mb-1.5 font-semibold text-foreground">Hak Pengguna</h4>
           <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
             {data.hak_pengguna.map((item, idx) => (
-              <li key={idx}>{item}</li>
+              <li key={idx}>{renderPrivacyItem(item)}</li>
             ))}
           </ul>
         </div>
@@ -280,6 +308,15 @@ function AboutTab() {
     (path) => api.get<InstitutionSettings>(path),
     { revalidateOnFocus: false },
   )
+
+  const aboutMarkdown = settings?.pengumuman ?? `MIRU (Mimika Recycle Unit) adalah aplikasi bank sampah resmi untuk Distrik Mimika Baru, Kabupaten Mimika, Papua Tengah.
+
+![MIRU Bank Sampah](https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=1200&q=80)
+
+### Layanan Utama:
+- **Setoran Sampah Terpilah**: Nasabah menyetor sampah plastik, kertas, logam, dan minyak jelantah.
+- **Jadwal Penjemputan**: Penjemputan langsung oleh petugas Bank Sampah.
+- **Tukar Poin & Saldo**: Poin setoran dapat ditukarkan dengan hadiah menarik.`
 
   return (
     <div className="space-y-4 text-sm">
@@ -306,12 +343,9 @@ function AboutTab() {
         </div>
       </div>
 
-      <p className="leading-relaxed text-muted-foreground">
-        MIRU (Mimika Recycle Unit) adalah aplikasi bank sampah untuk Distrik Mimika Baru.
-        Aplikasi ini membantu nasabah menyetor sampah terpilah, menjadwalkan penjemputan,
-        memantau saldo &amp; poin, serta mendukung pengelolaan bank sampah oleh petugas,
-        koordinator, dan pemerintah distrik.
-      </p>
+      <div className="rounded-xl border border-border bg-background p-4">
+        <MarkdownContent source={aboutMarkdown} />
+      </div>
     </div>
   )
 }
@@ -342,11 +376,12 @@ export function SettingsClient() {
                   role="tab"
                   aria-selected={activeTab === tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                  className={cn(
+                    'flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors cursor-pointer',
                     activeTab === tab.key
-                      ? 'border-b-2 border-primary bg-background text-primary'
-                      : 'text-muted-foreground hover:bg-surface-muted hover:text-foreground'
-                  }`}
+                      ? 'border-primary bg-background text-primary font-semibold'
+                      : 'border-transparent text-muted-foreground hover:bg-surface-muted hover:text-foreground',
+                  )}
                 >
                   <Icon className="size-4" aria-hidden />
                   {tab.label}
