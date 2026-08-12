@@ -62,7 +62,7 @@ export function PublicNavbar({
           href="/"
           className="group flex items-center gap-2 transition-opacity duration-200 hover:opacity-90"
         >
-          <MiruLogo variant="full-bg" height={44} className="h-11 w-auto" priority />
+          <MiruLogo variant="full" height={34} className="h-11 w-auto" priority />
         </Link>
 
         {showSectionLinks ? (

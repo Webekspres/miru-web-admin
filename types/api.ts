@@ -46,6 +46,7 @@ export interface LoginResponse {
     no_hp?: string
     saldo?: string
     poin?: number
+    avatar_url?: string | null
   }
 }
 

@@ -25,7 +25,10 @@ export function PublicSiteLayout({ children }: { children: ReactNode }) {
     pathname?.startsWith('/staff') ||
     pathname?.startsWith('/audit-log') ||
     pathname?.startsWith('/settings') ||
-    pathname?.startsWith('/profile')
+    pathname?.startsWith('/profile') ||
+    pathname?.startsWith('/institution') ||
+    pathname?.startsWith('/privacy') ||
+    pathname?.startsWith('/about')
 
   if (isDashboardRoute) {
     return <>{children}</>

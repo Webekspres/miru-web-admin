@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { LogOut, User } from 'lucide-react'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import { cn } from '@/lib/cn'
 import { getProfilePathForRole } from '@/lib/routes'
 import { ROLE_LABELS, type WebAdminRole } from '@/lib/navigation'
@@ -14,6 +15,7 @@ export interface ProfileDropdownProps {
     id: number
     nama_lengkap: string
     role: WebAdminRole
+    avatar_url?: string | null
   }
   onLogout?: () => void
   className?: string
@@ -52,9 +54,7 @@ export function ProfileDropdown({ user, onLogout, className }: ProfileDropdownPr
         aria-haspopup="true"
         className="gap-2"
       >
-        <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <User className="size-3.5" aria-hidden />
-        </span>
+        <UserAvatar src={user.avatar_url} name={user.nama_lengkap} size="sm" />
         <span className="hidden max-w-32 truncate sm:inline">
           {user.nama_lengkap}
         </span>
@@ -65,13 +65,16 @@ export function ProfileDropdown({ user, onLogout, className }: ProfileDropdownPr
           role="menu"
           className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-background shadow-lg"
         >
-          <div className="border-b border-border px-4 py-3">
-            <p className="truncate text-sm font-medium text-foreground">
-              {user.nama_lengkap}
-            </p>
-            <Badge variant="primary" className="mt-1">
-              {ROLE_LABELS[user.role]}
-            </Badge>
+          <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+            <UserAvatar src={user.avatar_url} name={user.nama_lengkap} size="sm" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">
+                {user.nama_lengkap}
+              </p>
+              <Badge variant="primary" className="mt-1">
+                {ROLE_LABELS[user.role]}
+              </Badge>
+            </div>
           </div>
 
           <div className="p-1">

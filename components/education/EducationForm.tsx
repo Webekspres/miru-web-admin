@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import useSWR, { useSWRConfig } from 'swr'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { api, ApiError } from '@/lib/api'
+import { uploadEducationImage } from '@/lib/media'
 import { useAuth } from '@/providers/AuthProvider'
 import { canMutate } from '@/lib/permissions'
 import { useToast } from '@/components/feedback/Toast'
@@ -12,14 +13,9 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
+import { ImageDropzone } from '@/components/ui/ImageDropzone'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
-import {
-  ArrowLeft,
-  BookOpen,
-  Image as ImageIcon,
-  Save,
-  ShieldAlert,
-} from 'lucide-react'
+import { ArrowLeft, Save, ShieldAlert } from 'lucide-react'
 import type { KontenEdukasi, WasteCategory } from '@/types/models'
 
 export interface EducationFormProps {
@@ -33,7 +29,6 @@ interface FormState {
   featured_image: string
   kategori_terkait: string
   aktif: boolean
-  urutan: string
 }
 
 interface FormErrors {
@@ -41,7 +36,6 @@ interface FormErrors {
   isi?: string
   featured_image?: string
   kategori_terkait?: string
-  urutan?: string
   _general?: string
 }
 
@@ -52,9 +46,11 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
   const { mutate: globalMutate } = useSWRConfig()
   const canWrite = authRole ? canMutate(authRole) : false
 
-  const { data: categories } = useSWR('/waste-categories/', (path) => api.get<WasteCategory[]>(path), {
-    revalidateOnFocus: false,
-  })
+  const { data: categories } = useSWR(
+    '/waste-categories/',
+    (path) => api.get<WasteCategory[]>(path),
+    { revalidateOnFocus: false },
+  )
   const categoryOptions = (categories ?? []).map((c) => ({
     value: String(c.id),
     label: c.nama,
@@ -64,9 +60,10 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
     judul: initialData?.judul ?? '',
     isi: initialData?.isi ?? '',
     featured_image: initialData?.featured_image ?? initialData?.gambar_url ?? '',
-    kategori_terkait: initialData?.kategori_terkait ? String(initialData.kategori_terkait) : '',
+    kategori_terkait: initialData?.kategori_terkait
+      ? String(initialData.kategori_terkait)
+      : '',
     aktif: initialData?.aktif ?? true,
-    urutan: initialData?.urutan !== undefined ? String(initialData.urutan) : '0',
   })
 
   const [formErrors, setFormErrors] = useState<FormErrors>({})
@@ -84,18 +81,13 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
       errs.isi = 'Isi artikel wajib diisi.'
       valid = false
     }
-    const urutan = parseInt(form.urutan)
-    if (form.urutan === '' || isNaN(urutan) || urutan < 0) {
-      errs.urutan = 'Urutan harus berupa angka ≥ 0.'
-      valid = false
-    }
 
     setFormErrors(errs)
     return valid
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(e?: React.FormEvent) {
+    e?.preventDefault()
     if (!validate() || !canWrite) return
     setSubmitting(true)
 
@@ -106,7 +98,6 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
       gambar_url: form.featured_image.trim() || null,
       kategori_terkait: form.kategori_terkait ? Number(form.kategori_terkait) : null,
       aktif: form.aktif,
-      urutan: parseInt(form.urutan),
     }
 
     try {
@@ -127,9 +118,9 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
             const msg = messages.join(', ')
             if (field === 'judul') apiErrs.judul = msg
             else if (field === 'isi') apiErrs.isi = msg
-            else if (field === 'featured_image' || field === 'gambar_url') apiErrs.featured_image = msg
-            else if (field === 'kategori_terkait') apiErrs.kategori_terkait = msg
-            else if (field === 'urutan') apiErrs.urutan = msg
+            else if (field === 'featured_image' || field === 'gambar_url') {
+              apiErrs.featured_image = msg
+            } else if (field === 'kategori_terkait') apiErrs.kategori_terkait = msg
             else apiErrs._general = msg
           }
         } else {
@@ -160,7 +151,9 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
         <Card className="p-6">
           <div className="flex items-center gap-3 text-danger">
             <ShieldAlert className="size-6" />
-            <p className="text-sm font-semibold">Anda tidak memiliki izin untuk mengedit atau menambahkan artikel.</p>
+            <p className="text-sm font-semibold">
+              Anda tidak memiliki izin untuk mengedit atau menambahkan artikel.
+            </p>
           </div>
         </Card>
       </div>
@@ -168,9 +161,8 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Link href="/education">
             <Button type="button" variant="outline" size="sm" className="gap-1">
@@ -183,7 +175,9 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
               {isEdit ? 'Edit Artikel Edukasi' : 'Tambah Artikel Edukasi Baru'}
             </h1>
             <p className="text-xs text-muted-foreground">
-              {isEdit ? 'Perbarui isi dan gambar artikel edukasi' : 'Tulis artikel panduan pemilahan sampah dengan gambar utama dan Markdown editor'}
+              {isEdit
+                ? 'Perbarui isi dan gambar artikel edukasi'
+                : 'Tulis artikel panduan pemilahan sampah'}
             </p>
           </div>
         </div>
@@ -194,71 +188,69 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
               Batal
             </Button>
           </Link>
-          <Button type="button" onClick={handleSubmit} loading={submitting} disabled={submitting} className="gap-1.5 font-semibold">
+          <Button
+            type="button"
+            onClick={() => void handleSubmit()}
+            loading={submitting}
+            disabled={submitting}
+            className="gap-1.5 font-semibold"
+          >
             <Save className="size-4" aria-hidden />
             {isEdit ? 'Simpan Perubahan' : 'Terbitkan Artikel'}
           </Button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
         {formErrors._general && (
-          <div className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger" role="alert">
+          <div
+            className="rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm text-danger"
+            role="alert"
+          >
             {formErrors._general}
           </div>
         )}
 
-        <Card className="p-6 space-y-5">
-          {/* Judul Artikel */}
+        <Card className="space-y-5 p-6">
           <Input
             label="Judul Artikel"
             placeholder="Contoh: Panduan Lengkap Memilah Sampah Organik dan Anorganik"
             value={form.judul}
             onChange={(e) => {
               setForm((p) => ({ ...p, judul: e.target.value }))
-              setFormErrors((p) => { const n = { ...p }; delete n.judul; return n })
+              setFormErrors((p) => {
+                const n = { ...p }
+                delete n.judul
+                return n
+              })
             }}
             error={formErrors.judul}
           />
 
-          {/* Featured Image (Gambar Utama) */}
-          <div className="space-y-2">
-            <Input
-              label="Gambar Utama / Featured Image (URL)"
-              placeholder="https://example.com/images/artikel-banner.jpg"
-              value={form.featured_image}
-              onChange={(e) => {
-                setForm((p) => ({ ...p, featured_image: e.target.value }))
-                setFormErrors((p) => { const n = { ...p }; delete n.featured_image; return n })
+          <div className="space-y-1.5">
+            <ImageDropzone
+              label="Upload Photos"
+              value={form.featured_image || null}
+              onUpload={async (file) => {
+                const uploaded = await uploadEducationImage(file)
+                setForm((p) => ({ ...p, featured_image: uploaded.url }))
+                setFormErrors((p) => {
+                  const n = { ...p }
+                  delete n.featured_image
+                  return n
+                })
               }}
-              error={formErrors.featured_image}
+              onClear={() => setForm((p) => ({ ...p, featured_image: '' }))}
+              disabled={submitting}
             />
-
-            {form.featured_image.trim() ? (
-              <div className="relative overflow-hidden rounded-xl border border-border bg-surface-muted/40 p-2">
-                <img
-                  src={form.featured_image.trim()}
-                  alt="Featured Preview"
-                  className="max-h-64 w-full rounded-lg object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none'
-                  }}
-                />
-                <p className="mt-1.5 px-1 text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <ImageIcon className="size-3.5 text-primary" />
-                  Preview Gambar Utama (Featured Image)
-                </p>
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <ImageIcon className="size-3.5" />
-                Masukkan URL gambar utama artikel untuk menampilkan banner thumbnail.
+            {formErrors.featured_image && (
+              <p className="text-xs font-medium text-danger" role="alert">
+                {formErrors.featured_image}
               </p>
             )}
           </div>
 
-          {/* Metadata Row */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div>
             <Select
               label="Kategori Terkait (opsional)"
               placeholder="Pilih Kategori Terkait"
@@ -266,44 +258,43 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
               value={form.kategori_terkait}
               onChange={(e) => {
                 setForm((p) => ({ ...p, kategori_terkait: e.target.value }))
-                setFormErrors((p) => { const n = { ...p }; delete n.kategori_terkait; return n })
+                setFormErrors((p) => {
+                  const n = { ...p }
+                  delete n.kategori_terkait
+                  return n
+                })
               }}
               error={formErrors.kategori_terkait}
             />
-            <Input
-              label="Urutan Tampil"
-              type="number"
-              min="0"
-              placeholder="Contoh: 1"
-              value={form.urutan}
-              onChange={(e) => {
-                setForm((p) => ({ ...p, urutan: e.target.value }))
-                setFormErrors((p) => { const n = { ...p }; delete n.urutan; return n })
-              }}
-              error={formErrors.urutan}
-            />
           </div>
 
-          {/* Full-width Rich Text / Markdown Editor */}
           <RichTextEditor
             id="edukasi-isi"
-            label="Isi Artikel (Rich Text Editor & Markdown)"
+            label="Isi Artikel"
             value={form.isi}
             onChange={(val) => {
               setForm((p) => ({ ...p, isi: val }))
-              setFormErrors((p) => { const n = { ...p }; delete n.isi; return n })
+              setFormErrors((p) => {
+                const n = { ...p }
+                delete n.isi
+                return n
+              })
             }}
-            placeholder={'# Judul Panduan\n\nTulis artikel edukasi di sini. Anda dapat menggunakan toolbar untuk **tebal**, *miring*, daftar, dan **sisipkan gambar** (`![alt](url)`).'}
-            rows={14}
+            onUploadImage={async (file) => {
+              const uploaded = await uploadEducationImage(file)
+              return uploaded.url
+            }}
+            placeholder="Tulis artikel edukasi di sini…"
             error={formErrors.isi}
           />
 
-          {/* Status Aktif */}
-          <div className="flex items-center justify-between rounded-xl border border-border p-4 bg-surface-muted/30">
+          <div className="flex items-center justify-between rounded-xl border border-border bg-surface-muted/30 p-4">
             <div>
               <p className="text-sm font-semibold text-foreground">Status Publikasi Artikel</p>
               <p className="text-xs text-muted-foreground">
-                {form.aktif ? 'Artikel ini dapat dibaca oleh nasabah di aplikasi' : 'Artikel disembunyikan (draft)'}
+                {form.aktif
+                  ? 'Artikel ini dapat dibaca oleh nasabah di aplikasi'
+                  : 'Artikel disembunyikan (draft)'}
               </p>
             </div>
             <button
@@ -318,7 +309,7 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
             >
               <span
                 className={`inline-block size-5 rounded-full bg-white shadow-sm transition-transform ${
-                  form.aktif ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                  form.aktif ? 'translate-x-5.5' : 'translate-x-0.5'
                 }`}
               />
             </button>
@@ -331,7 +322,12 @@ export function EducationForm({ initialData, isEdit = false }: EducationFormProp
               Batal
             </Button>
           </Link>
-          <Button type="submit" loading={submitting} disabled={submitting} className="gap-1.5 font-semibold">
+          <Button
+            type="submit"
+            loading={submitting}
+            disabled={submitting}
+            className="gap-1.5 font-semibold"
+          >
             <Save className="size-4" aria-hidden />
             {isEdit ? 'Simpan Perubahan' : 'Terbitkan Artikel'}
           </Button>

@@ -61,6 +61,7 @@ export function DashboardAuthShell({ children }: DashboardAuthShellProps) {
         id: user.id,
         nama_lengkap: user.nama_lengkap,
         role,
+        avatar_url: user.avatar_url,
       }}
       onLogout={handleLogout}
     >

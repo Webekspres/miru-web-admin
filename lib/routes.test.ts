@@ -25,6 +25,13 @@ describe('canAccessRoute', () => {
     expect(canAccessRoute('petugas', '/transactions/add')).toBe(true)
     expect(canAccessRoute('petugas', '/balance')).toBe(false)
     expect(canAccessRoute('petugas', '/settings')).toBe(false)
+    expect(canAccessRoute('petugas', '/profile/edit')).toBe(true)
+  })
+
+  it('allows koordinator settings pages', () => {
+    expect(canAccessRoute('koordinator', '/institution')).toBe(true)
+    expect(canAccessRoute('koordinator', '/privacy/edit')).toBe(true)
+    expect(canAccessRoute('koordinator', '/about')).toBe(true)
   })
 
   it('restricts pemerintah routes', () => {

@@ -25,7 +25,6 @@ import {
   PieChart as PieChartIcon,
   Plus,
   Scale,
-  Sparkles,
   TrendingUp,
   Truck,
   UserPlus,
@@ -104,7 +103,26 @@ const ACTIVITY_ICONS: Record<string, typeof TrendingUp> = {
   penjemputan: Truck,
 }
 
-const DONUT_COLORS = ['#16a34a', '#0891b2', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899', '#64748b']
+const DONUT_COLORS = [
+  '#16a34a',
+  '#0891b2',
+  '#f59e0b',
+  '#dc2626',
+  '#8b5cf6',
+  '#ec4899',
+  '#64748b',
+  '#92400e',
+  '#ea580c',
+  '#2563eb',
+  '#ca8a04',
+  '#4f46e5',
+]
+
+function donutColor(index: number): string {
+  const preset = DONUT_COLORS[index]
+  if (preset) return preset
+  return `hsl(${Math.round((index * 137.508) % 360)} 62% 42%)`
+}
 
 // ─── Sub-Component: Welcome Card (Matching Reference Design) ─────
 
@@ -113,9 +131,9 @@ function WelcomeBanner({ userName, role }: { userName: string; role?: string }) 
     <Card className="border-primary/20 bg-linear-to-r from-primary/5 via-background to-surface-muted">
       <CardHeader variant="default" className="border-b border-border/60">
         <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
-          <Sparkles className="size-5 text-primary" aria-hidden />
-          Selamat Datang
+          Selamat Datang 👋
         </CardTitle>
+        {/* icon hai sebagai ikon welcome */}
       </CardHeader>
       <CardContent className="py-4">
         <p className="text-sm leading-relaxed text-foreground">
@@ -246,19 +264,31 @@ function DepositChartView({ bulan, tahun }: { bulan: number; tahun: number }) {
   return (
     <Card>
       {/* Header bar matching reference green banner */}
-      <CardHeader variant="emerald" className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2 text-base font-bold text-white">
-          <BarChart3 className="size-5 text-white/90" aria-hidden />
-          Grafik Setoran Sampah ({MONTHS[viewMonth - 1]} {viewYear})
+      <CardHeader variant="emerald" className="flex flex-row items-center justify-between gap-2">
+        <CardTitle className="flex min-w-0 items-center gap-2 truncate text-base font-bold text-white">
+          <BarChart3 className="size-5 shrink-0 text-white/90" aria-hidden />
+          Grafik Setoran Sampah
         </CardTitle>
-        <div className="flex items-center gap-1 rounded-lg bg-black/20 p-1 text-white">
-          <Button type="button" variant="ghost" size="sm" onClick={prevMonth} className="h-7 w-7 p-0 text-white hover:bg-white/20">
+        <div className="flex shrink-0 items-center rounded-lg bg-black/20 p-0.5 text-white">
+          <button
+            type="button"
+            onClick={prevMonth}
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-white hover:bg-white/20"
+            aria-label="Bulan sebelumnya"
+          >
             <ChevronLeft className="size-4" aria-hidden />
-          </Button>
-          <span className="min-w-20 text-center text-xs font-semibold">{MONTHS[viewMonth - 1]} {viewYear}</span>
-          <Button type="button" variant="ghost" size="sm" onClick={nextMonth} className="h-7 w-7 p-0 text-white hover:bg-white/20">
+          </button>
+          <span className="min-w-20 px-1 text-center text-xs font-semibold">
+            {MONTHS[viewMonth - 1]} {viewYear}
+          </span>
+          <button
+            type="button"
+            onClick={nextMonth}
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-white hover:bg-white/20"
+            aria-label="Bulan berikutnya"
+          >
             <ChevronRight className="size-4" aria-hidden />
-          </Button>
+          </button>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
@@ -326,6 +356,7 @@ function StockDistributionChart() {
       }))
       .filter((item) => item.value > 0)
       .sort((a, b) => b.value - a.value)
+      .map((item, index) => ({ ...item, color: donutColor(index) }))
   }, [inventory])
 
   return (
@@ -364,8 +395,8 @@ function StockDistributionChart() {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {pieData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
+                    {pieData.map((item) => (
+                      <Cell key={item.name} fill={item.color} />
                     ))}
                   </Pie>
                   <Tooltip
@@ -381,17 +412,17 @@ function StockDistributionChart() {
               </ResponsiveContainer>
             </div>
 
-            <div className="min-w-0 flex-1 space-y-2">
-              {pieData.slice(0, 5).map((item, idx) => (
+            <div className="max-h-48 min-w-0 flex-1 space-y-2 overflow-y-auto">
+              {pieData.map((item) => (
                 <div key={item.name} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2 truncate">
                     <span
                       className="size-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: DONUT_COLORS[idx % DONUT_COLORS.length] }}
+                      style={{ backgroundColor: item.color }}
                     />
                     <span className="truncate font-medium text-foreground">{item.name}</span>
                   </div>
-                  <span className="ml-2 font-semibold text-foreground shrink-0">{formatWeightKg(item.value)}</span>
+                  <span className="ml-2 shrink-0 font-semibold text-foreground">{formatWeightKg(item.value)}</span>
                 </div>
               ))}
             </div>
@@ -758,6 +789,8 @@ function AdminDashboardContent({ userName, role }: { userName: string; role?: st
 
   return (
     <div className="space-y-6">
+      {/* Top Welcome Banner Card (Matching reference design top placement) */}
+      <WelcomeBanner userName={userName} role={role} />
       {/* Top Header section with Quick Actions */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -808,9 +841,6 @@ function AdminDashboardContent({ userName, role }: { userName: string; role?: st
           <StockMiniSummary />
         </div>
       </div>
-
-      {/* Bottom Welcome Banner Card (Matching reference design bottom placement) */}
-      <WelcomeBanner userName={userName} role={role} />
     </div>
   )
 }

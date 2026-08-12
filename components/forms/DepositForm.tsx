@@ -16,7 +16,8 @@ import { Select } from '@/components/ui/Select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
-import { Search, Plus, Trash2, User as UserIcon, Package, Scale, Calculator, AlertTriangle, CheckCircle2, QrCode, Camera } from 'lucide-react'
+import { Search, Plus, Trash2, Package, Scale, Calculator, AlertTriangle, CheckCircle2, QrCode, Camera } from 'lucide-react'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import type { Deposit, User, WasteCategory } from '@/types/models'
 
 // ─── Types ───────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ interface NasabahOption {
   nama_lengkap: string
   no_hp?: string
   alamat?: string
+  avatar_url?: string | null
 }
 
 /** GET /users/{id}/ for petugas omits `role` (NasabahLookupSerializer). */
@@ -35,6 +37,7 @@ type NasabahLookupUser = {
   no_hp?: string
   alamat?: string
   is_active: boolean
+  avatar_url?: string | null
   role?: User['role']
   username?: string
 }
@@ -104,10 +107,12 @@ function assertNasabahLookup(user: NasabahLookupUser): string | null {
 function NasabahSearch({
   onSelect,
   selectedName,
+  selectedAvatar,
   error,
 }: {
   onSelect: (nasabah: NasabahOption) => void
   selectedName: string
+  selectedAvatar?: string | null
   error?: string
 }) {
   const [query, setQuery] = useState('')
@@ -148,6 +153,7 @@ function NasabahSearch({
       nama_lengkap: u.nama_lengkap,
       no_hp: u.no_hp,
       alamat: u.alamat,
+      avatar_url: u.avatar_url,
     }))
 
   function handleSelect(nasabah: NasabahOption) {
@@ -191,7 +197,7 @@ function NasabahSearch({
 
       {selectedName ? (
         <div className="mt-1.5 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
-          <UserIcon className="size-5 text-primary" aria-hidden />
+          <UserAvatar src={selectedAvatar} name={selectedName} size="sm" className="size-8" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground">{selectedName}</p>
           </div>
@@ -280,9 +286,12 @@ function NasabahSearch({
                       : 'text-foreground hover:bg-surface-muted'
                   }`}
                 >
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted text-muted-foreground">
-                    <UserIcon className="size-4" aria-hidden />
-                  </div>
+                  <UserAvatar
+                    src={nasabah.avatar_url}
+                    name={nasabah.nama_lengkap}
+                    size="sm"
+                    className="size-8"
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{nasabah.nama_lengkap}</p>
                     <p className="truncate text-xs text-muted-foreground">
@@ -423,10 +432,12 @@ function NasabahQrCameraScanner({
 function NasabahQrInput({
   onSelect,
   selectedName,
+  selectedAvatar,
   error,
 }: {
   onSelect: (nasabah: NasabahOption) => void
   selectedName: string
+  selectedAvatar?: string | null
   error?: string
 }) {
   const [idInput, setIdInput] = useState('')
@@ -455,6 +466,7 @@ function NasabahQrInput({
         nama_lengkap: user.nama_lengkap,
         no_hp: user.no_hp,
         alamat: user.alamat,
+        avatar_url: user.avatar_url,
       }
       setSearchResult(option)
       // Langsung pilih setelah lookup sukses (scan QR / cari ID).
@@ -516,7 +528,7 @@ function NasabahQrInput({
   if (selectedName) {
     return (
       <div className="mt-1.5 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
-        <QrCode className="size-5 text-primary" aria-hidden />
+        <UserAvatar src={selectedAvatar} name={selectedName} size="sm" className="size-8" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-foreground">{selectedName}</p>
         </div>
@@ -588,9 +600,12 @@ function NasabahQrInput({
         <div className="rounded-lg border border-success/30 bg-success/5 p-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-success/10">
-                <UserIcon className="size-5 text-success" aria-hidden />
-              </div>
+              <UserAvatar
+                src={searchResult.avatar_url}
+                name={searchResult.nama_lengkap}
+                size="sm"
+                className="size-10"
+              />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">{searchResult.nama_lengkap}</p>
                 <p className="text-xs text-muted-foreground">
@@ -768,6 +783,7 @@ export function DepositForm() {
   // ── Form state ──
   const [nasabahId, setNasabahId] = useState<number | null>(null)
   const [nasabahNama, setNasabahNama] = useState('')
+  const [nasabahAvatar, setNasabahAvatar] = useState<string | null>(null)
   const [searchMode, setSearchMode] = useState<'name' | 'qr'>('name')
   // Satu baris awal — jangan addRow di useEffect (Strict Mode double-mount → 2 baris).
   const [details, setDetails] = useState<DetailRow[]>(() => [
@@ -787,9 +803,11 @@ export function DepositForm() {
     if (nasabah.id === 0) {
       setNasabahId(null)
       setNasabahNama('')
+      setNasabahAvatar(null)
     } else {
       setNasabahId(nasabah.id)
       setNasabahNama(nasabah.nama_lengkap)
+      setNasabahAvatar(nasabah.avatar_url ?? null)
     }
     setFieldErrors((prev) => {
       const next = { ...prev }
@@ -1025,12 +1043,14 @@ export function DepositForm() {
               <NasabahSearch
                 onSelect={handleSelectNasabah}
                 selectedName={nasabahNama}
+                selectedAvatar={nasabahAvatar}
                 error={fieldErrors.nasabah}
               />
             ) : (
               <NasabahQrInput
                 onSelect={handleSelectNasabah}
                 selectedName={nasabahNama}
+                selectedAvatar={nasabahAvatar}
                 error={fieldErrors.nasabah}
               />
             )}
@@ -1161,9 +1181,12 @@ export function DepositForm() {
       >
         <div className="space-y-4">
           {/* Nasabah Info */}
-          <div className="rounded-lg bg-surface-muted p-3">
-            <p className="text-xs text-muted-foreground">Nasabah</p>
-            <p className="font-medium text-foreground">{nasabahNama}</p>
+          <div className="flex items-center gap-3 rounded-lg bg-surface-muted p-3">
+            <UserAvatar src={nasabahAvatar} name={nasabahNama} size="sm" className="size-10" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Nasabah</p>
+              <p className="font-medium text-foreground">{nasabahNama}</p>
+            </div>
           </div>
 
           {/* Detail Summary */}

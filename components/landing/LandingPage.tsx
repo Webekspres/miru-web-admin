@@ -196,14 +196,14 @@ export function LandingPage() {
       {/* 1. HERO — ilustrasi + copy */}
       <section id="beranda" className="px-4 pt-4 sm:px-6 sm:pt-5">
         <div className="relative mx-auto min-h-[78vh] max-w-7xl overflow-hidden rounded-[1.75rem] text-white sm:min-h-[82vh] sm:rounded-4xl">
-          <Image
-            src="/landing/illustrations/hero.webp"
-            alt="Ilustrasi pengelolaan bank sampah MIRU-G"
-            fill
-            priority
-            className="object-cover object-center"
-            sizes="100vw"
-          />
+            <Image
+              src="/landing/illustrations/hero.webp"
+              alt="Ilustrasi pengelolaan bank sampah MIRU-G"
+              fill
+              priority
+              className="object-cover object-center"
+              sizes="100vw"
+            />
           <div className="absolute inset-0 bg-linear-to-r from-emerald-950/90 via-emerald-950/55 to-emerald-950/20" />
           <div className="absolute inset-0 bg-linear-to-t from-emerald-950/75 via-transparent to-emerald-950/25" />
 
@@ -281,7 +281,7 @@ export function LandingPage() {
                     <div
                       key={pillar.title}
                       className={cn(
-                        'flex gap-4 rounded-2xl p-4 transition hover:translate-x-0.5',
+                        'flex gap-4 rounded-2xl p-4 transition',
                         pillar.tone,
                       )}
                     >
@@ -359,7 +359,7 @@ export function LandingPage() {
       <section id="fitur" className="py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start lg:gap-12">
-            <div className="relative min-h-80 overflow-hidden rounded-[1.75rem] bg-emerald-50 lg:min-h-145 lg:sticky lg:top-24">
+            <div className="relative min-h-80 overflow-hidden rounded-[1.75rem] bg-emerald-50 lg:min-h-full ">
               <Image
                 src="/landing/illustrations/features.webp"
                 alt="Ilustrasi operasional panel bank sampah"
@@ -383,7 +383,7 @@ export function LandingPage() {
                 return (
                   <div
                     key={feat.title}
-                    className="rounded-2xl bg-white p-5 shadow-[0_12px_40px_-28px_rgba(6,78,59,0.45)] ring-1 ring-emerald-900/5 transition hover:-translate-y-0.5 hover:shadow-[0_18px_44px_-24px_rgba(6,78,59,0.4)]"
+                    className="rounded-2xl bg-white p-5 shadow-[0_12px_40px_-28px_rgba(6,78,59,0.45)] ring-1 ring-emerald-900/5 transition hover:shadow-[0_18px_44px_-24px_rgba(6,78,59,0.4)]"
                   >
                     <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
                       <Icon className="size-4.5" />
@@ -423,7 +423,7 @@ export function LandingPage() {
             {CATEGORIES.map((cat) => (
               <article
                 key={cat.title}
-                className="group overflow-hidden rounded-3xl bg-white shadow-[0_18px_50px_-32px_rgba(6,78,59,0.55)] ring-1 ring-emerald-900/5 transition hover:-translate-y-1"
+                className="group overflow-hidden rounded-3xl bg-white shadow-[0_18px_50px_-32px_rgba(6,78,59,0.55)] ring-1 ring-emerald-900/5 transition"
               >
                 <div className="relative aspect-square overflow-hidden bg-emerald-50">
                   <Image

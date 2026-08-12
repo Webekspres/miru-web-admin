@@ -25,6 +25,7 @@ import {
   Wallet,
   XCircle,
 } from 'lucide-react'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import type { User, Deposit, Withdrawal, RewardRedemption } from '@/types/models'
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -164,9 +165,12 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             {/* Left: Avatar & Name */}
             <div className="flex items-center gap-4">
-              <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                <UserIcon className="size-8 text-primary" aria-hidden />
-              </div>
+              <UserAvatar
+                src={profile.avatar_url}
+                name={profile.nama_lengkap}
+                size="md"
+                className="size-16"
+              />
               <div>
                 <h1 className="text-2xl font-semibold text-foreground">{profile.nama_lengkap}</h1>
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>

@@ -1,5 +1,5 @@
 import type { UserRole } from '@/types/models'
-import { getNavSectionsForRole, WEB_ADMIN_ROLES } from '@/lib/navigation'
+import { WEB_ADMIN_ROLES } from '@/lib/navigation'
 import type { WebAdminRole } from '@/lib/navigation'
 
 export type { WebAdminRole }
@@ -37,6 +37,9 @@ const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
     '/reports',
     '/settings',
     '/profile',
+    '/institution',
+    '/privacy',
+    '/about',
   ],
   pemerintah: ['/dashboard', '/reports', '/warehouse', '/profile'],
 }
@@ -49,9 +52,8 @@ export function getLandingPathForRole(role: WebAdminRole): string {
   return LANDING_PATH_BY_ROLE[role]
 }
 
-export function getProfilePathForRole(role: WebAdminRole): string {
-  const { settings } = getNavSectionsForRole(role)
-  return settings.length > 0 ? '/settings' : '/profile'
+export function getProfilePathForRole(_role: WebAdminRole): string {
+  return '/profile'
 }
 
 export function canAccessRoute(role: WebAdminRole, pathname: string): boolean {

@@ -99,7 +99,7 @@ export function LoginForm() {
           disabled={loading || status === 'loading'}
           required
         />
-        <div className="flex justify-center">
+        <div className="flex justify-end">
           <Link
             href="/forgot-password"
             className="text-xs font-semibold text-primary transition hover:underline"

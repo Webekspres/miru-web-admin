@@ -1,10 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useEditor, EditorContent, type Editor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
+import Underline from '@tiptap/extension-underline'
+import Image from '@tiptap/extension-image'
+import { Markdown } from 'tiptap-markdown'
 import {
   Bold,
-  Columns2,
-  Eye,
   Heading2,
   Heading3,
   Image as ImageIcon,
@@ -12,323 +16,311 @@ import {
   Link as LinkIcon,
   List,
   ListOrdered,
-  Maximize2,
-  Minimize2,
-  PenTool,
   Quote,
   RotateCcw,
-  Sparkles,
+  RotateCw,
+  Underline as UnderlineIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
-import { MarkdownContent } from '@/components/ui/MarkdownContent'
+import { ImageDropzone } from '@/components/ui/ImageDropzone'
 import { cn } from '@/lib/cn'
 
 export interface RichTextEditorProps {
   id?: string
   value: string
   onChange: (val: string) => void
+  onUploadImage?: (file: File) => Promise<string>
   placeholder?: string
-  rows?: number
   label?: string
   error?: string
   className?: string
+  /** @deprecated ignored — editor height is fixed for writing UX */
+  rows?: number
+}
+
+const isMac =
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+const mod = isMac ? '⌘' : 'Ctrl'
+
+function ToolbarButton({
+  onClick,
+  active,
+  disabled,
+  title,
+  shortcut,
+  children,
+}: {
+  onClick: () => void
+  active?: boolean
+  disabled?: boolean
+  title: string
+  shortcut?: string
+  children: React.ReactNode
+}) {
+  const label = shortcut ? `${title} (${shortcut})` : title
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => {
+        e.preventDefault()
+        onClick()
+      }}
+      disabled={disabled}
+      title={label}
+      aria-label={label}
+      className={cn(
+        'flex size-8 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-colors',
+        'hover:bg-background hover:text-foreground',
+        'disabled:cursor-not-allowed disabled:opacity-40',
+        active && 'border-border bg-background text-foreground shadow-xs',
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+function Divider() {
+  return <div className="mx-0.5 h-5 w-px self-center bg-border" />
+}
+
+function getMarkdown(editor: Editor): string {
+  const storage = editor.storage as { markdown?: { getMarkdown?: () => string } }
+  return storage.markdown?.getMarkdown?.() ?? editor.getText()
 }
 
 export function RichTextEditor({
   id = 'rte-editor',
   value,
   onChange,
-  placeholder = 'Tulis konten artikel di sini... Teks terformat dan gambar akan langsung tampil secara real-time di panel pratinjau sebelah kanan.',
-  rows = 14,
+  onUploadImage,
+  placeholder = 'Tulis artikel di sini…',
   label,
   error,
   className,
 }: RichTextEditorProps) {
-  const [viewMode, setViewMode] = useState<'split' | 'edit' | 'preview'>('split')
-  const [imageModalOpen, setImageModalOpen] = useState(false)
-  const [imageUrl, setImageUrl] = useState('')
+  const [imageOpen, setImageOpen] = useState(false)
+  const [imageSrc, setImageSrc] = useState('')
   const [imageAlt, setImageAlt] = useState('')
-  const [imageCaption, setImageCaption] = useState('')
-  const [imageError, setImageError] = useState(false)
+  const [linkOpen, setLinkOpen] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
 
-  function insertFormatting(prefix: string, suffix: string = '', defaultText: string = 'teks') {
-    const textarea = document.getElementById(id) as HTMLTextAreaElement | null
-    if (!textarea) {
-      onChange(value + `${prefix}${defaultText}${suffix}`)
-      return
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [2, 3] },
+        link: {
+          openOnClick: false,
+          HTMLAttributes: {
+            class: 'text-primary underline underline-offset-2',
+          },
+        },
+      }),
+      Underline,
+      Placeholder.configure({
+        placeholder,
+        emptyEditorClass:
+          'before:content-[attr(data-placeholder)] before:float-left before:h-0 before:pointer-events-none before:text-muted-foreground',
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'max-h-80 w-full rounded-lg border border-border object-contain my-4',
+        },
+      }),
+      Markdown.configure({
+        html: false,
+        tightLists: true,
+        transformPastedText: true,
+        transformCopiedText: false,
+      }),
+    ],
+    content: value || '',
+    immediatelyRender: false,
+    editorProps: {
+      attributes: {
+        id,
+        class: cn(
+          'min-h-80 px-4 py-3 focus:outline-none text-base text-foreground',
+          '[&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-bold',
+          '[&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold',
+          '[&_p]:mb-3 [&_p]:leading-relaxed',
+          '[&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-6',
+          '[&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-6',
+          '[&_li]:mb-1',
+          '[&_blockquote]:my-3 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/40 [&_blockquote]:bg-primary/5 [&_blockquote]:px-4 [&_blockquote]:py-2 [&_blockquote]:italic',
+          '[&_a]:text-primary [&_a]:underline',
+          '[&_strong]:font-bold',
+          '[&_em]:italic',
+        ),
+      },
+    },
+    onUpdate({ editor: ed }) {
+      onChange(getMarkdown(ed))
+    },
+  })
+
+  useEffect(() => {
+    if (!editor) return
+    const current = getMarkdown(editor)
+    if (current !== (value || '')) {
+      editor.commands.setContent(value || '', { emitUpdate: false })
     }
+  }, [value, editor])
 
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selected = value.substring(start, end)
-    const content = selected || defaultText
-    const replacement = `${prefix}${content}${suffix}`
+  const openLink = useCallback(() => {
+    if (!editor) return
+    const prev = editor.getAttributes('link').href as string | undefined
+    setLinkUrl(prev ?? '')
+    setLinkOpen(true)
+  }, [editor])
 
-    const newValue = value.substring(0, start) + replacement + value.substring(end)
-    onChange(newValue)
-
-    setTimeout(() => {
-      textarea.focus()
-      const newCursorPos = start + prefix.length
-      textarea.setSelectionRange(newCursorPos, newCursorPos + content.length)
-    }, 0)
-  }
-
-  function handleOpenImageModal() {
-    setImageUrl('')
-    setImageAlt('')
-    setImageCaption('')
-    setImageError(false)
-    setImageModalOpen(true)
-  }
-
-  function handleConfirmImage() {
-    if (!imageUrl.trim()) return
-    const alt = imageAlt.trim() || 'Gambar Artikel'
-    const caption = imageCaption.trim()
-    
-    let imgMarkdown = `\n![${alt}](${imageUrl.trim()})\n`
-    if (caption) {
-      imgMarkdown += `*${caption}*\n`
+  useEffect(() => {
+    if (!editor) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        openLink()
+      }
     }
+    editor.view.dom.addEventListener('keydown', onKeyDown)
+    return () => editor.view.dom.removeEventListener('keydown', onKeyDown)
+  }, [editor, openLink])
 
-    const textarea = document.getElementById(id) as HTMLTextAreaElement | null
-    if (textarea) {
-      const start = textarea.selectionStart
-      const end = textarea.selectionEnd
-      const newValue = value.substring(0, start) + imgMarkdown + value.substring(end)
-      onChange(newValue)
-      setTimeout(() => {
-        textarea.focus()
-        const nextPos = start + imgMarkdown.length
-        textarea.setSelectionRange(nextPos, nextPos)
-      }, 0)
-    } else {
-      onChange(value + imgMarkdown)
-    }
-
-    setImageModalOpen(false)
-  }
+  if (!editor) return null
 
   return (
     <div className={cn('space-y-2', className)}>
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-foreground flex items-center justify-between">
-          <span>{label}</span>
-          <span className="text-xs text-muted-foreground font-normal">
-            Real-time Live Preview &amp; Editor
-          </span>
+        <label htmlFor={id} className="block text-sm font-medium text-foreground">
+          {label}
         </label>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-border bg-background shadow-xs">
-        {/* Editor Toolbar Header */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-muted/60 px-3 py-2">
-          {/* Layout Mode Switcher */}
-          <div className="flex items-center gap-1 rounded-lg bg-background p-1 ring-1 ring-border">
-            <button
-              type="button"
-              onClick={() => setViewMode('split')}
-              className={cn(
-                'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer',
-                viewMode === 'split'
-                  ? 'bg-primary text-primary-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-              title="Tampilan berdampingan (Live Real-time Preview)"
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-background">
+        <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-surface-muted/50 p-2">
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            active={editor.isActive('heading', { level: 2 })}
+            title="Judul 2"
+          >
+            <Heading2 className="size-4" />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            active={editor.isActive('heading', { level: 3 })}
+            title="Judul 3"
+          >
+            <Heading3 className="size-4" />
+          </ToolbarButton>
+          <Divider />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            active={editor.isActive('bold')}
+            title="Tebal"
+            shortcut={`${mod}+B`}
+          >
+            <Bold className="size-4" />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            active={editor.isActive('italic')}
+            title="Miring"
+            shortcut={`${mod}+I`}
+          >
+            <Italic className="size-4" />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            active={editor.isActive('underline')}
+            title="Garis bawah"
+            shortcut={`${mod}+U`}
+          >
+            <UnderlineIcon className="size-4" />
+          </ToolbarButton>
+          <Divider />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            active={editor.isActive('bulletList')}
+            title="Daftar bullet"
+            shortcut={`${mod}+Shift+8`}
+          >
+            <List className="size-4" />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            active={editor.isActive('orderedList')}
+            title="Daftar bernomor"
+            shortcut={`${mod}+Shift+7`}
+          >
+            <ListOrdered className="size-4" />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            active={editor.isActive('blockquote')}
+            title="Kutipan"
+            shortcut={`${mod}+Shift+B`}
+          >
+            <Quote className="size-4" />
+          </ToolbarButton>
+          <Divider />
+          <ToolbarButton
+            onClick={openLink}
+            active={editor.isActive('link')}
+            title="Tautan"
+            shortcut={`${mod}+K`}
+          >
+            <LinkIcon className="size-4" />
+          </ToolbarButton>
+          {onUploadImage && (
+            <ToolbarButton
+              onClick={() => {
+                setImageSrc('')
+                setImageAlt('')
+                setImageOpen(true)
+              }}
+              title="Sisipkan gambar"
             >
-              <Columns2 className="size-3.5" aria-hidden />
-              Split View
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('edit')}
-              className={cn(
-                'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer',
-                viewMode === 'edit'
-                  ? 'bg-primary text-primary-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-              title="Fokus Editor Tulis"
-            >
-              <PenTool className="size-3.5" aria-hidden />
-              Editor Saja
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('preview')}
-              className={cn(
-                'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer',
-                viewMode === 'preview'
-                  ? 'bg-primary text-primary-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-              title="Fokus Pratinjau Full"
-            >
-              <Eye className="size-3.5" aria-hidden />
-              Pratinjau Saja
-            </button>
-          </div>
-
-          {/* Action Tools */}
-          {viewMode !== 'preview' && (
-            <div className="flex items-center gap-1 flex-wrap">
-              <button
-                type="button"
-                onClick={() => insertFormatting('## ', '', 'Judul Bagian')}
-                title="Judul 2 (H2)"
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground cursor-pointer"
-              >
-                <Heading2 className="size-4" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => insertFormatting('### ', '', 'Sub-judul')}
-                title="Judul 3 (H3)"
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground cursor-pointer"
-              >
-                <Heading3 className="size-4" aria-hidden />
-              </button>
-
-              <div className="h-4 w-px bg-border mx-1" />
-
-              <button
-                type="button"
-                onClick={() => insertFormatting('**', '**', 'teks tebal')}
-                title="Tebal (Bold)"
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground cursor-pointer"
-              >
-                <Bold className="size-4" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => insertFormatting('*', '*', 'teks miring')}
-                title="Miring (Italic)"
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground cursor-pointer"
-              >
-                <Italic className="size-4" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => insertFormatting('> ', '', 'Teks kutipan penting')}
-                title="Kutipan (Blockquote)"
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground cursor-pointer"
-              >
-                <Quote className="size-4" aria-hidden />
-              </button>
-
-              <div className="h-4 w-px bg-border mx-1" />
-
-              <button
-                type="button"
-                onClick={() => insertFormatting('- ', '', 'Poin daftar')}
-                title="Daftar Poin (List)"
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground cursor-pointer"
-              >
-                <List className="size-4" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => insertFormatting('1. ', '', 'Langkah pertama')}
-                title="Daftar Bernomor (Ordered List)"
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground cursor-pointer"
-              >
-                <ListOrdered className="size-4" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => insertFormatting('[Teks Link](', ')', 'https://example.com')}
-                title="Sisipkan Tautan"
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-foreground cursor-pointer"
-              >
-                <LinkIcon className="size-4" aria-hidden />
-              </button>
-
-              <div className="h-4 w-px bg-border mx-1" />
-
-              {/* Dedicated Image Modal Button */}
-              <button
-                type="button"
-                onClick={handleOpenImageModal}
-                title="Sisipkan Gambar (Modal)"
-                className="flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors cursor-pointer"
-              >
-                <ImageIcon className="size-3.5" aria-hidden />
-                <span>+ Gambar</span>
-              </button>
-            </div>
+              <ImageIcon className="size-4" />
+            </ToolbarButton>
           )}
+          <Divider />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            title="Urungkan"
+            shortcut={`${mod}+Z`}
+          >
+            <RotateCcw className="size-4" />
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+            title="Ulangi"
+            shortcut={isMac ? `${mod}+Shift+Z` : 'Ctrl+Y'}
+          >
+            <RotateCw className="size-4" />
+          </ToolbarButton>
         </div>
 
-        {/* Editor Body Grid */}
-        <div className="min-h-[380px] bg-background">
-          {viewMode === 'split' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
-              {/* Left: Textarea Editor */}
-              <div className="p-3 flex flex-col">
-                <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-                  <span className="flex items-center gap-1">
-                    <PenTool className="size-3 text-primary" /> Editor Markdown
-                  </span>
-                  <span>{value.length} karakter</span>
-                </div>
-                <textarea
-                  id={id}
-                  rows={rows}
-                  value={value}
-                  onChange={(e) => onChange(e.target.value)}
-                  placeholder={placeholder}
-                  className="w-full flex-1 bg-transparent font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none resize-y min-h-[340px]"
-                />
-              </div>
+        <div className="max-h-[min(70vh,560px)] min-h-80 overflow-y-auto">
+          <EditorContent editor={editor} />
+        </div>
 
-              {/* Right: Real-time Live Preview */}
-              <div className="p-4 bg-surface-muted/30 flex flex-col overflow-y-auto max-h-[500px]">
-                <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground font-semibold uppercase tracking-wider pb-2 border-b border-border">
-                  <span className="flex items-center gap-1.5 text-primary">
-                    <Sparkles className="size-3.5" /> Live Pratinjau Artikel
-                  </span>
-                  <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">Real-time</span>
-                </div>
-                {value.trim() ? (
-                  <div className="prose prose-sm max-w-none">
-                    <MarkdownContent source={value} />
-                  </div>
-                ) : (
-                  <div className="my-auto text-center py-12">
-                    <Eye className="size-8 text-muted-foreground/40 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-muted-foreground">Belum ada konten artikel.</p>
-                    <p className="text-xs text-muted-foreground/80 mt-1">Ketik di sebelah kiri untuk melihat hasil tampilan secara langsung.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {viewMode === 'edit' && (
-            <div className="p-4">
-              <textarea
-                id={id}
-                rows={rows}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder={placeholder}
-                className="w-full bg-transparent font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none resize-y min-h-[380px]"
-              />
-            </div>
-          )}
-
-          {viewMode === 'preview' && (
-            <div className="p-6 bg-surface-muted/20 min-h-[380px]">
-              {value.trim() ? (
-                <MarkdownContent source={value} />
-              ) : (
-                <p className="text-sm italic text-muted-foreground">Belum ada konten untuk di-preview.</p>
-              )}
-            </div>
-          )}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-border bg-surface-muted/40 px-3 py-1.5">
+          {[
+            [`${mod}+B`, 'Tebal'],
+            [`${mod}+I`, 'Miring'],
+            [`${mod}+U`, 'Garis bawah'],
+            [`${mod}+K`, 'Tautan'],
+            [`${mod}+Z`, 'Urungkan'],
+          ].map(([key, text]) => (
+            <span key={key} className="font-mono text-[10px] text-muted-foreground">
+              <kbd className="rounded border border-border bg-background px-1 py-0.5">{key}</kbd>{' '}
+              {text}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -338,85 +330,106 @@ export function RichTextEditor({
         </p>
       )}
 
-      {/* ── Modal Sisipkan Gambar Artikel ───────────────────────────── */}
       <Modal
-        open={imageModalOpen}
-        onClose={() => setImageModalOpen(false)}
-        title="Sisipkan Gambar ke Artikel"
-        description="Masukkan URL gambar dan deskripsi pendukung untuk disisipkan ke dalam konten artikel."
-        size="md"
+        open={linkOpen}
+        onClose={() => setLinkOpen(false)}
+        title="Tautan"
+        description="Masukkan URL untuk teks yang dipilih."
+        size="sm"
         footer={
           <>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setImageModalOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setLinkOpen(false)}>
               Batal
             </Button>
             <Button
               type="button"
-              onClick={handleConfirmImage}
-              disabled={!imageUrl.trim()}
-              className="gap-1.5 font-semibold"
+              variant="outline"
+              onClick={() => {
+                editor.chain().focus().extendMarkRange('link').unsetLink().run()
+                setLinkOpen(false)
+              }}
             >
-              <ImageIcon className="size-4" aria-hidden />
-              Sisipkan Gambar
+              Hapus tautan
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (!linkUrl.trim()) return
+                editor
+                  .chain()
+                  .focus()
+                  .extendMarkRange('link')
+                  .setLink({ href: linkUrl.trim() })
+                  .run()
+                setLinkOpen(false)
+              }}
+              disabled={!linkUrl.trim()}
+            >
+              Simpan
             </Button>
           </>
         }
       >
-        <div className="space-y-4">
-          <Input
-            label="URL Gambar / Link Image"
-            placeholder="https://example.com/images/artikel-sampah.jpg"
-            value={imageUrl}
-            onChange={(e) => {
-              setImageUrl(e.target.value)
-              setImageError(false)
-            }}
-          />
-
-          <Input
-            label="Teks Alternatif (Alt Text)"
-            placeholder="Contoh: Pemilahan botol plastik bekas"
-            value={imageAlt}
-            onChange={(e) => setImageAlt(e.target.value)}
-          />
-
-          <Input
-            label="Sumber / Keterangan Gambar (Opsional)"
-            placeholder="Contoh: Dokumen Bank Sampah MIRU"
-            value={imageCaption}
-            onChange={(e) => setImageCaption(e.target.value)}
-          />
-
-          {/* Live Preview Box inside Modal */}
-          {imageUrl.trim() ? (
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                <Eye className="size-3.5 text-primary" />
-                Pratinjau Gambar Modal:
-              </p>
-              <div className="overflow-hidden rounded-xl border border-border bg-surface-muted/40 p-2 flex items-center justify-center min-h-[120px]">
-                {!imageError ? (
-                  <img
-                    src={imageUrl.trim()}
-                    alt={imageAlt || 'Pratinjau Gambar'}
-                    className="max-h-48 rounded-lg object-contain"
-                    onError={() => setImageError(true)}
-                  />
-                ) : (
-                  <div className="text-center p-4 text-xs text-danger">
-                    <p className="font-semibold">URL gambar tidak dapat dimuat</p>
-                    <p className="text-muted-foreground mt-0.5">Pastikan URL gambar valid dan dapat diakses publik.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : null}
-        </div>
+        <Input
+          label="URL"
+          value={linkUrl}
+          onChange={(e) => setLinkUrl(e.target.value)}
+          placeholder="https://"
+          autoFocus
+        />
       </Modal>
+
+      {onUploadImage && (
+        <Modal
+          open={imageOpen}
+          onClose={() => setImageOpen(false)}
+          title="Upload Photos"
+          description="Unggah gambar lalu sisipkan ke artikel."
+          size="md"
+          footer={
+            <>
+              <Button type="button" variant="outline" onClick={() => setImageOpen(false)}>
+                Batal
+              </Button>
+              <Button
+                type="button"
+                disabled={!imageSrc}
+                onClick={() => {
+                  editor
+                    .chain()
+                    .focus()
+                    .setImage({ src: imageSrc, alt: imageAlt.trim() || 'Gambar' })
+                    .run()
+                  onChange(getMarkdown(editor))
+                  setImageOpen(false)
+                }}
+              >
+                Sisipkan gambar
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <ImageDropzone
+              value={imageSrc || null}
+              onUpload={async (file) => {
+                const url = await onUploadImage(file)
+                setImageSrc(url)
+                if (!imageAlt.trim()) {
+                  setImageAlt(file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' '))
+                }
+              }}
+              onClear={() => setImageSrc('')}
+            />
+            <Input
+              label="Teks alternatif (opsional)"
+              value={imageAlt}
+              onChange={(e) => setImageAlt(e.target.value)}
+              placeholder="Deskripsi singkat gambar"
+            />
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

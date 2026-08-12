@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { User, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { MiruLogo } from '@/components/brand/MiruLogo'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import { cn } from '@/lib/cn'
 import { APP_NAME } from '@/lib/config'
 import { useSidebarBadges } from '@/hooks/useSidebarBadges'
@@ -21,6 +22,7 @@ export interface SidebarProps {
   user?: {
     nama_lengkap: string
     role: WebAdminRole
+    avatar_url?: string | null
   }
   open: boolean
   onClose: () => void
@@ -142,9 +144,7 @@ export function Sidebar({ role, user, open, onClose, className }: SidebarProps) 
       {/* User Profile Box (matching design tokens) */}
       <div className="shrink-0 border-b border-border px-4 py-3.5 bg-surface-muted/60">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/20">
-            <User className="size-5" aria-hidden />
-          </div>
+          <UserAvatar src={user?.avatar_url} name={displayName} size="sidebar" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
             <p className="truncate text-xs font-medium text-muted-foreground">{roleLabel}</p>

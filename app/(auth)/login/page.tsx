@@ -40,7 +40,7 @@ export default function LoginPage() {
           <div className="relative z-10 flex h-full flex-col justify-center p-10 text-white xl:p-14">
 
             <div>
-              <div className="mb-8 flex items-center gap-4">
+              <div className="mb-4 flex items-center gap-4">
                 <Image
                   src="/brand/lambang-kabupaten-mimika.webp"
                   alt="Lambang Kabupaten Mimika"
@@ -65,15 +65,15 @@ export default function LoginPage() {
               <h1 className="max-w-lg text-3xl font-bold tracking-tight xl:text-4xl">
                 Panel Administrasi MIRU-G
               </h1>
-              <p className="mt-4 max-w-md text-sm leading-relaxed text-white/80 xl:text-base">
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-white/80 xl:text-base">
                 Mimika Baru Green Solution — aplikasi bank sampah digital untuk mencatat setoran,
                 penjemputan, saldo, dan laporan operasional wilayah.
               </p>
 
-              <ul className="mt-8 space-y-3 text-sm text-white/85">
+              <ul className="mt-4 space-y-3 text-sm text-white/85">
                 {[
                   'Akses sesuai peran: admin, koordinator, petugas, pemerintah distrik',
-                  'Data penimbangan digital & transaksi dapat ditelusuri',
+                  'Data penimbangan digital & transaksi dapat ditelusuri  ',
                   'Monitoring operasional wilayah Distrik Mimika Baru',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2.5">
@@ -83,10 +83,6 @@ export default function LoginPage() {
                 ))}
               </ul>
             </div>
-
-            <p className="text-xs text-white/55">
-              Pemerintah Distrik Mimika Baru · MIRU-G Bank Sampah
-            </p>
           </div>
         </aside>
 

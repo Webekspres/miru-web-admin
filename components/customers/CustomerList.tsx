@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { PaginationControls } from '@/components/ui/PaginationControls'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { useToast } from '@/components/feedback/Toast'
@@ -21,7 +22,6 @@ import {
   Download,
   FileText,
   Plus,
-  User as UserIcon,
   UserCheck,
   UserX,
 } from 'lucide-react'
@@ -80,6 +80,7 @@ interface CustomerRow {
   poin?: number
   is_active: boolean
   phone_verified?: boolean
+  avatar_url?: string | null
 }
 
 
@@ -143,6 +144,7 @@ export function CustomerList() {
           poin: u.poin,
           is_active: u.is_active,
           phone_verified: u.phone_verified,
+          avatar_url: u.avatar_url,
         }))
 
       return {
@@ -185,6 +187,7 @@ export function CustomerList() {
           poin: u.poin,
           is_active: u.is_active,
           phone_verified: u.phone_verified,
+          avatar_url: u.avatar_url,
         }))
 
       exportToCSV(allUsers, `nasabah_${new Date().toISOString().split('T')[0]}.csv`)
@@ -327,9 +330,11 @@ export function CustomerList() {
                   >
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted">
-                          <UserIcon className="size-4 text-muted-foreground" aria-hidden />
-                        </div>
+                        <UserAvatar
+                          src={customer.avatar_url}
+                          name={customer.nama_lengkap}
+                          size="sm"
+                        />
                         <span className="font-medium text-foreground">{customer.nama_lengkap}</span>
                       </div>
                     </TableCell>

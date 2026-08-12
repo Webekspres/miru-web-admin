@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import useSWR, { useSWRConfig } from 'swr'
+import useSWR from 'swr'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import { formatDateWIT } from '@/lib/format'
@@ -16,7 +16,6 @@ import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableR
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
-  BookOpen,
   Edit,
   FileText,
   Plus,
@@ -95,7 +94,7 @@ export function EducationManagement() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Edukasi Sampah</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Kelola artikel dan panduan pemilahan sampah dengan gambar utama &amp; halaman editor.
+            Kelola artikel dan panduan pemilahan sampah.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -122,7 +121,6 @@ export function EducationManagement() {
               <TableRow>
                 <TableHead>Artikel</TableHead>
                 <TableHead>Kategori Terkait</TableHead>
-                <TableHead className="text-right">Urutan</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Diperbarui</TableHead>
                 {canWrite && <TableHead className="text-right">Aksi</TableHead>}
@@ -131,39 +129,29 @@ export function EducationManagement() {
             <TableBody>
               {list.length === 0 ? (
                 <TableEmpty
-                  colSpan={canWrite ? 6 : 5}
+                  colSpan={canWrite ? 5 : 4}
                   message="Belum ada artikel edukasi. Tambahkan artikel baru."
                 />
               ) : (
                 list.map((item) => {
-                  const imageSrc = item.featured_image || item.gambar_url
                   return (
                     <TableRow key={item.id}>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          {imageSrc ? (
-                            <img
-                              src={imageSrc}
-                              alt={item.judul}
-                              className="size-12 shrink-0 rounded-lg border border-border object-cover"
-                            />
-                          ) : (
-                            <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                              <BookOpen className="size-6" aria-hidden />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <span className="line-clamp-1 font-semibold text-foreground">{item.judul}</span>
-                            <span className="line-clamp-1 text-xs text-muted-foreground">
-                              {item.isi.replace(/[#*`]/g, '').slice(0, 60)}...
-                            </span>
-                          </div>
+                        <div className="min-w-0">
+                          <span className="line-clamp-1 font-semibold text-foreground">{item.judul}</span>
+                          <span className="line-clamp-1 text-xs text-muted-foreground">
+                            {item.isi
+                              .replace(/[#*_`>~\[\]]/g, '')
+                              .replace(/\s+/g, ' ')
+                              .trim()
+                              .slice(0, 80)}
+                            {item.isi.length > 80 ? '…' : ''}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {item.kategori_terkait_nama ?? '—'}
                       </TableCell>
-                      <TableCell className="text-right text-muted-foreground font-mono">{item.urutan}</TableCell>
                       <TableCell>
                         <Badge variant={item.aktif ? 'success' : 'default'}>
                           {item.aktif ? 'Aktif' : 'Nonaktif'}

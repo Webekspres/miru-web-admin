@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { PaginationControls } from '@/components/ui/PaginationControls'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
@@ -110,11 +111,22 @@ function SetujuiModal({
       <div className="space-y-4">
         {/* Saldo saat ini */}
         {nasabahProfile && (
-          <div className="rounded-lg bg-surface-muted p-3">
-            <p className="text-xs text-muted-foreground">Saldo Nasabah Saat Ini</p>
-            <p className="text-lg font-bold text-foreground">
-              {nasabahProfile.saldo ? formatRupiah(nasabahProfile.saldo) : 'Rp0,00'}
-            </p>
+          <div className="flex items-center gap-3 rounded-lg bg-surface-muted p-3">
+            <UserAvatar
+              src={nasabahProfile.avatar_url}
+              name={nasabahProfile.nama_lengkap}
+              size="sm"
+              className="size-10"
+            />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Saldo Nasabah Saat Ini</p>
+              <p className="truncate text-sm font-medium text-foreground">
+                {nasabahProfile.nama_lengkap}
+              </p>
+              <p className="text-lg font-bold text-foreground">
+                {nasabahProfile.saldo ? formatRupiah(nasabahProfile.saldo) : 'Rp0,00'}
+              </p>
+            </div>
           </div>
         )}
 

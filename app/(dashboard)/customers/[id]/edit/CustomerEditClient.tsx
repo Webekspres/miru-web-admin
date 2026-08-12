@@ -45,6 +45,7 @@ export function CustomerEditClient({ customerId }: { customerId: number }) {
         no_hp: user.no_hp,
         alamat: user.alamat,
         is_active: user.is_active,
+        avatar_url: user.avatar_url,
       }}
     />
   )

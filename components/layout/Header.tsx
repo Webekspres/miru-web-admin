@@ -12,6 +12,7 @@ export interface HeaderUser {
   id: number
   nama_lengkap: string
   role: WebAdminRole
+  avatar_url?: string | null
 }
 
 export interface HeaderProps {

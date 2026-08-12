@@ -22,6 +22,7 @@ export interface User {
   poin?: number
   is_active: boolean
   date_joined?: string
+  avatar_url?: string | null
   qr?: {
     id: number
     nama_lengkap: string
@@ -170,6 +171,8 @@ export interface InstitutionSettings {
   jam_buka?: string | null
   jam_tutup?: string | null
   pengumuman: string
+  tentang?: string
+  kebijakan?: string
 }
 
 export interface KontenEdukasi {
@@ -181,7 +184,7 @@ export interface KontenEdukasi {
   kategori_terkait: number | null
   kategori_terkait_nama?: string | null
   aktif: boolean
-  urutan: number
+  urutan?: number
   created_at: string
   updated_at: string
 }
