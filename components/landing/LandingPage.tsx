@@ -28,6 +28,10 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { APP_NAME } from '@/lib/config'
+import { PhotoBackdrop } from '@/components/landing/PhotoBackdrop'
+import { KeywordMarquee } from '@/components/landing/KeywordMarquee'
+import { HERO_BACKDROPS } from '@/components/landing/backdrops'
+import { PublicEducationPreview } from '@/components/education/PublicEducationPreview'
 
 const WORKFLOW = [
   {
@@ -193,22 +197,19 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f8f6] text-foreground">
-      {/* 1. HERO — ilustrasi + copy */}
-      <section id="beranda" className="px-4 pt-4 sm:px-6 sm:pt-5">
-        <div className="relative mx-auto min-h-[78vh] max-w-7xl overflow-hidden rounded-[1.75rem] text-white sm:min-h-[82vh] sm:rounded-4xl">
-            <Image
-              src="/landing/illustrations/hero.webp"
-              alt="Ilustrasi pengelolaan bank sampah MIRU-G"
-              fill
-              priority
-              className="object-cover object-center"
-              sizes="100vw"
-            />
-          <div className="absolute inset-0 bg-linear-to-r from-emerald-950/90 via-emerald-950/55 to-emerald-950/20" />
-          <div className="absolute inset-0 bg-linear-to-t from-emerald-950/75 via-transparent to-emerald-950/25" />
+      {/* 1. HERO — full-bleed */}
+      <section id="beranda" className="relative min-h-[85vh] overflow-hidden text-white sm:min-h-[90vh]">
+        <PhotoBackdrop
+          src={HERO_BACKDROPS}
+          alt="Kegiatan bank sampah MIRU-G Mimika Baru"
+          overlay="hero"
+          extraOverlay="heroBottom"
+          kenBurns
+          priority
+        />
 
-          <div className="relative z-10 flex min-h-[78vh] flex-col justify-end px-6 py-10 sm:min-h-[82vh] sm:px-10 sm:py-14 lg:px-14">
-            <div className="max-w-2xl">
+        <div className="relative z-10 mx-auto flex min-h-[85vh] max-w-7xl flex-col justify-end px-4 py-12 sm:min-h-[90vh] sm:px-6 sm:py-16 lg:px-8">
+          <div className="max-w-2xl">
               <p className="mb-3 text-sm font-medium text-emerald-100/85">
                 Pemerintah Kabupaten Mimika · Distrik Mimika Baru
               </p>
@@ -225,39 +226,37 @@ export function LandingPage() {
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
                   href="/login"
-                  className="inline-flex h-12 items-center gap-2 rounded-full bg-emerald-500 px-6 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-400 active:scale-[0.98]"
+                  className="inline-flex h-12 items-center gap-2 rounded-md bg-emerald-500 px-6 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-400 active:scale-[0.98]"
                 >
                   Masuk Panel Administrasi
                   <ArrowRight className="size-4" />
                 </Link>
-                <a
-                  href="#tentang"
-                  className="inline-flex h-12 items-center rounded-full border border-white/45 bg-white/10 px-5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                <Link
+                  href="/edukasi"
+                  className="inline-flex h-12 items-center rounded-md border border-white/45 bg-white/10 px-5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
                 >
-                  Pelajari Layanan
-                </a>
+                  Edukasi Sampah
+                </Link>
               </div>
 
               <p className="mt-8 text-xs font-medium tracking-wide text-white/60 sm:text-sm">
                 100% Digital · Mimika Baru · Laporan Realtime
               </p>
-            </div>
           </div>
         </div>
       </section>
+
+      <KeywordMarquee />
 
       {/* 2. TENTANG */}
       <section id="tentang" className="py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12">
-            <div className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-emerald-50 sm:aspect-16/10">
-              <Image
+            <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-emerald-50 sm:aspect-16/10">
+              <PhotoBackdrop
                 src="/landing/illustrations/about.webp"
-                alt="Ilustrasi bank sampah MIRU-G"
-                fill
-                className="object-cover object-center"
+                alt="Pemilahan sampah di bank sampah MIRU-G"
                 sizes="(max-width: 1024px) 100vw, 55vw"
-                priority
               />
             </div>
 
@@ -281,7 +280,7 @@ export function LandingPage() {
                     <div
                       key={pillar.title}
                       className={cn(
-                        'flex gap-4 rounded-2xl p-4 transition',
+                        'flex gap-4 rounded-lg p-4 transition',
                         pillar.tone,
                       )}
                     >
@@ -311,14 +310,7 @@ export function LandingPage() {
       {/* 3. ALUR — kolom tanpa card berborder */}
       <section id="alur" className="relative overflow-hidden py-16 sm:py-20">
         <div className="absolute inset-0">
-          <Image
-            src="/landing/why-us-portrait.webp"
-            alt=""
-            fill
-            className="object-cover opacity-[0.07]"
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-[#eef3ef]/90" />
+          <PhotoBackdrop src="/landing/illustrations/about.webp" overlay="mist" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
@@ -335,7 +327,11 @@ export function LandingPage() {
             {WORKFLOW.map((item) => {
               const Icon = item.icon
               return (
-                <div key={item.step} className="text-center sm:text-left">
+                <div
+                  key={item.step}
+                  className="text-center motion-safe:animate-fade-up sm:text-left"
+                  style={{ animationDelay: `${Number(item.step) * 80}ms` }}
+                >
                   <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-600 text-white sm:mx-0">
                     <Icon className="size-5" />
                   </div>
@@ -359,12 +355,10 @@ export function LandingPage() {
       <section id="fitur" className="py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start lg:gap-12">
-            <div className="relative min-h-80 overflow-hidden rounded-[1.75rem] bg-emerald-50 lg:min-h-full ">
-              <Image
+            <div className="relative min-h-80 overflow-hidden rounded-xl bg-emerald-50 lg:min-h-full">
+              <PhotoBackdrop
                 src="/landing/illustrations/features.webp"
                 alt="Ilustrasi operasional panel bank sampah"
-                fill
-                className="object-cover object-center"
                 sizes="(max-width: 1024px) 100vw, 45vw"
               />
               <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-emerald-950/75 to-transparent p-6 pt-16 text-white">
@@ -383,7 +377,7 @@ export function LandingPage() {
                 return (
                   <div
                     key={feat.title}
-                    className="rounded-2xl bg-white p-5 shadow-[0_12px_40px_-28px_rgba(6,78,59,0.45)] ring-1 ring-emerald-900/5 transition hover:shadow-[0_18px_44px_-24px_rgba(6,78,59,0.4)]"
+                    className="rounded-xl bg-white p-5 shadow-[0_12px_40px_-28px_rgba(6,78,59,0.45)] ring-1 ring-emerald-900/5 transition hover:shadow-[0_18px_44px_-24px_rgba(6,78,59,0.4)]"
                   >
                     <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
                       <Icon className="size-4.5" />
@@ -423,7 +417,7 @@ export function LandingPage() {
             {CATEGORIES.map((cat) => (
               <article
                 key={cat.title}
-                className="group overflow-hidden rounded-3xl bg-white shadow-[0_18px_50px_-32px_rgba(6,78,59,0.55)] ring-1 ring-emerald-900/5 transition"
+                className="group overflow-hidden rounded-xl bg-white shadow-[0_18px_50px_-32px_rgba(6,78,59,0.55)] ring-1 ring-emerald-900/5 transition"
               >
                 <div className="relative aspect-square overflow-hidden bg-emerald-50">
                   <Image
@@ -446,52 +440,48 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 6. PERAN — ilustrasi + panel peran */}
-      <section id="akses" className="py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="overflow-hidden rounded-[1.75rem] bg-emerald-950 text-white">
-            <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="relative min-h-60 lg:min-h-full">
-                <Image
-                  src="/landing/illustrations/roles.webp"
-                  alt="Ilustrasi peran pengguna MIRU-G"
-                  fill
-                  className="object-cover object-center opacity-90"
-                  sizes="(max-width: 1024px) 100vw, 55vw"
-                />
-                <div className="absolute inset-0 bg-linear-to-r from-emerald-950/20 via-transparent to-emerald-950/80 lg:bg-linear-to-r lg:from-transparent lg:to-emerald-950" />
-              </div>
+      <PublicEducationPreview />
 
-              <div className="relative z-10 flex flex-col justify-center p-6 sm:p-8 lg:p-10">
-                <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-                  Hak Akses & Peran Pengguna
-                </h2>
-                <p className="mt-2 text-sm text-emerald-100/70">
-                  Otorisasi berlapis untuk keamanan dan akurasi transaksi
-                </p>
+      {/* 6. PERAN — full-bleed */}
+      <section id="akses" className="bg-emerald-950 text-white">
+        <div className="mx-auto grid max-w-7xl lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="relative min-h-60 lg:min-h-full">
+            <PhotoBackdrop
+              src="/landing/illustrations/roles.webp"
+              alt="Ilustrasi peran pengguna MIRU-G"
+              sizes="(max-width: 1024px) 100vw, 55vw"
+            />
+            <div className="absolute inset-0 bg-linear-to-r from-emerald-950/20 via-transparent to-emerald-950/80 lg:from-transparent lg:to-emerald-950" />
+          </div>
 
-                <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                  {ROLES.map((role) => {
-                    const Icon = role.icon
-                    return (
-                      <div
-                        key={role.title}
-                        className="rounded-2xl bg-white/8 p-4 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-white/12"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-200">
-                            <Icon className="size-5" />
-                          </span>
-                        </div>
-                        <h3 className="mt-3 text-sm font-bold">{role.title}</h3>
-                        <p className="mt-1 text-xs leading-relaxed text-emerald-100/65">
-                          {role.desc}
-                        </p>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+          <div className="relative z-10 flex flex-col justify-center px-4 py-12 sm:px-6 sm:py-16 lg:px-10 lg:py-20">
+            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Hak Akses & Peran Pengguna
+            </h2>
+            <p className="mt-2 text-sm text-emerald-100/70">
+              Otorisasi berlapis untuk keamanan dan akurasi transaksi
+            </p>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {ROLES.map((role) => {
+                const Icon = role.icon
+                return (
+                  <div
+                    key={role.title}
+                    className="rounded-lg bg-white/8 p-4 ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-white/12"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-10 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-200">
+                        <Icon className="size-5" />
+                      </span>
+                    </div>
+                    <h3 className="mt-3 text-sm font-bold">{role.title}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-emerald-100/65">
+                      {role.desc}
+                    </p>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -532,36 +522,27 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 8. CTA — bg foto, logo besar tanpa label kecil */}
-      <section className="px-4 pb-10 sm:px-6 sm:pb-14">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[1.75rem] sm:rounded-4xl">
-          <Image
-            src="/landing/hero.webp"
-            alt=""
-            fill
-            className="object-cover object-center"
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-emerald-950/85" />
+      {/* 8. CTA — full-bleed */}
+      <section className="relative overflow-hidden">
+        <PhotoBackdrop src={HERO_BACKDROPS} overlay="dark" kenBurns />
 
-          <div className="relative z-10 flex flex-col items-start gap-6 px-6 py-12 text-white sm:flex-row sm:items-center sm:justify-between sm:px-10 sm:py-14 lg:px-14">
-            <div className="max-w-xl">
-              <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-                Siap Mengelola Operasional Bank Sampah?
-              </h2>
-              <p className="mt-2 text-sm text-white/70">
-                Masuk dengan akun petugas, koordinator, atau admin yang terdaftar.
-              </p>
-            </div>
-
-            <Link
-              href="/login"
-              className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-white px-6 text-sm font-bold text-emerald-950 transition hover:bg-emerald-50 active:scale-[0.98]"
-            >
-              <LogIn className="size-4" />
-              Masuk ke Panel Administrasi
-            </Link>
+        <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-start gap-6 px-4 py-14 text-white sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-16 lg:px-8">
+          <div className="max-w-xl">
+            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Siap Mengelola Operasional Bank Sampah?
+            </h2>
+            <p className="mt-2 text-sm text-white/70">
+              Masuk dengan akun petugas, koordinator, atau admin yang terdaftar.
+            </p>
           </div>
+
+          <Link
+            href="/login"
+            className="inline-flex h-12 shrink-0 items-center gap-2 rounded-md bg-white px-6 text-sm font-bold text-emerald-950 transition hover:bg-emerald-50 active:scale-[0.98]"
+          >
+            <LogIn className="size-4" />
+            Masuk ke Panel Administrasi
+          </Link>
         </div>
       </section>
     </div>

@@ -40,7 +40,9 @@ export function DashboardLayout({
 
   useEffect(() => {
     if (window.matchMedia('(max-width: 1023px)').matches) {
-      setSidebarOpen(false)
+      setTimeout(() => {
+        setSidebarOpen(false)
+      }, 0)
     }
   }, [pathname])
 

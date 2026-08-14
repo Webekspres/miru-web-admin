@@ -144,8 +144,8 @@ type RequestOptions = {
 }
 
 class ApiClient {
-  private getHeaders(isMultipart = false): HeadersInit {
-    const token = getAccessToken()
+  private getHeaders(isMultipart = false, skipAuth = false): HeadersInit {
+    const token = skipAuth ? null : getAccessToken()
     return {
       ...(isMultipart ? {} : { 'Content-Type': 'application/json' }),
       Accept: 'application/json',
@@ -180,7 +180,7 @@ class ApiClient {
       url,
       {
         method,
-        headers: this.getHeaders(isMultipart),
+        headers: this.getHeaders(isMultipart, skipAuth),
         ...(body !== undefined
           ? { body: isMultipart ? body : JSON.stringify(body) }
           : {}),
@@ -219,8 +219,12 @@ class ApiClient {
     return parseEnvelope<T>(res)
   }
 
-  get<T>(path: string, params?: Record<string, string>): Promise<T> {
-    return this.request<T>(path, { params })
+  get<T>(
+    path: string,
+    params?: Record<string, string>,
+    options?: { skipAuth?: boolean },
+  ): Promise<T> {
+    return this.request<T>(path, { params, skipAuth: options?.skipAuth })
   }
 
   post<T>(path: string, body: unknown, options?: { skipAuth?: boolean }): Promise<T> {

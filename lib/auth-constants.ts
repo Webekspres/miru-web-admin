@@ -11,7 +11,7 @@ export const ACCESS_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24
 export const AUTH_ROUTES = ['/login', '/forgot-password'] as const
 
 /** Rute publik yang tidak memerlukan autentikasi */
-export const PUBLIC_ROUTES = ['/', '/login', '/forgot-password'] as const
+export const PUBLIC_ROUTES = ['/', '/login', '/forgot-password', '/edukasi'] as const
 
 /** Aset statis di `public/` — jangan di-gate auth (termasuk PWA manifest). */
 export const PUBLIC_FILE =

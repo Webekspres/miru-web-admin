@@ -19,7 +19,7 @@ Web admin melayani **staff saja**: `admin`, `petugas`, `koordinator`, `pemerinta
 | Blokir login `nasabah` | Login/register nasabah di web |
 | HTTPS production | Payment gateway / “Bayar Sekarang” |
 | Sembunyikan token dari UI | GPS live tracking petugas |
-| Mask NIK / batasi KTP | Expose stack trace / raw API error ke user awam |
+| Mask KTP | Expose stack trace / raw API error ke user awam |
 | Role-based menu & `canMutate` | Mengandalkan hide-button saja tanpa backend enforce |
 
 Server tetap sumber kebenaran otorisasi. UI hanya *defense in depth*.
@@ -72,8 +72,8 @@ Selaras `10-integration-and-roles.md` dan backend permissions:
 
 | Data | Perilaku UI |
 |------|-------------|
-| NIK | Mask partial (mis. `****1234`); jangan copy-all tanpa need-to-know |
-| Foto KTP | Hanya di alur penarikan besar; jangan tampil di list nasabah generik |
+| NIK | **Tidak dikumpulkan** — jangan tambah field NIK di form/tabel |
+| Foto KTP | Hanya tombol lihat di alur penarikan besar (status menunggu); jangan tampil di list nasabah |
 | No HP / alamat | Hanya di layar yang relevan; batasi di export jika tidak perlu |
 | Password | Tidak pernah di response; field form `type=password` |
 | Token / secret | Tidak di React state yang di-render debug |
@@ -139,7 +139,7 @@ Contoh arah headers (Nginx/Next — sesuaikan):
 ## 8. Logging Client
 
 - Development: boleh log envelope error (tanpa token)
-- Production: minimal; **jangan** `console.log` token, NIK, KTP, atau body penarikan penuh
+- Production: minimal; **jangan** `console.log` token, KTP, atau body penarikan penuh
 - Laporkan crash ke Sentry **hanya jika** diaktifkan lintas proyek dan sudah di-scrub
 
 ---
@@ -152,7 +152,6 @@ Contoh arah headers (Nginx/Next — sesuaikan):
 - [ ] CORS backend whitelist domain admin
 - [ ] Logout membersihkan semua credential client
 - [ ] Role guard: nasabah ditolak; pemerintah/koordinator tidak bisa mutate via UI
-- [ ] Mask NIK di tabel
 - [ ] Tidak ada password/token di UI atau URL
 - [ ] Session expired → login
 - [ ] Error boundary tanpa stack trace user-facing
@@ -160,7 +159,7 @@ Contoh arah headers (Nginx/Next — sesuaikan):
 
 ### Selaras Backend Fase 8
 
-- [ ] Alur lihat/unggah KTP hanya untuk penarikan besar
+- [x] Alur lihat lampiran KTP hanya untuk penarikan besar (status menunggu)
 - [ ] Unduh PDF bukti hanya untuk user berwenang
 - [ ] Panel notifikasi tidak menampilkan PII berlebih
 

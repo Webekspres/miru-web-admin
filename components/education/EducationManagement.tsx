@@ -95,6 +95,10 @@ export function EducationManagement() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Edukasi Sampah</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Kelola artikel dan panduan pemilahan sampah.
+            {' '}
+            <Link href="/edukasi" className="font-semibold text-primary hover:underline">
+              Lihat halaman publik
+            </Link>
           </p>
         </div>
         <div className="flex items-center gap-2">

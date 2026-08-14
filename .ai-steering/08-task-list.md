@@ -29,7 +29,7 @@
 | — | Out of Scope | Larangan sistem / di luar modul | — | ⛔ |
 
 > **Status proyek:** MVP web-admin selesai. API backend Fase 8 fitur bisnis hampir semua siap.
-> **Kerja aktif #1:** sisa **Fase 9** wire UI (wilayah, PDF/KTP, laporan, bulk import).
+> **Kerja aktif #1:** sisa **Fase 9** wire UI (wilayah, PDF bukti, laporan). KTP penarikan besar (lihat lampiran) ✅.
 > Audit Temuan web (W0–W11) sudah ✅ — arsip BAGIAN B.
 > Item hanya dari Proposal / Jawaban / Modules / Business Rules / **temuan audit** — **tidak menambah modul** di luar 17.
 
@@ -39,14 +39,14 @@
 |----|-------|---------|------------|-----------------|
 | 1 | Manajemen Pengguna | `/customers`, `/staff` | ✅ | Filter kelurahan; bulk import; verifikasi HP |
 | 2 | Autentikasi | `/login` | ✅ | Pesan BI + disable empty ✅ |
-| 3 | Profil Nasabah | `/customers/{id}` | ✅ | Lihat KTP penarikan besar; field RT/RW |
+| 3 | Profil Nasabah | `/customers/{id}` | ✅ | Field RT/RW; **tanpa NIK** (tidak dikumpulkan) |
 | 4 | Edukasi Sampah | `/education` | ✅ | CRUD + Markdown ✅ |
 | 5 | Katalog & Harga | `/waste/categories` | ✅ | Menu sidebar + form H-3 ✅ |
 | 6 | Setor Langsung | `/transactions/add` | ✅ | Lookup + scan QR ✅; notif nilai (backend T1 ✅) |
 | 7 | Penjemputan | `/pickups` | ✅ | Approve+assign; filter petugas; notif ✅ |
 | 8 | Penimbangan | (form setoran) | ✅ | — |
 | 9 | Saldo & Riwayat | `/customers/{id}`, `/transactions` | ✅ | Notifikasi in-app ✅ |
-| 10 | Penarikan Saldo | `/balance` | ✅ | Tanda terima PDF; KTP penarikan besar |
+| 10 | Penarikan Saldo | `/balance` | ✅ | Lihat lampiran KTP pending ✅; tanda terima PDF |
 | 11 | Poin & Reward | `/reward` | ✅ | Tab pengajuan dulu ✅; notif admin ✅ |
 | 12 | Stok Gudang | `/warehouse` | ✅ | Link ke sales ✅ |
 | 13 | Penjualan Mitra | `/warehouse/sales`, partners | ✅ | CRUD mitra discoverable ✅ |
@@ -59,7 +59,7 @@
 
 ## Urutan kerja disarankan (Web)
 
-1. **Sisa Fase 9** wire (wilayah, PDF/KTP, laporan, bulk import).
+1. **Sisa Fase 9** wire (wilayah, PDF bukti, laporan, bulk import).
 2. Fase 7 UAT beriringan; Fase 8 deploy saat staging stabil.
 3. Bulk import setelah backend endpoint import siap.
 4. Audit Temuan web sudah selesai (arsip BAGIAN B).
@@ -92,15 +92,12 @@
   - Tampilkan pesan error envelope backend (wilayah tidak terdaftar / kuota penuh) dengan bahasa Indonesia jelas
   - Indikator sisa kuota wilayah jika API menyediakan meta; jika tidak, andalkan error server
 
-### 9.4 Modul 6 / 10 — Bukti digital & verifikasi KTP
+### 9.4 Modul 6 / 10 — Bukti digital
 
-> **Sumber:** Jawaban §6.3.4, §6.3.6; Security §4, §6.
-> **API:** download PDF role-gated + unduh KTP — siap.
+> **Sumber:** Jawaban §6.3.6; Proposal modul 9/10 (bukti transaksi). KTP **bukan** field modul proposal.
+> **API:** PDF role-gated siap. Lampiran KTP penarikan besar: lihat-only saat `menunggu` ✅ (BAGIAN B).
+> NIK tidak dikumpulkan — tidak ada mask NIK di UI.
 
-- [ ] **Upload / lihat foto KTP hanya di alur penarikan besar** (`/balance`)
-  - Jangan tampilkan KTP di list nasabah generik
-  - Role need-to-know: admin/koordinator; petugas sesuai aturan backend
-- [ ] **Mask NIK di UI** (partial, mis. `****1234`) di mana NIK muncul; akses penuh hanya need-to-know
 - [ ] **Unduh / cetak tanda terima PDF** setoran & penarikan
   - Tombol di detail transaksi / detail penarikan; hit endpoint download role-gated
   - Jangan expose URL media publik terbuka
@@ -112,7 +109,7 @@
 > Ekspor CSV/Excel client-side sudah ✅.
 
 - [ ] **Batasi kolom PII pada export** sesuai role / need-to-know
-  - Pemerintah & petugas: jangan ikutkan NIK lengkap / kontak sensitif jika tidak diperlukan
+  - Pemerintah & petugas: jangan ikutkan kontak sensitif jika tidak diperlukan (NIK tidak ada di sistem)
 - [ ] **Ekspor PDF laporan bulanan** untuk arsip kantor distrik
   - Boleh client-print atau unduh dari export server jika endpoint tersedia
 - [ ] **Tab/section evaluasi** di `/reports`: field **kendala** + **rekomendasi tindak lanjut**
@@ -143,7 +140,6 @@
 
 - [ ] **Audit route:** tidak ada route dashboard tanpa guard role yang sesuai
   - Cek `(dashboard)/*` + redirect petugas/pemerintah/koordinator
-- [ ] **Mask NIK di tabel** (partial) di semua tempat NIK ditampilkan
 - [ ] **Jangan log / tampilkan** JWT, password, atau stack trace ke user (console production & toast)
 - [ ] **Session expired** → redirect `/login` dengan pesan jelas (bukan blank/spinner infinite)
 - [ ] **Double-submit prevention** pada form transaksi keuangan (setoran, approve penarikan, approve tukar poin)
@@ -313,6 +309,12 @@
 - [x] **`/settings` hanya berisi:** data institusi + kebijakan data + tentang MIRU
   - Tab Institusi (jam time input, tanpa logo) + Kebijakan Data (`/privacy-policy/`) + Tentang MIRU
 
+### PDP / KTP (selaras proposal + implementasi 2026-08)
+
+- [x] **NIK tidak ditampilkan** di detail/list nasabah (field tidak dikumpulkan)
+- [x] **Lihat lampiran KTP** hanya di `/balance` saat status menunggu + `ada_lampiran_ktp`
+  - Tombol admin/koordinator; unduh via endpoint role-gated; tidak di list nasabah
+
 ---
 
 ### Dari Fase 9: Pengembangan Lanjutan (prioritas wire UI)
@@ -450,8 +452,9 @@
 | Pengaduan | Tindak lanjut ✅ | Ajukan ✅ | ✅ |
 | Dashboard / laporan | UI ✅ | — | ✅ |
 | Edukasi artikel | CRUD ✅ (W6) | Baca ✅ | API ✅ |
-| Harga H-3 | Form ✅ (W7) | Banner 🔲 | API ✅ |
-| PDF bukti / KTP | UI 🔲 | Share/unduh 🔲 | API ✅ |
+| Harga H-3 | Form ✅ (W7) | Banner ✅ | API ✅ |
+| PDF bukti | UI 🔲 | Share/unduh 🔲 | API ✅ |
+| Lampiran KTP penarikan ≥1jt | Lihat pending ✅ | Unggah di app ✅ | API ✅ (hapus setelah proses) |
 
 ---
 

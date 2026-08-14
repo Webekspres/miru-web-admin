@@ -46,18 +46,15 @@ export function ProfileDropdown({ user, onLogout, className }: ProfileDropdownPr
     <div ref={containerRef} className={cn('relative', className)}>
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={() => setOpen((value) => !value)}
         aria-label="Menu profil"
         aria-expanded={open}
         aria-haspopup="true"
-        className="gap-2"
+        className="gap-2 hover:bg-surface-muted scale-125 transition-all duration-300"
       >
         <UserAvatar src={user.avatar_url} name={user.nama_lengkap} size="sm" />
-        <span className="hidden max-w-32 truncate sm:inline">
-          {user.nama_lengkap}
-        </span>
       </Button>
 
       {open && (

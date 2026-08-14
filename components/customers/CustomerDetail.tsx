@@ -21,7 +21,6 @@ import {
   Gift,
   MapPin,
   Phone,
-  User as UserIcon,
   Wallet,
   XCircle,
 } from 'lucide-react'
@@ -268,15 +267,6 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                 </p>
               )}
             </div>
-            {profile.nik && (
-              <div className="rounded-lg bg-surface-muted p-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <UserIcon className="size-4" aria-hidden />
-                  NIK
-                </div>
-                <p className="mt-1 text-sm text-foreground">{profile.nik}</p>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>

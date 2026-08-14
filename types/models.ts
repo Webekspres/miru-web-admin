@@ -14,7 +14,6 @@ export interface User {
   username: string
   role: UserRole
   nama_lengkap: string
-  nik?: string
   no_hp?: string
   phone_verified?: boolean
   alamat?: string
@@ -94,6 +93,8 @@ export interface Withdrawal {
   metode: string
   status: WithdrawalStatus
   tanggal: string
+  ada_lampiran_ktp?: boolean
+  ktp_diverifikasi?: boolean
   saldo_nasabah_baru?: string
 }
 
@@ -187,6 +188,16 @@ export interface KontenEdukasi {
   urutan?: number
   created_at: string
   updated_at: string
+}
+
+/** List/detail publik — tanpa field internal (aktif, urutan, updated_at). */
+export interface KontenEdukasiPublic {
+  id: number
+  judul: string
+  isi: string
+  gambar_url?: string | null
+  kategori_terkait_nama?: string | null
+  created_at: string
 }
 
 export interface Announcement {

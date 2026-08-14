@@ -1,4 +1,13 @@
 import { api } from './api'
+import { API_BASE_URL } from './config'
+
+/** Absolute-kan URL media publik (MinIO/objects atau path relatif). */
+export function resolvePublicMediaUrl(url?: string | null): string | null {
+  if (!url) return null
+  if (/^https?:\/\//i.test(url)) return url
+  if (url.startsWith('/')) return `${API_BASE_URL}${url}`
+  return url
+}
 
 export type MediaUploadResult = {
   url: string

@@ -5,6 +5,8 @@ import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { LoginSessionSync } from '@/components/auth/LoginSessionSync'
 import { CardSkeleton } from '@/components/feedback/LoadingSkeleton'
+import { KeywordOrbit } from '@/components/landing/KeywordOrbit'
+import { PhotoBackdrop } from '@/components/landing/PhotoBackdrop'
 import { APP_NAME } from '@/lib/config'
 
 function LoginFormFallback() {
@@ -25,20 +27,16 @@ export default function LoginPage() {
       </Suspense>
 
       <div className="grid min-h-full flex-1 lg:grid-cols-2">
-        {/* Brand panel */}
         <aside className="relative hidden overflow-hidden lg:block">
-          <Image
-            src="/landing/illustrations/hero.webp"
+          <PhotoBackdrop
+            src="/landing/hero.webp"
             alt="Pengelolaan bank sampah Mimika Baru"
-            fill
+            overlay="split"
             priority
-            className="object-cover"
             sizes="50vw"
           />
-          <div className="absolute inset-0 bg-linear-to-br from-emerald-950/92 via-emerald-900/78 to-black/70" />
 
-          <div className="relative z-10 flex h-full flex-col justify-center p-10 text-white xl:p-14">
-
+          <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white xl:p-14">
             <div>
               <div className="mb-4 flex items-center gap-4">
                 <Image
@@ -83,22 +81,27 @@ export default function LoginPage() {
                 ))}
               </ul>
             </div>
+
+            <KeywordOrbit className="size-36 text-white/75" />
           </div>
         </aside>
 
-        {/* Form panel */}
         <main className="relative flex flex-col justify-center px-4 py-10 sm:px-8 lg:px-12 xl:px-16">
+          <PhotoBackdrop
+            src="/landing/hero.webp"
+            overlay="split"
+            className="lg:hidden"
+          />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(22,163,74,0.08),transparent_50%)]"
+            className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(ellipse_at_top,rgba(22,163,74,0.08),transparent_50%)] lg:block"
             aria-hidden
           />
 
           <div className="relative mx-auto w-full max-w-md">
-            {/* Mobile-only: back + brand (no logo repeat on desktop form) */}
             <div className="mb-6 space-y-5 lg:hidden">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-500"
+                className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-sm backdrop-blur-sm transition hover:bg-white/25"
               >
                 <ArrowLeft className="size-4" aria-hidden />
                 Kembali ke beranda
@@ -109,16 +112,16 @@ export default function LoginPage() {
                   alt="Logo MIRU-G"
                   width={48}
                   height={48}
-                  className="size-12 rounded-full object-cover"
+                  className="size-12 rounded-full object-cover ring-2 ring-white/40"
                 />
                 <div>
-                  <p className="text-sm font-bold text-foreground">MIRU-G</p>
-                  <p className="text-xs text-muted-foreground">Distrik Mimika Baru</p>
+                  <p className="text-sm font-bold text-white">MIRU-G</p>
+                  <p className="text-xs text-white/75">Distrik Mimika Baru</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-background/95 p-6 shadow-md backdrop-blur sm:p-8">
+            <div className="rounded-2xl border border-white/20 bg-background/95 p-6 shadow-md backdrop-blur sm:p-8 lg:border-border">
               <h2 className="text-2xl font-bold tracking-tight text-foreground">Masuk Panel</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 Gunakan akun {APP_NAME} Anda untuk mengelola operasional bank sampah.
@@ -132,7 +135,7 @@ export default function LoginPage() {
               <div className="flex justify-center">
                 <Link
                   href="/"
-                  className="text-xs text-muted-foreground hover:text-foreground hover:underline mt-4 block text-right"
+                  className="mt-4 hidden text-xs text-muted-foreground hover:text-foreground hover:underline lg:block"
                 >
                   Kembali ke beranda
                 </Link>

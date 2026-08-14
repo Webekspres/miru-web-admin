@@ -2,18 +2,19 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { LogIn, Menu, X } from 'lucide-react'
 import { MiruLogo } from '@/components/brand/MiruLogo'
 import { cn } from '@/lib/cn'
 
 export const NAV_LINKS = [
-  { href: '#beranda', label: 'Beranda' },
-  { href: '#tentang', label: 'Tentang' },
-  { href: '#alur', label: 'Alur Kerja' },
-  { href: '#fitur', label: 'Fitur Utama' },
-  { href: '#kategori', label: 'Kategori' },
-  { href: '#akses', label: 'Peran Akses' },
-  { href: '#faq', label: 'FAQ' },
+  { href: '/#beranda', label: 'Beranda' },
+  { href: '/#tentang', label: 'Tentang' },
+  { href: '/#alur', label: 'Alur Kerja' },
+  { href: '/#fitur', label: 'Fitur Utama' },
+  { href: '/edukasi', label: 'Edukasi' },
+  { href: '/#kategori', label: 'Kategori' },
+  { href: '/#faq', label: 'FAQ' },
 ] as const
 
 interface PublicNavbarProps {
@@ -28,6 +29,7 @@ export function PublicNavbar({
 }: PublicNavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     if (lockScroll) return
@@ -67,15 +69,21 @@ export function PublicNavbar({
 
         {showSectionLinks ? (
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Navigasi utama">
-            {NAV_LINKS.map((link) => (
-              <a
+            {NAV_LINKS.map((link) => {
+              const isActive = link.href === '/edukasi' && pathname?.startsWith('/edukasi')
+              return (
+              <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-md px-3 py-1.5 text-xs font-semibold text-foreground/80 transition-colors duration-150 hover:bg-primary/10 hover:text-primary"
+                className={cn(
+                  'rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-150 hover:bg-primary/10 hover:text-primary',
+                  isActive ? 'bg-primary/10 text-primary' : 'text-foreground/80',
+                )}
               >
                 {link.label}
-              </a>
-            ))}
+              </Link>
+              )
+            })}
           </nav>
         ) : (
           <div className="hidden flex-1 lg:block" aria-hidden />
@@ -122,14 +130,14 @@ export function PublicNavbar({
           <div className="overflow-hidden">
             <nav className="mx-auto flex max-w-7xl flex-col gap-1 border-t border-border/60 bg-background px-4 py-3 sm:px-6">
               {NAV_LINKS.map((link) => (
-                <a
+                <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className="rounded-md px-3 py-2 text-sm font-semibold text-foreground/80 transition hover:bg-primary/10 hover:text-primary"
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
               <div className="mt-2 border-t border-border pt-2">
                 <Link

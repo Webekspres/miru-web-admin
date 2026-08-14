@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   FileText,
+  IdCard,
   ThumbsDown,
   User,
 } from 'lucide-react'
@@ -276,6 +277,29 @@ export function WithdrawalManagement() {
     setShowTolakModal(true)
   }
 
+  async function handleLihatKtp(withdrawal: Withdrawal) {
+    const token = getAccessToken()
+    if (!token) {
+      toastError('Sesi berakhir. Silakan login kembali.')
+      return
+    }
+    try {
+      const res = await fetch(
+        `${API_PREFIX}/withdrawals/${withdrawal.id}/lampiran-ktp/`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+      if (!res.ok) {
+        toastError('Lampiran KTP tidak tersedia.')
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch {
+      toastError('Gagal membuka lampiran KTP.')
+    }
+  }
+
   async function confirmSetujui() {
     if (!selectedWithdrawal) return
     setActionLoading(true)
@@ -416,6 +440,12 @@ export function WithdrawalManagement() {
                     {!isReadOnly && activeTab === 'menunggu' && (
                       <TableCell>
                         <div className="flex justify-end gap-1.5">
+                          {w.ada_lampiran_ktp && (
+                            <Button type="button" variant="outline" size="sm" onClick={() => handleLihatKtp(w)} disabled={actionLoading}>
+                              <IdCard className="size-3.5" aria-hidden />
+                              Lihat KTP
+                            </Button>
+                          )}
                           <Button type="button" variant="primary" size="sm" onClick={() => handleSetujuiClick(w)} disabled={actionLoading}>
                             <CheckCircle2 className="size-3.5" aria-hidden />
                             Setujui

@@ -56,12 +56,12 @@ export function PublicFooter() {
             <ul className="mt-4 space-y-2.5 text-xs font-medium text-muted-foreground">
               {NAV_LINKS.map((link) => (
                 <li key={link.href}>
-                  <a
+                  <Link
                     href={link.href}
                     className="transition-colors duration-150 hover:text-primary"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
               <li>
