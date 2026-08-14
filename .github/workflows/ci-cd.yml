@@ -1,0 +1,148 @@
+name: Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - staging
+      - main
+  pull_request:
+    branches:
+      - staging
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ==========================================
+  # 1. CI: Lint & Unit Tests
+  # ==========================================
+  test:
+    name: Lint & Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Unit Tests
+        run: npm run test
+
+  # ==========================================
+  # 2. CD: Build Docker Image & Push to GHCR
+  # ==========================================
+  build-and-push:
+    name: Build & Push Image to GHCR
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      env_name: ${{ steps.set-env.outputs.env_name }}
+      target_dir: ${{ steps.set-env.outputs.target_dir }}
+      image_tag: ${{ steps.set-env.outputs.image_tag }}
+      api_url: ${{ steps.set-env.outputs.api_url }}
+      app_name: ${{ steps.set-env.outputs.app_name }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Determine Environment & Build Args
+        id: set-env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "env_name=production" >> $GITHUB_OUTPUT
+            echo "target_dir=/opt/miru-prod" >> $GITHUB_OUTPUT
+            echo "image_tag=latest" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.mirubanksampah.id" >> $GITHUB_OUTPUT
+            echo "app_name=MIRU Bank Sampah" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+            echo "target_dir=/opt/miru-staging" >> $GITHUB_OUTPUT
+            echo "image_tag=staging" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.dev.mirubanksampah.id" >> $GITHUB_OUTPUT
+            echo "app_name=MIRU Bank Sampah (Staging)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.set-env.outputs.image_tag }}
+            type=sha,prefix=${{ steps.set-env.outputs.env_name }}-,format=short
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ steps.set-env.outputs.api_url }}
+            NEXT_PUBLIC_APP_NAME=${{ steps.set-env.outputs.app_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ==========================================
+  # 3. CD: Deploy to VPS via SSH
+  # ==========================================
+  deploy:
+    name: Deploy to VPS
+    needs: build-and-push
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Remote Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT || 22022 }}
+          username: ${{ secrets.SSH_USER || 'developer' }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            echo "==> Logging in to GHCR on server..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin || true
+            echo "==> Deploying Frontend to ${{ needs.build-and-push.outputs.env_name }} at ${{ needs.build-and-push.outputs.target_dir }}..."
+            cd ${{ needs.build-and-push.outputs.target_dir }}
+            
+            # Pull latest admin image from GHCR
+            docker compose pull admin
+            
+            # Restart Admin service
+            docker compose up -d --no-deps admin
+            
+            # Check container health
+            echo "==> Verifying Admin container status..."
+            docker compose ps admin
+            echo "==> Frontend Deployment completed successfully!"
