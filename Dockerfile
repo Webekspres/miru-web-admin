@@ -1,12 +1,11 @@
-# Base image
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# Base image with Bun
+FROM oven/bun:1-alpine AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 # Builder stage
-FROM node:20-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -17,7 +16,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN bun run build
 
 # Runner stage
 FROM node:20-alpine AS runner
@@ -40,4 +39,4 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["node_modules/.bin/next", "start"]
