@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import useSWR from 'swr'
 import { api, getAccessToken } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
@@ -8,16 +8,16 @@ import { formatDateWIT, formatRupiah, formatWeightKg } from '@/lib/format'
 import { useAuth } from '@/providers/AuthProvider'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
+import { PaginationControls } from '@/components/ui/PaginationControls'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
-import { Calendar, ChevronLeft, ChevronRight, FileText, User } from 'lucide-react'
-import type { Deposit, DepositDetail } from '@/types/models'
+import { Calendar, FileText, User } from 'lucide-react'
+import type { Deposit } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
-
 // ─── Helpers ──────────────────────────────────────────────────────
 
 function getTodayWIT(): string {
@@ -205,54 +205,22 @@ function DetailDepositModal({
   )
 }
 
-// ─── Pagination Controls ──────────────────────────────────────────
-
-function PaginationControls({
-  meta,
-  page,
-  onPageChange,
-}: {
-  meta: PaginationMeta | undefined
-  page: number
-  onPageChange: (p: number) => void
-}) {
-  if (!meta || meta.total_pages <= 1) return null
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Menampilkan halaman {meta.page} dari {meta.total_pages} ({meta.count} total)
-      </p>
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!meta.previous}
-          onClick={() => onPageChange(page - 1)}
-        >
-          <ChevronLeft className="size-4" aria-hidden />
-          Sebelumnya
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!meta.next}
-          onClick={() => onPageChange(page + 1)}
-        >
-          Selanjutnya
-          <ChevronRight className="size-4" aria-hidden />
-        </Button>
-      </div>
-    </div>
-  )
-}
 
 // ─── Main Component ───────────────────────────────────────────────
 
-export function DepositHistory() {
+export function DepositHistory({
+  title = 'Riwayat Setoran',
+  description = 'Daftar setoran sampah nasabah.',
+  scopeToCurrentPetugas = false,
+}: {
+  title?: string
+  description?: string
+  /** Jika true (atau role petugas), filter API ke petugas yang login. */
+  scopeToCurrentPetugas?: boolean
+} = {}) {
   const { user } = useAuth()
+  const filterByPetugas =
+    scopeToCurrentPetugas || user?.role === 'petugas'
 
   // ── Filters ──
   const [page, setPage] = useState(1)
@@ -270,17 +238,15 @@ export function DepositHistory() {
   const [selectedDepositId, setSelectedDepositId] = useState<number | null>(null)
   const [showDetail, setShowDetail] = useState(false)
 
-  // ── Build query params ──
-  const params = useMemo(() => {
-    const p: Record<string, string> = {
-      page: String(page),
-      page_size: '20',
-      ordering: '-tanggal',
-    }
-    if (debouncedSearch) p.search = debouncedSearch
-    if (dateFilter) p.tanggal = dateFilter
-    return p
-  }, [page, debouncedSearch, dateFilter])
+  // ── Build query params (tanpa useMemo — React Compiler) ──
+  const params: Record<string, string> = {
+    page: String(page),
+    page_size: '20',
+    ordering: '-tanggal',
+  }
+  if (debouncedSearch) params.search = debouncedSearch
+  if (dateFilter) params.tanggal = dateFilter
+  if (filterByPetugas && user?.id != null) params.petugas = String(user.id)
 
   // ── Fetch with raw response to get pagination meta ──
   const {
@@ -337,9 +303,9 @@ export function DepositHistory() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Riwayat Setoran</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Daftar setoran sampah nasabah.
+            {description}
           </p>
         </div>
         <TableSkeleton rows={8} cols={5} />
@@ -352,9 +318,9 @@ export function DepositHistory() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Riwayat Setoran</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Daftar setoran sampah nasabah.
+            {description}
           </p>
         </div>
         <ErrorMessage
@@ -371,9 +337,9 @@ export function DepositHistory() {
       {/* Page Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Riwayat Setoran</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Daftar setoran sampah nasabah.
+            {description}
           </p>
         </div>
         <Button
@@ -404,7 +370,7 @@ export function DepositHistory() {
               }}
             />
           </div>
-          <div className="w-full sm:w-[200px]">
+          <div className="w-full sm:w-50">
             <Input
               label="Filter Tanggal"
               type="date"

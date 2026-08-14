@@ -1,23 +1,15 @@
 import type { UserRole } from '@/types/models'
-import { getNavSectionsForRole } from '@/lib/navigation'
+import { WEB_ADMIN_ROLES } from '@/lib/navigation'
+import type { WebAdminRole } from '@/lib/navigation'
 
-export type WebAdminRole = Extract<
-  UserRole,
-  'admin' | 'petugas' | 'koordinator' | 'pemerintah'
->
-
-const WEB_ADMIN_ROLES: WebAdminRole[] = [
-  'admin',
-  'petugas',
-  'koordinator',
-  'pemerintah',
-]
+export type { WebAdminRole }
 
 export const LANDING_PATH_BY_ROLE: Record<WebAdminRole, string> = {
   admin: '/dashboard',
   koordinator: '/dashboard',
   pemerintah: '/reports',
-  petugas: '/transactions/add',
+  // W9: petugas punya dashboard sendiri (bukan redirect ke input setoran)
+  petugas: '/dashboard',
 }
 
 const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
@@ -38,10 +30,16 @@ const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
     '/balance',
     '/reward',
     '/warehouse',
+    '/waste',
+    '/education',
+    '/announcements',
     '/complaints',
     '/reports',
     '/settings',
     '/profile',
+    '/institution',
+    '/privacy',
+    '/about',
   ],
   pemerintah: ['/dashboard', '/reports', '/warehouse', '/profile'],
 }
@@ -54,9 +52,8 @@ export function getLandingPathForRole(role: WebAdminRole): string {
   return LANDING_PATH_BY_ROLE[role]
 }
 
-export function getProfilePathForRole(role: WebAdminRole): string {
-  const { settings } = getNavSectionsForRole(role)
-  return settings.length > 0 ? '/settings' : '/profile'
+export function getProfilePathForRole(_role: WebAdminRole): string {
+  return '/profile'
 }
 
 export function canAccessRoute(role: WebAdminRole, pathname: string): boolean {
@@ -68,11 +65,24 @@ export function canAccessRoute(role: WebAdminRole, pathname: string): boolean {
   )
 }
 
+/** `from` query hanya untuk path app — abaikan aset statis / manifest. */
+function isAppNavigationPath(from: string): boolean {
+  if (!from.startsWith('/')) return false
+  if (from.startsWith('//')) return false
+  if (from.startsWith('/brand/')) return false
+  if (from.includes('.')) return false
+  return true
+}
+
 export function resolvePostLoginPath(
   role: WebAdminRole,
   from: string | null,
 ): string {
-  if (from && from.startsWith('/') && canAccessRoute(role, from)) {
+  if (
+    from &&
+    isAppNavigationPath(from) &&
+    canAccessRoute(role, from)
+  ) {
     return from
   }
 

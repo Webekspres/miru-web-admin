@@ -40,9 +40,20 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { key: 'catalog', label: 'Katalog' },
-  { key: 'redemptions', label: 'Penukaran' },
+  { key: 'redemptions', label: 'Pengajuan penukaran' },
+  { key: 'catalog', label: 'Katalog reward' },
 ]
+
+/** Prefer server BI detail from envelope.errors over generic ValidationError message. */
+function apiErrorDetail(err: ApiError): string {
+  if (err.errors) {
+    const nonField = err.errors.non_field_errors
+    if (nonField?.length) return nonField.join(', ')
+    const first = Object.values(err.errors).flat()[0]
+    if (first) return first
+  }
+  return err.message
+}
 
 // ─── Reward Catalog Sub-component ─────────────────────────────────
 
@@ -305,8 +316,12 @@ function RedemptionList({ canWrite }: { canWrite: boolean }) {
       await api.patch(`/reward-redemptions/${redemption.id}/`, { status: 'selesai' })
       toastSuccess('Penukaran reward berhasil disetujui.')
       mutate()
-    } catch {
-      toastError('Gagal menyetujui penukaran.')
+    } catch (err) {
+      if (err instanceof ApiError) {
+        toastError(apiErrorDetail(err))
+      } else {
+        toastError('Gagal menyetujui penukaran.')
+      }
     } finally {
       setLoadingAction(false)
     }
@@ -382,7 +397,7 @@ function RedemptionList({ canWrite }: { canWrite: boolean }) {
 
 export function RewardManagement() {
   const { role: authRole } = useAuth()
-  const [activeTab, setActiveTab] = useState<TabKey>('catalog')
+  const [activeTab, setActiveTab] = useState<TabKey>('redemptions')
   const canWrite = authRole ? canMutate(authRole) : false
 
   return (
@@ -390,7 +405,9 @@ export function RewardManagement() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Reward & Poin</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Katalog reward dan daftar penukaran poin nasabah.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pengajuan penukaran poin nasabah dan katalog reward.
+          </p>
         </div>
       </div>
 
@@ -408,10 +425,10 @@ export function RewardManagement() {
           </div>
         </CardHeader>
         <div className="p-4">
-          {activeTab === 'catalog' ? (
-            <RewardCatalog canWrite={canWrite} />
-          ) : (
+          {activeTab === 'redemptions' ? (
             <RedemptionList canWrite={canWrite} />
+          ) : (
+            <RewardCatalog canWrite={canWrite} />
           )}
         </div>
       </Card>

@@ -5,18 +5,23 @@ export type UserRole =
   | 'koordinator'
   | 'pemerintah'
 
+/** Roles yang termasuk staff (bukan nasabah/pemerintah). */
+export type StaffRole = Extract<UserRole, 'petugas' | 'admin' | 'koordinator'>
+
+
 export interface User {
   id: number
   username: string
   role: UserRole
   nama_lengkap: string
-  nik?: string
   no_hp?: string
+  phone_verified?: boolean
   alamat?: string
   saldo?: string
   poin?: number
   is_active: boolean
   date_joined?: string
+  avatar_url?: string | null
   qr?: {
     id: number
     nama_lengkap: string
@@ -88,6 +93,8 @@ export interface Withdrawal {
   metode: string
   status: WithdrawalStatus
   tanggal: string
+  ada_lampiran_ktp?: boolean
+  ktp_diverifikasi?: boolean
   saldo_nasabah_baru?: string
 }
 
@@ -140,6 +147,7 @@ export type ComplaintType =
   | 'petugas_tidak_datang'
   | 'kesalahan_data'
   | 'bukti_tidak_muncul'
+  | 'lainnya'
 
 export type ComplaintStatus = 'terbuka' | 'ditutup'
 
@@ -161,7 +169,35 @@ export interface InstitutionSettings {
   email: string
   logo_url?: string | null
   jam_operasional: string
+  jam_buka?: string | null
+  jam_tutup?: string | null
   pengumuman: string
+  tentang?: string
+  kebijakan?: string
+}
+
+export interface KontenEdukasi {
+  id: number
+  judul: string
+  isi: string
+  featured_image?: string | null
+  gambar_url?: string | null
+  kategori_terkait: number | null
+  kategori_terkait_nama?: string | null
+  aktif: boolean
+  urutan?: number
+  created_at: string
+  updated_at: string
+}
+
+/** List/detail publik — tanpa field internal (aktif, urutan, updated_at). */
+export interface KontenEdukasiPublic {
+  id: number
+  judul: string
+  isi: string
+  gambar_url?: string | null
+  kategori_terkait_nama?: string | null
+  created_at: string
 }
 
 export interface Announcement {

@@ -1,9 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ApiError } from '@/lib/api'
-import { WebAdminAccessError } from '@/lib/auth'
+import { mapLoginError, WebAdminAccessError } from '@/lib/auth'
 import { resolvePostLoginPath } from '@/lib/routes'
 import { useAuth } from '@/providers/AuthProvider'
 import { Button } from '@/components/ui/Button'
@@ -31,10 +32,14 @@ export function LoginForm() {
   const [formError, setFormError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
-  const isDisabled = loading || status === 'loading'
+  const hasEmptyCredentials =
+    username.trim().length === 0 || password.length === 0
+  const isDisabled = loading || status === 'loading' || hasEmptyCredentials
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (hasEmptyCredentials) return
+
     setFormError(null)
     setFieldErrors({})
     setLoading(true)
@@ -44,7 +49,7 @@ export function LoginForm() {
       router.replace(resolvePostLoginPath(role, searchParams.get('from')))
     } catch (error) {
       if (error instanceof ApiError) {
-        setFormError(error.message)
+        setFormError(mapLoginError(error))
         setFieldErrors(mapFieldErrors(error.errors))
       } else if (error instanceof WebAdminAccessError) {
         setFormError(error.message)
@@ -77,22 +82,32 @@ export function LoginForm() {
         value={username}
         onChange={(event) => setUsername(event.target.value)}
         error={fieldErrors.username}
-        disabled={isDisabled}
+        disabled={loading || status === 'loading'}
         required
       />
 
-      <Input
-        label="Kata sandi"
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        placeholder="Masukkan kata sandi"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        error={fieldErrors.password}
-        disabled={isDisabled}
-        required
-      />
+      <div className="space-y-1.5">
+        <Input
+          label="Kata sandi"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Masukkan kata sandi"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          error={fieldErrors.password}
+          disabled={loading || status === 'loading'}
+          required
+        />
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-xs font-semibold text-primary transition hover:underline"
+          >
+            Lupa kata sandi?
+          </Link>
+        </div>
+      </div>
 
       <Button
         type="submit"

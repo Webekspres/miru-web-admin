@@ -87,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         saldo: data.user.saldo,
         poin: data.user.poin,
         is_active: true,
+        avatar_url: data.user.avatar_url,
       })
 
       return validateWebAdminRole(webAdminRole)

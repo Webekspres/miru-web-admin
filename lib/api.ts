@@ -140,13 +140,14 @@ type RequestOptions = {
   params?: Record<string, string>
   retried?: boolean
   skipAuth?: boolean
+  timeoutMs?: number
 }
 
 class ApiClient {
-  private getHeaders(): HeadersInit {
-    const token = getAccessToken()
+  private getHeaders(isMultipart = false, skipAuth = false): HeadersInit {
+    const token = skipAuth ? null : getAccessToken()
     return {
-      'Content-Type': 'application/json',
+      ...(isMultipart ? {} : { 'Content-Type': 'application/json' }),
       Accept: 'application/json',
       'Accept-Language': 'id',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -164,14 +165,28 @@ class ApiClient {
   }
 
   private async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-    const { method = 'GET', body, params, retried = false, skipAuth = false } = options
+    const {
+      method = 'GET',
+      body,
+      params,
+      retried = false,
+      skipAuth = false,
+      timeoutMs,
+    } = options
     const url = this.buildUrl(path, params)
+    const isMultipart = body instanceof FormData
 
-    const res = await fetchWithTimeout(url, {
-      method,
-      headers: this.getHeaders(),
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-    })
+    const res = await fetchWithTimeout(
+      url,
+      {
+        method,
+        headers: this.getHeaders(isMultipart, skipAuth),
+        ...(body !== undefined
+          ? { body: isMultipart ? body : JSON.stringify(body) }
+          : {}),
+      },
+      timeoutMs,
+    )
 
     const isUnauthorized = res.status === 401
     const canRetry =
@@ -204,8 +219,12 @@ class ApiClient {
     return parseEnvelope<T>(res)
   }
 
-  get<T>(path: string, params?: Record<string, string>): Promise<T> {
-    return this.request<T>(path, { params })
+  get<T>(
+    path: string,
+    params?: Record<string, string>,
+    options?: { skipAuth?: boolean },
+  ): Promise<T> {
+    return this.request<T>(path, { params, skipAuth: options?.skipAuth })
   }
 
   post<T>(path: string, body: unknown, options?: { skipAuth?: boolean }): Promise<T> {
@@ -218,6 +237,10 @@ class ApiClient {
 
   delete(path: string): Promise<void> {
     return this.request<void>(path, { method: 'DELETE' })
+  }
+
+  upload<T>(path: string, formData: FormData): Promise<T> {
+    return this.request<T>(path, { method: 'POST', body: formData, timeoutMs: 30000 })
   }
 }
 

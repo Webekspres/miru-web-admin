@@ -1,0 +1,78 @@
+name: MIRU Web Admin CI/CD (Staging)
+
+on:
+  push:
+    branches: [stage]
+    paths:
+      - "web-admin/**"
+      - ".github/workflows/**"
+
+jobs:
+  ci:
+    name: Lint + Test + Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: web-admin
+        run: bun install --frozen-lockfile
+
+      - name: Web admin lint
+        working-directory: web-admin
+        run: bun run lint
+
+      - name: Web admin tests
+        working-directory: web-admin
+        run: bun run test
+
+      - name: Web admin build
+        working-directory: web-admin
+        run: bun run build
+
+  deploy:
+    name: Deploy to VPS Staging (/opt/miru-staging)
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Sync web-admin to VPS staging
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          rsync -az \
+            --exclude 'node_modules' \
+            --exclude '.next' \
+            --exclude 'graphify-out' \
+            --exclude '.cursor' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            web-admin/ "${DEPLOY_USER}@${DEPLOY_HOST}:/opt/miru-staging/admin/"
+
+      - name: Restart admin on VPS staging
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" <<'SSH_CMDS'
+            set -e
+            cd /opt/miru-staging
+            docker compose up -d --build admin nginx
+            docker image prune -f || true
+          SSH_CMDS
+

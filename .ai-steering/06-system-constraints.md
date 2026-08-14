@@ -21,7 +21,8 @@
 - Berat diinput manual. QR nasabah via kamera HP (upload/scan).
 
 ### 4. TIDAK ADA Integrasi Dukcapil
-- NIK field opsional, tanpa validasi ke database kependudukan.
+- **Jangan** tambahkan field NIK di form nasabah.
+- Tidak ada validasi ke database kependudukan.
 
 ### 5. Google Maps — Sederhana Saja
 - Static map atau input alamat teks saja.
@@ -57,7 +58,7 @@ Detail matriks: `10-integration-and-roles.md`
 ## Keamanan & Privasi UI
 
 - Jangan tampilkan password, token, atau stack trace ke user
-- Mask NIK di tabel (tampilkan partial: `****1234`)
+- Jangan tampilkan NIK (tidak dikumpulkan). Lampiran KTP hanya di `/balance` pending.
 - Logout clear semua token dari storage
 - HTTPS wajib di production
 - Pedoman lengkap: **`11-security-and-privacy.md`** (selaras kanonik backend)

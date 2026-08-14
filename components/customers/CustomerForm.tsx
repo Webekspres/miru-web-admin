@@ -7,7 +7,8 @@ import { useToast } from '@/components/feedback/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
-import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton'
+import { PasswordInput } from '@/components/ui/PasswordInput'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import { UserPlus, ArrowLeft, Save } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -39,6 +40,7 @@ interface CustomerFormProps {
     no_hp?: string
     alamat?: string
     is_active: boolean
+    avatar_url?: string | null
   }
   isEdit?: boolean
 }
@@ -183,13 +185,21 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="size-5 text-primary" aria-hidden />
+            <CardTitle className="flex items-center gap-3">
+              {isEdit ? (
+                <UserAvatar
+                  src={initialData?.avatar_url}
+                  name={formData.nama_lengkap || initialData?.nama_lengkap || 'Nasabah'}
+                  size="md"
+                />
+              ) : (
+                <UserPlus className="size-5 text-primary" aria-hidden />
+              )}
               {isEdit ? 'Edit Data Nasabah' : 'Form Data Nasabah'}
             </CardTitle>
             <CardDescription>
               {isEdit
-                ? 'Ubah data nasabah. Biarkan password kosong jika tidak ingin mengubahnya.'
+                ? 'Ubah data nasabah. Biarkan password kosong jika tidak ingin mengubahnya. Avatar diubah oleh nasabah di aplikasi mobile.'
                 : 'Isi data diri nasabah untuk mendaftarkan akun baru.'}
             </CardDescription>
           </CardHeader>
@@ -210,9 +220,8 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
                 error={fieldErrors.username}
                 disabled={isEdit}
               />
-              <Input
+              <PasswordInput
                 label={isEdit ? 'Password (biarkan kosong jika tidak diubah)' : 'Password'}
-                type="password"
                 placeholder={isEdit ? 'Kosongkan jika tidak diubah' : 'Minimal 6 karakter'}
                 value={formData.password}
                 onChange={(e) => updateField('password', e.target.value)}
@@ -236,6 +245,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
                 value={formData.no_hp}
                 onChange={(e) => updateField('no_hp', e.target.value)}
                 error={fieldErrors.no_hp}
+                hint="Nomor HP baru berstatus belum terverifikasi dan akan diverifikasi saat user login di aplikasi mobile."
               />
             </div>
 

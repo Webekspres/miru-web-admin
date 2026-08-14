@@ -10,7 +10,8 @@ describe('getLandingPathForRole', () => {
     expect(getLandingPathForRole('admin')).toBe('/dashboard')
     expect(getLandingPathForRole('koordinator')).toBe('/dashboard')
     expect(getLandingPathForRole('pemerintah')).toBe('/reports')
-    expect(getLandingPathForRole('petugas')).toBe('/transactions/add')
+    // W9: petugas punya dashboard sendiri
+    expect(getLandingPathForRole('petugas')).toBe('/dashboard')
   })
 })
 
@@ -24,6 +25,13 @@ describe('canAccessRoute', () => {
     expect(canAccessRoute('petugas', '/transactions/add')).toBe(true)
     expect(canAccessRoute('petugas', '/balance')).toBe(false)
     expect(canAccessRoute('petugas', '/settings')).toBe(false)
+    expect(canAccessRoute('petugas', '/profile/edit')).toBe(true)
+  })
+
+  it('allows koordinator settings pages', () => {
+    expect(canAccessRoute('koordinator', '/institution')).toBe(true)
+    expect(canAccessRoute('koordinator', '/privacy/edit')).toBe(true)
+    expect(canAccessRoute('koordinator', '/about')).toBe(true)
   })
 
   it('restricts pemerintah routes', () => {
@@ -39,7 +47,15 @@ describe('resolvePostLoginPath', () => {
   })
 
   it('falls back to landing when from is disallowed', () => {
-    expect(resolvePostLoginPath('petugas', '/balance')).toBe('/transactions/add')
+    expect(resolvePostLoginPath('petugas', '/balance')).toBe('/dashboard')
     expect(resolvePostLoginPath('pemerintah', null)).toBe('/reports')
+  })
+
+  it('ignores static asset from paths (manifest/favicon)', () => {
+    expect(
+      resolvePostLoginPath('petugas', '/brand/favicon/site.webmanifest'),
+    ).toBe('/dashboard')
+    expect(resolvePostLoginPath('admin', '/brand/logo.svg')).toBe('/dashboard')
+    expect(resolvePostLoginPath('admin', '/favicon.ico')).toBe('/dashboard')
   })
 })

@@ -21,10 +21,10 @@ import {
   Gift,
   MapPin,
   Phone,
-  User as UserIcon,
   Wallet,
   XCircle,
 } from 'lucide-react'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import type { User, Deposit, Withdrawal, RewardRedemption } from '@/types/models'
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -164,9 +164,12 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             {/* Left: Avatar & Name */}
             <div className="flex items-center gap-4">
-              <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                <UserIcon className="size-8 text-primary" aria-hidden />
-              </div>
+              <UserAvatar
+                src={profile.avatar_url}
+                name={profile.nama_lengkap}
+                size="md"
+                className="size-16"
+              />
               <div>
                 <h1 className="text-2xl font-semibold text-foreground">{profile.nama_lengkap}</h1>
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
@@ -174,6 +177,11 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                   <Badge variant={profile.is_active ? 'success' : 'default'}>
                     {profile.is_active ? 'Aktif' : 'Nonaktif'}
                   </Badge>
+                  {profile.no_hp && profile.phone_verified === false && (
+                    <Badge variant="warning" title="Nomor HP akan diverifikasi saat user login di aplikasi mobile">
+                      HP Belum Verifikasi
+                    </Badge>
+                  )}
                   <Badge variant="default">Nasabah</Badge>
                   {profile.date_joined && (
                     <span className="text-xs text-muted-foreground">
@@ -253,16 +261,12 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                 No. HP
               </div>
               <p className="mt-1 text-sm text-foreground">{profile.no_hp ?? '—'}</p>
+              {profile.no_hp && profile.phone_verified === false && (
+                <p className="mt-1 text-xs text-warning">
+                  Belum verifikasi — akan diverifikasi saat login mobile.
+                </p>
+              )}
             </div>
-            {profile.nik && (
-              <div className="rounded-lg bg-surface-muted p-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <UserIcon className="size-4" aria-hidden />
-                  NIK
-                </div>
-                <p className="mt-1 text-sm text-foreground">{profile.nik}</p>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>

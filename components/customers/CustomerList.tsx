@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { api, getAccessToken } from '@/lib/api'
+import { getAccessToken } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatRupiah } from '@/lib/format'
 import { canMutate } from '@/lib/permissions'
@@ -12,17 +12,16 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { PaginationControls } from '@/components/ui/PaginationControls'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { useToast } from '@/components/feedback/Toast'
 import {
-  ChevronLeft,
-  ChevronRight,
   Download,
   FileText,
   Plus,
-  User as UserIcon,
   UserCheck,
   UserX,
 } from 'lucide-react'
@@ -80,39 +79,11 @@ interface CustomerRow {
   saldo?: string
   poin?: number
   is_active: boolean
+  phone_verified?: boolean
+  avatar_url?: string | null
 }
 
-// ─── Pagination ───────────────────────────────────────────────────
 
-function PaginationControls({
-  meta,
-  page,
-  onPageChange,
-}: {
-  meta: PaginationMeta | undefined
-  page: number
-  onPageChange: (p: number) => void
-}) {
-  if (!meta || meta.total_pages <= 1) return null
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Menampilkan halaman {meta.page} dari {meta.total_pages} ({meta.count} total)
-      </p>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" disabled={!meta.previous} onClick={() => onPageChange(page - 1)}>
-          <ChevronLeft className="size-4" aria-hidden />
-          Sebelumnya
-        </Button>
-        <Button type="button" variant="outline" size="sm" disabled={!meta.next} onClick={() => onPageChange(page + 1)}>
-          Selanjutnya
-          <ChevronRight className="size-4" aria-hidden />
-        </Button>
-      </div>
-    </div>
-  )
-}
 
 // ─── Main Component ───────────────────────────────────────────────
 
@@ -172,6 +143,8 @@ export function CustomerList() {
           saldo: u.saldo,
           poin: u.poin,
           is_active: u.is_active,
+          phone_verified: u.phone_verified,
+          avatar_url: u.avatar_url,
         }))
 
       return {
@@ -213,6 +186,8 @@ export function CustomerList() {
           saldo: u.saldo,
           poin: u.poin,
           is_active: u.is_active,
+          phone_verified: u.phone_verified,
+          avatar_url: u.avatar_url,
         }))
 
       exportToCSV(allUsers, `nasabah_${new Date().toISOString().split('T')[0]}.csv`)
@@ -355,13 +330,22 @@ export function CustomerList() {
                   >
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted">
-                          <UserIcon className="size-4 text-muted-foreground" aria-hidden />
-                        </div>
+                        <UserAvatar
+                          src={customer.avatar_url}
+                          name={customer.nama_lengkap}
+                          size="sm"
+                        />
                         <span className="font-medium text-foreground">{customer.nama_lengkap}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{customer.no_hp ?? '—'}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span>{customer.no_hp ?? '—'}</span>
+                        {customer.no_hp && customer.phone_verified === false && (
+                          <Badge variant="warning">Belum Verifikasi</Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-[200px] truncate text-muted-foreground" title={customer.alamat}>
                       {customer.alamat ?? '—'}
                     </TableCell>

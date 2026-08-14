@@ -3,8 +3,6 @@ export const API_BASE_URL =
 
 export const API_PREFIX = `${API_BASE_URL}/api`
 
-export const API_DOCS_URL = `${API_BASE_URL}/api/docs/`
-
 export const APP_NAME =
   process.env.NEXT_PUBLIC_APP_NAME ?? 'MIRU Bank Sampah'
 
@@ -18,4 +16,8 @@ export const AUTH = {
   login: `${API_PREFIX}/auth/login/`,
   refresh: `${API_PREFIX}/auth/refresh/`,
   me: `${API_PREFIX}/auth/me/`,
+  forgotPassword: `${API_PREFIX}/auth/forgot-password/`,
+  resetPasswordRequestOtp: `${API_PREFIX}/auth/reset-password/request-otp/`,
+  resetPasswordVerifyOtp: `${API_PREFIX}/auth/reset-password/verify-otp/`,
+  resetPassword: `${API_PREFIX}/auth/reset-password/`,
 } as const

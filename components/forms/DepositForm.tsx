@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
+import { Html5Qrcode } from 'html5-qrcode'
 import { api, ApiError } from '@/lib/api'
 import { formatRupiah, formatWeightKg } from '@/lib/format'
+import { parseMiruNasabahQr } from '@/lib/miru-qr'
 import { useToast } from '@/components/feedback/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -14,8 +16,9 @@ import { Select } from '@/components/ui/Select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
-import { Search, Plus, Trash2, User as UserIcon, Package, Scale, Calculator, AlertTriangle, CheckCircle2, QrCode } from 'lucide-react'
-import type { User, WasteCategory } from '@/types/models'
+import { Search, Plus, Trash2, Package, Scale, Calculator, AlertTriangle, CheckCircle2, QrCode, Camera } from 'lucide-react'
+import { UserAvatar } from '@/components/ui/UserAvatar'
+import type { Deposit, User, WasteCategory } from '@/types/models'
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -24,6 +27,19 @@ interface NasabahOption {
   nama_lengkap: string
   no_hp?: string
   alamat?: string
+  avatar_url?: string | null
+}
+
+/** GET /users/{id}/ for petugas omits `role` (NasabahLookupSerializer). */
+type NasabahLookupUser = {
+  id: number
+  nama_lengkap: string
+  no_hp?: string
+  alamat?: string
+  is_active: boolean
+  avatar_url?: string | null
+  role?: User['role']
+  username?: string
 }
 
 interface DetailRow {
@@ -57,15 +73,46 @@ function generateId(): string {
   return crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 11)
 }
 
+/** Prefer field-level envelope errors; fall back to message / status. */
+function formatLookupError(err: ApiError): string {
+  if (err.errors) {
+    const parts = Object.values(err.errors).flat().filter(Boolean)
+    if (parts.length > 0) return parts.join(' ')
+  }
+  if (err.statusCode === 404) {
+    return 'Nasabah dengan ID tersebut tidak ditemukan.'
+  }
+  if (err.statusCode === 403) {
+    return err.message || 'Anda tidak memiliki akses untuk melihat data nasabah ini.'
+  }
+  return err.message || 'Terjadi kesalahan. Silakan coba lagi.'
+}
+
+/**
+ * Lookup via GET /users/{id}/.
+ * Petugas gets NasabahLookupSerializer (no `role`); queryset already limits to active nasabah.
+ */
+function assertNasabahLookup(user: NasabahLookupUser): string | null {
+  if (user.role != null && user.role !== 'nasabah') {
+    return 'ID tersebut bukan milik nasabah.'
+  }
+  if (user.is_active === false) {
+    return 'Nasabah dengan ID tersebut tidak aktif.'
+  }
+  return null
+}
+
 // ─── Nasabah Search Combobox ─────────────────────────────────────
 
 function NasabahSearch({
   onSelect,
   selectedName,
+  selectedAvatar,
   error,
 }: {
   onSelect: (nasabah: NasabahOption) => void
   selectedName: string
+  selectedAvatar?: string | null
   error?: string
 }) {
   const [query, setQuery] = useState('')
@@ -75,6 +122,7 @@ function NasabahSearch({
   const inputRef = useRef<HTMLInputElement | null>(null)
   const listRef = useRef<HTMLUListElement | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const listboxId = useId()
 
   // Debounce search query (300ms)
   useEffect(() => {
@@ -93,7 +141,9 @@ function NasabahSearch({
 
   // Reset highlight when results change
   useEffect(() => {
-    setHighlightedIdx(-1)
+    setTimeout(() => {
+      setHighlightedIdx(-1)
+    }, 0)
   }, [data])
 
   const results: NasabahOption[] = (data ?? [])
@@ -103,6 +153,7 @@ function NasabahSearch({
       nama_lengkap: u.nama_lengkap,
       no_hp: u.no_hp,
       alamat: u.alamat,
+      avatar_url: u.avatar_url,
     }))
 
   function handleSelect(nasabah: NasabahOption) {
@@ -146,7 +197,7 @@ function NasabahSearch({
 
       {selectedName ? (
         <div className="mt-1.5 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
-          <UserIcon className="size-5 text-primary" aria-hidden />
+          <UserAvatar src={selectedAvatar} name={selectedName} size="sm" className="size-8" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground">{selectedName}</p>
           </div>
@@ -182,9 +233,11 @@ function NasabahSearch({
             placeholder="Cari nasabah berdasarkan nama atau No. HP..."
             className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
             aria-label="Cari nasabah"
-            aria-expanded={open}
-            aria-autocomplete="list"
             role="combobox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
           />
         </div>
       )}
@@ -215,8 +268,12 @@ function NasabahSearch({
           )}
 
           {!isLoading && results.length > 0 && (
-            <ul ref={listRef} className="max-h-60 overflow-y-auto py-1" role="listbox">
-              {results.map((nasabah, idx) => (
+            <ul
+              id={listboxId}
+              ref={listRef}
+              className="max-h-60 overflow-y-auto py-1"
+              role="listbox"
+            >              {results.map((nasabah, idx) => (
                 <li
                   key={nasabah.id}
                   role="option"
@@ -229,9 +286,12 @@ function NasabahSearch({
                       : 'text-foreground hover:bg-surface-muted'
                   }`}
                 >
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted text-muted-foreground">
-                    <UserIcon className="size-4" aria-hidden />
-                  </div>
+                  <UserAvatar
+                    src={nasabah.avatar_url}
+                    name={nasabah.nama_lengkap}
+                    size="sm"
+                    className="size-8"
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{nasabah.nama_lengkap}</p>
                     <p className="truncate text-xs text-muted-foreground">
@@ -249,15 +309,135 @@ function NasabahSearch({
   )
 }
 
+// ─── Camera QR Scanner ───────────────────────────────────────────
+
+function NasabahQrCameraScanner({
+  open,
+  onClose,
+  onDetected,
+}: {
+  open: boolean
+  onClose: () => void
+  onDetected: (raw: string) => void
+}) {
+  const scannerHostId = useId().replace(/:/g, '')
+  const scannerRef = useRef<Html5Qrcode | null>(null)
+  const handledRef = useRef(false)
+  const [cameraError, setCameraError] = useState<string | null>(null)
+  // true saat mount (scanner hanya di-render saat modal open)
+  const [starting, setStarting] = useState(true)
+
+  const stopScanner = useCallback(async () => {
+    const scanner = scannerRef.current
+    scannerRef.current = null
+    if (!scanner) return
+    try {
+      const state = scanner.getState()
+      // 2 = SCANNING, 3 = PAUSED (Html5QrcodeScannerState)
+      if (state === 2 || state === 3) {
+        await scanner.stop()
+      }
+      scanner.clear()
+    } catch {
+      // ignore stop races when modal closes mid-start
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+
+    handledRef.current = false
+    let cancelled = false
+
+    async function start() {
+      try {
+        // Wait a tick so the modal DOM node exists
+        await new Promise((r) => setTimeout(r, 50))
+        if (cancelled) return
+
+        const scanner = new Html5Qrcode(scannerHostId, { verbose: false })
+        scannerRef.current = scanner
+
+        await scanner.start(
+          { facingMode: 'environment' },
+          { fps: 8, qrbox: { width: 240, height: 240 } },
+          (decodedText) => {
+            if (handledRef.current || cancelled) return
+            handledRef.current = true
+            onDetected(decodedText)
+          },
+          undefined,
+        )
+      } catch (err) {
+        if (cancelled) return
+        const message =
+          err instanceof Error && /NotAllowed|Permission/i.test(err.message)
+            ? 'Izin kamera ditolak. Izinkan akses kamera di browser, atau masukkan ID / payload QR secara manual.'
+            : 'Tidak dapat membuka kamera. Pastikan perangkat punya kamera dan izin sudah diberikan, atau masukkan ID manual.'
+        setCameraError(message)
+      } finally {
+        if (!cancelled) setStarting(false)
+      }
+    }
+
+    void start()
+
+    return () => {
+      cancelled = true
+      void stopScanner()
+    }
+  }, [open, onDetected, scannerHostId, stopScanner])
+
+  function handleClose() {
+    void stopScanner().finally(onClose)
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={handleClose}
+      title="Scan QR Nasabah"
+      description="Arahkan kamera ke QR code kartu digital nasabah MIRU."
+      size="md"
+      footer={
+        <Button type="button" variant="outline" onClick={handleClose}>
+          Tutup
+        </Button>
+      }
+    >
+      <div className="space-y-3">
+        {starting && !cameraError && (
+          <p className="text-sm text-muted-foreground">Menyiapkan kamera...</p>
+        )}
+        {cameraError && (
+          <p className="text-sm text-danger" role="alert">
+            {cameraError}
+          </p>
+        )}
+        <div
+          id={scannerHostId}
+          className="overflow-hidden rounded-lg border border-border bg-black/5 [&_video]:max-h-80 [&_video]:w-full [&_video]:object-cover"
+        />
+        <p className="text-xs text-muted-foreground">
+          Payload QR: JSON MIRU dengan field <code className="text-[11px]">id</code>, atau ID angka.
+          Input manual tetap tersedia di form.
+        </p>
+      </div>
+    </Modal>
+  )
+}
+
 // ─── Nasabah QR / ID Search ──────────────────────────────────────
 
 function NasabahQrInput({
   onSelect,
   selectedName,
+  selectedAvatar,
   error,
 }: {
   onSelect: (nasabah: NasabahOption) => void
   selectedName: string
+  selectedAvatar?: string | null
   error?: string
 }) {
   const [idInput, setIdInput] = useState('')
@@ -265,47 +445,71 @@ function NasabahQrInput({
   const [loading, setLoading] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
+  const [cameraOpen, setCameraOpen] = useState(false)
 
-  async function handleSearch() {
-    const trimmed = idInput.trim()
-    if (!trimmed || !/^\d+$/.test(trimmed)) {
-      setSearchError('Masukkan ID nasabah yang valid (angka).')
-      return
-    }
-
+  const lookupById = useCallback(async (nasabahId: number, displayInput?: string) => {
     setLoading(true)
     setSearchError(null)
     setSearchResult(null)
     setSearched(true)
+    if (displayInput != null) setIdInput(displayInput)
 
     try {
-      const user = await api.get<User>(`/users/${trimmed}/`)
-      if (user.role !== 'nasabah') {
-        setSearchError('ID tersebut bukan milik nasabah.')
+      const user = await api.get<NasabahLookupUser>(`/users/${nasabahId}/`)
+      const roleErr = assertNasabahLookup(user)
+      if (roleErr) {
+        setSearchError(roleErr)
         return
       }
-      if (!user.is_active) {
-        setSearchError('Nasabah dengan ID tersebut tidak aktif.')
-        return
-      }
-      setSearchResult({
+      const option: NasabahOption = {
         id: user.id,
         nama_lengkap: user.nama_lengkap,
         no_hp: user.no_hp,
         alamat: user.alamat,
-      })
+        avatar_url: user.avatar_url,
+      }
+      setSearchResult(option)
+      // Langsung pilih setelah lookup sukses (scan QR / cari ID).
+      onSelect(option)
     } catch (err) {
-      if (err instanceof ApiError && err.statusCode === 404) {
-        setSearchError('Nasabah dengan ID tersebut tidak ditemukan.')
-      } else if (err instanceof ApiError) {
-        setSearchError(err.message)
+      if (err instanceof ApiError) {
+        setSearchError(formatLookupError(err))
       } else {
         setSearchError('Terjadi kesalahan. Silakan coba lagi.')
       }
     } finally {
       setLoading(false)
     }
+  }, [onSelect])
+
+  async function handleSearch() {
+    const parsed = parseMiruNasabahQr(idInput)
+    if (!parsed) {
+      setSearchError(
+        'Masukkan ID nasabah (angka) atau tempel payload QR MIRU JSON yang valid.',
+      )
+      return
+    }
+    await lookupById(parsed.id, String(parsed.id))
   }
+
+  const handleQrDetected = useCallback(
+    (raw: string) => {
+      setCameraOpen(false)
+      const parsed = parseMiruNasabahQr(raw)
+      if (!parsed) {
+        setIdInput(raw.trim())
+        setSearchError(
+          'QR tidak dikenali sebagai payload nasabah MIRU. Pastikan memindai QR kartu digital aplikasi.',
+        )
+        setSearchResult(null)
+        setSearched(true)
+        return
+      }
+      void lookupById(parsed.id, String(parsed.id))
+    },
+    [lookupById],
+  )
 
   function handleSelectResult() {
     if (searchResult) {
@@ -316,7 +520,7 @@ function NasabahQrInput({
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter') {
       e.preventDefault()
-      handleSearch()
+      void handleSearch()
     }
   }
 
@@ -324,7 +528,7 @@ function NasabahQrInput({
   if (selectedName) {
     return (
       <div className="mt-1.5 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
-        <QrCode className="size-5 text-primary" aria-hidden />
+        <UserAvatar src={selectedAvatar} name={selectedName} size="sm" className="size-8" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-foreground">{selectedName}</p>
         </div>
@@ -347,14 +551,14 @@ function NasabahQrInput({
 
   return (
     <div className="space-y-3">
-      {/* ID Input + Search Button */}
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
+      {/* ID Input + Search / Camera */}
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="min-w-0 flex-1 basis-50">
           <Input
-            label="ID Nasabah"
+            label="ID Nasabah / Payload QR"
             type="text"
-            inputMode="numeric"
-            placeholder="Masukkan ID nasabah dari scan QR..."
+            inputMode="text"
+            placeholder="ID angka atau tempel JSON QR MIRU..."
             value={idInput}
             onChange={(e) => {
               setIdInput(e.target.value)
@@ -370,8 +574,18 @@ function NasabahQrInput({
         </div>
         <Button
           type="button"
+          variant="outline"
+          onClick={() => setCameraOpen(true)}
+          disabled={loading}
+          className="mb-0.5 shrink-0"
+        >
+          <Camera className="size-4" aria-hidden />
+          Scan Kamera
+        </Button>
+        <Button
+          type="button"
           variant="primary"
-          onClick={handleSearch}
+          onClick={() => void handleSearch()}
           loading={loading}
           disabled={loading}
           className="mb-0.5 shrink-0"
@@ -385,12 +599,15 @@ function NasabahQrInput({
       {searchResult && !loading && (
         <div className="rounded-lg border border-success/30 bg-success/5 p-3">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-success/10">
-                <UserIcon className="size-5 text-success" aria-hidden />
-              </div>
+            <div className="flex min-w-0 items-center gap-3">
+              <UserAvatar
+                src={searchResult.avatar_url}
+                name={searchResult.nama_lengkap}
+                size="sm"
+                className="size-10"
+              />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{searchResult.nama_lengkap}</p>
+                <p className="truncate text-sm font-medium text-foreground">{searchResult.nama_lengkap}</p>
                 <p className="text-xs text-muted-foreground">
                   ID: {searchResult.id}
                   {searchResult.no_hp ? ` · ${searchResult.no_hp}` : ''}
@@ -420,9 +637,16 @@ function NasabahQrInput({
 
       <p className="text-xs text-muted-foreground">
         <QrCode className="mr-1 inline size-3" aria-hidden />
-        Masukkan ID nasabah dari QR code. Fitur scan kamera akan tersedia kemudian.
+        Scan QR kartu digital nasabah, atau masukkan ID / tempel payload JSON secara manual.
       </p>
-    </div>
+
+      {cameraOpen ? (
+        <NasabahQrCameraScanner
+          open
+          onClose={() => setCameraOpen(false)}
+          onDetected={handleQrDetected}
+        />
+      ) : null}    </div>
   )
 }
 
@@ -479,7 +703,7 @@ function DetailRowInput({
   return (
     <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface-muted/20 p-3">
       {/* Kategori */}
-      <div className="min-w-0 flex-1 basis-[200px]">
+      <div className="min-w-0 flex-1 basis-50">
         <Select
           label="Jenis Sampah"
           placeholder="Pilih kategori..."
@@ -491,7 +715,7 @@ function DetailRowInput({
       </div>
 
       {/* Berat */}
-      <div className="w-[140px] shrink-0">
+      <div className="w-35 shrink-0">
         <Input
           label="Berat (kg)"
           type="text"
@@ -504,7 +728,7 @@ function DetailRowInput({
       </div>
 
       {/* Harga (read-only) */}
-      <div className="w-[130px] shrink-0">
+      <div className="w-32.5 shrink-0">
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-foreground">Harga/kg</span>
           <div className="flex h-10 items-center rounded-lg border border-border bg-surface-muted px-3 text-sm text-muted-foreground">
@@ -514,7 +738,7 @@ function DetailRowInput({
       </div>
 
       {/* Subtotal (read-only) */}
-      <div className="w-[130px] shrink-0">
+      <div className="w-32.5 shrink-0">
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-foreground">Subtotal</span>
           <div className="flex h-10 items-center rounded-lg border border-border bg-surface-muted px-3 text-sm font-semibold text-foreground">
@@ -559,8 +783,12 @@ export function DepositForm() {
   // ── Form state ──
   const [nasabahId, setNasabahId] = useState<number | null>(null)
   const [nasabahNama, setNasabahNama] = useState('')
+  const [nasabahAvatar, setNasabahAvatar] = useState<string | null>(null)
   const [searchMode, setSearchMode] = useState<'name' | 'qr'>('name')
-  const [details, setDetails] = useState<DetailRow[]>([])
+  // Satu baris awal — jangan addRow di useEffect (Strict Mode double-mount → 2 baris).
+  const [details, setDetails] = useState<DetailRow[]>(() => [
+    { id: generateId(), ...EMPTY_DETAIL_ROW },
+  ])
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [rowErrors, setRowErrors] = useState<Record<number, Record<string, string>>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -575,9 +803,11 @@ export function DepositForm() {
     if (nasabah.id === 0) {
       setNasabahId(null)
       setNasabahNama('')
+      setNasabahAvatar(null)
     } else {
       setNasabahId(nasabah.id)
       setNasabahNama(nasabah.nama_lengkap)
+      setNasabahAvatar(nasabah.avatar_url ?? null)
     }
     setFieldErrors((prev) => {
       const next = { ...prev }
@@ -674,8 +904,12 @@ export function DepositForm() {
     }
 
     try {
-      await api.post('/deposits/', payload)
-      toastSuccess('Setoran berhasil disimpan!')
+      const created = await api.post<Deposit>('/deposits/', payload)
+      const nilai =
+        created.total_nilai != null && created.total_nilai !== ''
+          ? formatRupiah(created.total_nilai)
+          : formatRupiah(total)
+      toastSuccess(`Setoran berhasil disimpan! Nilai: ${nilai}`)
       router.push('/transactions')
     } catch (err) {
       if (err instanceof ApiError) {
@@ -723,14 +957,6 @@ export function DepositForm() {
       setSubmitting(false)
     }
   }
-
-  // ── Initial row on mount ──
-  useEffect(() => {
-    if (details.length === 0) {
-      addRow()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // ── Loading state ──
   if (catLoading) {
@@ -817,12 +1043,14 @@ export function DepositForm() {
               <NasabahSearch
                 onSelect={handleSelectNasabah}
                 selectedName={nasabahNama}
+                selectedAvatar={nasabahAvatar}
                 error={fieldErrors.nasabah}
               />
             ) : (
               <NasabahQrInput
                 onSelect={handleSelectNasabah}
                 selectedName={nasabahNama}
+                selectedAvatar={nasabahAvatar}
                 error={fieldErrors.nasabah}
               />
             )}
@@ -913,7 +1141,7 @@ export function DepositForm() {
               }}
               loading={submitting}
               disabled={submitting}
-              className="min-w-[160px]"
+              className="min-w-40"
             >
               <Calculator className="size-4" aria-hidden />
               Simpan Setoran
@@ -953,9 +1181,12 @@ export function DepositForm() {
       >
         <div className="space-y-4">
           {/* Nasabah Info */}
-          <div className="rounded-lg bg-surface-muted p-3">
-            <p className="text-xs text-muted-foreground">Nasabah</p>
-            <p className="font-medium text-foreground">{nasabahNama}</p>
+          <div className="flex items-center gap-3 rounded-lg bg-surface-muted p-3">
+            <UserAvatar src={nasabahAvatar} name={nasabahNama} size="sm" className="size-10" />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Nasabah</p>
+              <p className="font-medium text-foreground">{nasabahNama}</p>
+            </div>
           </div>
 
           {/* Detail Summary */}

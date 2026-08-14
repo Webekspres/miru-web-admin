@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  // Pin root so Turbopack finds next/ when multiple lockfiles confuse inference
+  // Pin root so Turbopack finds next/ when multiple lockfiles confuse inference.
+  // NB: next.config.ts di-load sebagai ES module, jadi __dirname tidak tersedia —
+  // gunakan import.meta.dirname (Node 20.11+ / Bun).
   turbopack: {
-    root: path.join(__dirname),
+    root: import.meta.dirname,
   },
 };
 

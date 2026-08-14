@@ -12,15 +12,16 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
+import { PaginationControls } from '@/components/ui/PaginationControls'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
   AlertTriangle,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   FileText,
+  IdCard,
   ThumbsDown,
   User,
 } from 'lucide-react'
@@ -66,37 +67,7 @@ function getStatusLabel(status: WithdrawalStatus): string {
   return labels[status] ?? status
 }
 
-// ─── Pagination ───────────────────────────────────────────────────
 
-function PaginationControls({
-  meta,
-  page,
-  onPageChange,
-}: {
-  meta: PaginationMeta | undefined
-  page: number
-  onPageChange: (p: number) => void
-}) {
-  if (!meta || meta.total_pages <= 1) return null
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Menampilkan halaman {meta.page} dari {meta.total_pages} ({meta.count} total)
-      </p>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" disabled={!meta.previous} onClick={() => onPageChange(page - 1)}>
-          <ChevronLeft className="size-4" aria-hidden />
-          Sebelumnya
-        </Button>
-        <Button type="button" variant="outline" size="sm" disabled={!meta.next} onClick={() => onPageChange(page + 1)}>
-          Selanjutnya
-          <ChevronRight className="size-4" aria-hidden />
-        </Button>
-      </div>
-    </div>
-  )
-}
 
 // ─── Konfirmasi Setujui Modal ─────────────────────────────────────
 
@@ -141,11 +112,22 @@ function SetujuiModal({
       <div className="space-y-4">
         {/* Saldo saat ini */}
         {nasabahProfile && (
-          <div className="rounded-lg bg-surface-muted p-3">
-            <p className="text-xs text-muted-foreground">Saldo Nasabah Saat Ini</p>
-            <p className="text-lg font-bold text-foreground">
-              {nasabahProfile.saldo ? formatRupiah(nasabahProfile.saldo) : 'Rp0,00'}
-            </p>
+          <div className="flex items-center gap-3 rounded-lg bg-surface-muted p-3">
+            <UserAvatar
+              src={nasabahProfile.avatar_url}
+              name={nasabahProfile.nama_lengkap}
+              size="sm"
+              className="size-10"
+            />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Saldo Nasabah Saat Ini</p>
+              <p className="truncate text-sm font-medium text-foreground">
+                {nasabahProfile.nama_lengkap}
+              </p>
+              <p className="text-lg font-bold text-foreground">
+                {nasabahProfile.saldo ? formatRupiah(nasabahProfile.saldo) : 'Rp0,00'}
+              </p>
+            </div>
           </div>
         )}
 
@@ -295,6 +277,29 @@ export function WithdrawalManagement() {
     setShowTolakModal(true)
   }
 
+  async function handleLihatKtp(withdrawal: Withdrawal) {
+    const token = getAccessToken()
+    if (!token) {
+      toastError('Sesi berakhir. Silakan login kembali.')
+      return
+    }
+    try {
+      const res = await fetch(
+        `${API_PREFIX}/withdrawals/${withdrawal.id}/lampiran-ktp/`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+      if (!res.ok) {
+        toastError('Lampiran KTP tidak tersedia.')
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch {
+      toastError('Gagal membuka lampiran KTP.')
+    }
+  }
+
   async function confirmSetujui() {
     if (!selectedWithdrawal) return
     setActionLoading(true)
@@ -435,6 +440,12 @@ export function WithdrawalManagement() {
                     {!isReadOnly && activeTab === 'menunggu' && (
                       <TableCell>
                         <div className="flex justify-end gap-1.5">
+                          {w.ada_lampiran_ktp && (
+                            <Button type="button" variant="outline" size="sm" onClick={() => handleLihatKtp(w)} disabled={actionLoading}>
+                              <IdCard className="size-3.5" aria-hidden />
+                              Lihat KTP
+                            </Button>
+                          )}
                           <Button type="button" variant="primary" size="sm" onClick={() => handleSetujuiClick(w)} disabled={actionLoading}>
                             <CheckCircle2 className="size-3.5" aria-hidden />
                             Setujui
