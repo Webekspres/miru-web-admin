@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/providers/AuthProvider'
 import { Card } from '@/components/ui/Card'
+import type { WebAdminRole } from '@/lib/navigation'
 
 const ITEMS = [
   {
@@ -45,7 +46,7 @@ const ITEMS = [
 export function SettingsHub() {
   const { role } = useAuth()
 
-  const items = ITEMS.filter((item) => role && item.roles.includes(role))
+  const items = ITEMS.filter((item) => role && (item.roles as readonly WebAdminRole[]).includes(role))
 
   return (
     <div className="space-y-6">

@@ -323,6 +323,7 @@ export function PickupManagement() {
 
   // ── Build query params ──
   const activeTabDef = visibleTabs.find((t) => t.key === activeTab) ?? visibleTabs[0]
+  const userId = user?.id
   const params = useMemo(() => {
     const p: Record<string, string> = {
       page: String(page),
@@ -338,12 +339,12 @@ export function PickupManagement() {
     }
 
     // Petugas: only see assigned pickups (backend also filters; keep explicit)
-    if (isPetugas && user?.id) {
-      p.petugas = String(user.id)
+    if (isPetugas && userId) {
+      p.petugas = String(userId)
     }
 
     return p
-  }, [page, activeTabDef, isPetugas, user?.id])
+  }, [page, activeTabDef, isPetugas, userId])
 
   // ── Fetch data ──
   const {
