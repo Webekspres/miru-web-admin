@@ -4,9 +4,10 @@ export default function TermsAdminPage() {
   return (
     <MarkdownDocView
       title="Syarat & Ketentuan"
-      description="Dokumen publik di /terms untuk Play Store dan situs web."
+      description="Konten halaman publik /terms — dapat diedit admin kapan saja."
       field="syarat_ketentuan"
       editHref="/syarat-ketentuan/edit"
+      publicHref="/terms"
     />
   )
 }

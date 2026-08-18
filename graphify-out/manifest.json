@@ -20,8 +20,8 @@
     "semantic_hash": ""
   },
   "next.config.ts": {
-    "mtime": 1786414909.2937105,
-    "ast_hash": "802b74ed5f2bc782d86f3b1a6d86a2c4",
+    "mtime": 1787021384.662432,
+    "ast_hash": "c7e7d9a7f0bc1b91b0ee21535fb9d030",
     "semantic_hash": ""
   },
   "package.json": {
@@ -730,8 +730,8 @@
     "semantic_hash": ""
   },
   "components/layout/PublicFooter.tsx": {
-    "mtime": 1787019538.5292265,
-    "ast_hash": "bfe092ef1960c6c5971a8ee1883751a5",
+    "mtime": 1787023645.7417889,
+    "ast_hash": "8d11251eb38243a7e4d4e54048aef0d5",
     "semantic_hash": ""
   },
   "components/layout/PublicNavbar.tsx": {
@@ -860,8 +860,8 @@
     "semantic_hash": ""
   },
   ".github/workflows/ci-cd-staging.yml": {
-    "mtime": 1786438816.6981864,
-    "ast_hash": "5f068f5048812cd2e109dc8612709f58",
+    "mtime": 1787021384.662432,
+    "ast_hash": "afd0d96c8ccd3fd900e71a256cd2da28",
     "semantic_hash": ""
   },
   "lib/media.ts": {
@@ -905,13 +905,13 @@
     "semantic_hash": ""
   },
   "app/(dashboard)/privacy/edit/page.tsx": {
-    "mtime": 1786504540.8991282,
-    "ast_hash": "abcef3b8138d8ddcd09bede023bf40c2",
+    "mtime": 1787023655.6244397,
+    "ast_hash": "8b47a0075ac9b6075a6924f71aefc720",
     "semantic_hash": ""
   },
   "app/(dashboard)/privacy/page.tsx": {
-    "mtime": 1787019553.8512335,
-    "ast_hash": "398316592c303eb671eca18027f2b845",
+    "mtime": 1787023649.528654,
+    "ast_hash": "d6793055707d457922bb6b02c93a0e04",
     "semantic_hash": ""
   },
   "app/(dashboard)/profile/edit/page.tsx": {
@@ -940,18 +940,18 @@
     "semantic_hash": ""
   },
   "components/settings/MarkdownDocView.tsx": {
-    "mtime": 1787019529.3893664,
-    "ast_hash": "bfb9e1828d1427c54602e2c1b7bb7d25",
+    "mtime": 1787023649.3943114,
+    "ast_hash": "c545edf08628c520dcfe14014ee083a3",
     "semantic_hash": ""
   },
   "components/settings/SettingsHub.tsx": {
-    "mtime": 1787019553.8512335,
-    "ast_hash": "8c902178b26343e12e98b559835dd828",
+    "mtime": 1787023649.334355,
+    "ast_hash": "a3edd3a4a7eb81d8e9367a569a69db96",
     "semantic_hash": ""
   },
   "components/settings/SettingsPageHeader.tsx": {
-    "mtime": 1786504490.6179917,
-    "ast_hash": "1b3c646a97f45add503f96c59dade6ec",
+    "mtime": 1787023645.860845,
+    "ast_hash": "24bc9864e23ba9f02a17696d02bc0d88",
     "semantic_hash": ""
   },
   "components/ui/ImageDropzone.tsx": {
@@ -1025,8 +1025,8 @@
     "semantic_hash": ""
   },
   "app/(dashboard)/syarat-ketentuan/page.tsx": {
-    "mtime": 1787019529.305514,
-    "ast_hash": "82bef03aab3b0706ab9597061a1a4255",
+    "mtime": 1787023649.528654,
+    "ast_hash": "a4632699280dd42f3751b9ffa58efd9e",
     "semantic_hash": ""
   },
   "app/privacy-policy/page.tsx": {

@@ -15,11 +15,13 @@ export function MarkdownDocView({
   description,
   field,
   editHref,
+  publicHref,
 }: {
   title: string
   description: string
   field: 'tentang' | 'kebijakan' | 'syarat_ketentuan'
   editHref: string
+  publicHref?: string
 }) {
   const { role } = useAuth()
   const { data, error, isLoading, mutate } = useSWR(
@@ -45,6 +47,7 @@ export function MarkdownDocView({
         title={title}
         description={description}
         editHref={editHref}
+        publicHref={publicHref}
         canEdit={role === 'admin'}
       />
       <Card className="p-4 sm:p-6">
