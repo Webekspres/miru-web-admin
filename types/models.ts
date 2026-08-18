@@ -174,6 +174,15 @@ export interface InstitutionSettings {
   pengumuman: string
   tentang?: string
   kebijakan?: string
+  syarat_ketentuan?: string
+}
+
+export interface LegalDocument {
+  versi: string
+  judul: string
+  institusi: string
+  ringkasan?: string
+  konten: string
 }
 
 export interface KontenEdukasi {

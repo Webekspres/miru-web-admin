@@ -18,7 +18,7 @@ export function MarkdownDocView({
 }: {
   title: string
   description: string
-  field: 'tentang' | 'kebijakan'
+  field: 'tentang' | 'kebijakan' | 'syarat_ketentuan'
   editHref: string
 }) {
   const { role } = useAuth()

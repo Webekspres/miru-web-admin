@@ -69,6 +69,22 @@ export function PublicFooter() {
                   Masuk Panel Admin
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/privacy-policy"
+                  className="transition-colors duration-150 hover:text-primary"
+                >
+                  Kebijakan Privasi
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="transition-colors duration-150 hover:text-primary"
+                >
+                  Syarat & Ketentuan
+                </Link>
+              </li>
             </ul>
           </div>
 

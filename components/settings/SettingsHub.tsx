@@ -5,6 +5,7 @@ import {
   Building2,
   ChevronRight,
   FileText,
+  Scale,
   Shield,
   UserRound,
 } from 'lucide-react'
@@ -32,6 +33,13 @@ const ITEMS = [
     label: 'Kebijakan Data',
     description: 'Dokumen markdown yang tampil di aplikasi mobile.',
     icon: Shield,
+    roles: ['admin', 'koordinator'],
+  },
+  {
+    href: '/syarat-ketentuan',
+    label: 'Syarat & Ketentuan',
+    description: 'Dokumen publik di /terms untuk Play Store.',
+    icon: Scale,
     roles: ['admin', 'koordinator'],
   },
   {

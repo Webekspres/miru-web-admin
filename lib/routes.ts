@@ -40,6 +40,7 @@ const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
     '/institution',
     '/privacy',
     '/about',
+    '/syarat-ketentuan',
   ],
   pemerintah: ['/dashboard', '/reports', '/warehouse', '/profile'],
 }

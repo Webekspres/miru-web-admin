@@ -4,7 +4,7 @@ export default function PrivacyPage() {
   return (
     <MarkdownDocView
       title="Kebijakan Data"
-      description="Dokumen ini tampil di aplikasi mobile."
+      description="Dokumen mobile; versi publik Play Store di /privacy-policy."
       field="kebijakan"
       editHref="/privacy/edit"
     />
