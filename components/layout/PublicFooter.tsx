@@ -6,6 +6,7 @@ import { NAV_LINKS } from './PublicNavbar'
 export const FOOTER_LEGAL_LINKS = [
   { href: '/privacy-policy', label: 'Kebijakan Privasi' },
   { href: '/terms', label: 'Syarat & Ketentuan' },
+  { href: '/hapus-akun', label: 'Hapus Akun' },
 ] as const
 
 export function PublicFooter() {
@@ -49,6 +50,11 @@ export function PublicFooter() {
               <li>
                 <Link href="/login" className="transition hover:text-primary">
                   Masuk Panel Admin
+                </Link>
+              </li>
+              <li>
+                <Link href="/tentang" className="transition hover:text-primary">
+                  Tentang MIRU
                 </Link>
               </li>
             </ul>
