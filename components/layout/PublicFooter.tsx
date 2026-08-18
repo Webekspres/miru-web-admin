@@ -14,7 +14,7 @@ export function PublicFooter() {
   return (
     <footer className="border-t border-border bg-background text-foreground">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:py-12">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr] lg:gap-10">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <Image
@@ -56,6 +56,21 @@ export function PublicFooter() {
 
           <div>
             <h4 className="text-xs font-bold tracking-wide text-foreground uppercase">
+              Legal
+            </h4>
+            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              {FOOTER_LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="transition hover:text-primary">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold tracking-wide text-foreground uppercase">
               Kontak
             </h4>
             <address className="mt-3 space-y-1 text-sm not-italic leading-relaxed text-muted-foreground">
@@ -66,24 +81,8 @@ export function PublicFooter() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-4 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-8 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {currentYear} Pemerintah Distrik Mimika Baru · MIRU-G</p>
-
-          <nav
-            aria-label="Dokumen legal"
-            className="flex flex-wrap items-center gap-x-4 gap-y-1"
-          >
-            {FOOTER_LEGAL_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="font-medium text-foreground/80 transition hover:text-primary"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
           <p>
             Developed by{' '}
             <a
