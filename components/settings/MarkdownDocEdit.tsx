@@ -22,7 +22,7 @@ export function MarkdownDocEdit({
   backHref,
 }: {
   title: string
-  field: 'tentang' | 'kebijakan'
+  field: 'tentang' | 'kebijakan' | 'syarat_ketentuan'
   backHref: string
 }) {
   const router = useRouter()

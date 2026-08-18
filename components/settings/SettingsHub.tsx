@@ -5,6 +5,7 @@ import {
   Building2,
   ChevronRight,
   FileText,
+  Scale,
   Shield,
   UserRound,
 } from 'lucide-react'
@@ -29,15 +30,22 @@ const ITEMS = [
   },
   {
     href: '/privacy',
-    label: 'Kebijakan Data',
-    description: 'Dokumen markdown yang tampil di aplikasi mobile.',
+    label: 'Kebijakan Privasi',
+    description: 'Mobile & halaman publik /privacy-policy (Play Store).',
     icon: Shield,
+    roles: ['admin', 'koordinator'],
+  },
+  {
+    href: '/syarat-ketentuan',
+    label: 'Syarat & Ketentuan',
+    description: 'Halaman publik /terms — dapat diedit admin.',
+    icon: Scale,
     roles: ['admin', 'koordinator'],
   },
   {
     href: '/about',
     label: 'Tentang MIRU',
-    description: 'Halaman tentang yang tampil di aplikasi mobile.',
+    description: 'Konten tentang kami di aplikasi mobile.',
     icon: FileText,
     roles: ['admin', 'koordinator'],
   },
