@@ -18,6 +18,9 @@ export const PUBLIC_ROUTES = [
   '/edukasi',
   '/privacy-policy',
   '/terms',
+  '/hapus-akun',
+  '/tentang',
+  '/kebijakan-privasi',
 ] as const
 
 /** Aset statis di `public/` — jangan di-gate auth (termasuk PWA manifest). */
