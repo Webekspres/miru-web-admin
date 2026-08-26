@@ -33,7 +33,7 @@
   --font-mono: var(--font-geist-mono);
   --animate-ken-burns: ken-burns 18s ease-in-out infinite alternate;
   --animate-ken-burns-alt: ken-burns-alt 18s ease-in-out infinite alternate;
-  --animate-marquee-x: marquee-x 32s linear infinite;
+  --animate-marquee-x: marquee-x 180s linear infinite;
   --animate-orbit-spin: orbit-spin 32s linear infinite;
   --animate-fade-up: fade-up 0.7s ease-out both;
   --animate-float-y: float-y 5s ease-in-out infinite;
