@@ -20,7 +20,4 @@ export const AUTH = {
   resetPasswordRequestOtp: `${API_PREFIX}/auth/reset-password/request-otp/`,
   resetPasswordVerifyOtp: `${API_PREFIX}/auth/reset-password/verify-otp/`,
   resetPassword: `${API_PREFIX}/auth/reset-password/`,
-  deleteAccountCheck: `${API_PREFIX}/auth/delete-account/check/`,
-  deleteAccountRequestOtp: `${API_PREFIX}/auth/delete-account/request-otp/`,
-  deleteAccountConfirm: `${API_PREFIX}/auth/delete-account/confirm/`,
 } as const

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState, type FormEvent } from 'react'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import { api, ApiError } from '@/lib/api'
-import { AUTH, APP_NAME } from '@/lib/config'
+import { APP_NAME } from '@/lib/config'
 import { formatRupiah } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -65,7 +65,7 @@ export function DeleteAccountForm() {
     setLoading(true)
     try {
       const data = await api.post<CheckResponse>(
-        AUTH.deleteAccountCheck,
+        '/auth/delete-account/check/',
         { username: username.trim() },
         { skipAuth: true },
       )
@@ -96,7 +96,7 @@ export function DeleteAccountForm() {
         masked_phone: string
         expires_in_seconds: number
       }>(
-        AUTH.deleteAccountRequestOtp,
+        '/auth/delete-account/request-otp/',
         { username: username.trim(), no_hp: phone.trim() },
         { skipAuth: true },
       )
@@ -120,7 +120,7 @@ export function DeleteAccountForm() {
     setLoading(true)
     try {
       await api.post(
-        AUTH.deleteAccountConfirm,
+        '/auth/delete-account/confirm/',
         {
           username: username.trim(),
           otp: otp.trim(),
