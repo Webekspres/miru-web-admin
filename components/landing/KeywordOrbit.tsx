@@ -21,7 +21,7 @@ export function KeywordOrbit({
     <div className={cn('relative size-40', className)}>
       <svg
         viewBox="0 0 200 200"
-        className="size-full motion-safe:animate-orbit-spin"
+        className="size-full origin-center motion-safe:animate-orbit-spin"
         aria-hidden
       >
         <defs>
@@ -39,8 +39,9 @@ export function KeywordOrbit({
           <textPath href={`#${pathId}`}>{text}</textPath>
         </text>
       </svg>
+      {/* Center tetap diam — float-y bikin ikon keluar dari orbit saat teks spin. */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="flex size-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg motion-safe:animate-float-y">
+        <span className="flex size-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg">
           <Recycle className="size-7" aria-hidden />
         </span>
       </div>
