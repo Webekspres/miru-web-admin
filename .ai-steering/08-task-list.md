@@ -1,6 +1,6 @@
 # 08 — Task List: Web Admin Development Roadmap
 
-> **Dokumen ini** adalah roadmap **miru-web-admin**.
+> **Dokumen ini** adalah roadmap **web** (web admin MIRU).
 > **Urutan:** item **belum selesai di atas**; item **sudah selesai di bawah** (arsip).
 >
 > Item pengembangan lanjutan hanya dari dokumen persyaratan (Proposal, Jawaban,
@@ -28,7 +28,7 @@
 | 9 | Pengembangan Lanjutan | Fitur persyaratan dalam **17 modul** | Backend Fase 8 (fitur ✅) | 🔲 **Aktif — prioritas wire UI** |
 | — | Out of Scope | Larangan sistem / di luar modul | — | ⛔ |
 
-> **Status proyek:** MVP web-admin selesai. API backend Fase 8 fitur bisnis hampir semua siap.
+> **Status proyek:** MVP web admin selesai. API backend Fase 8 fitur bisnis hampir semua siap.
 > **Kerja aktif #1:** sisa **Fase 9** wire UI (wilayah, PDF bukti, laporan). KTP penarikan besar (lihat lampiran) ✅.
 > Audit Temuan web (W0–W11) sudah ✅ — arsip BAGIAN B.
 > Item hanya dari Proposal / Jawaban / Modules / Business Rules / **temuan audit** — **tidak menambah modul** di luar 17.
@@ -335,7 +335,7 @@
 
 > **Sumber:** Business Rules §G; Jawaban §6.2.4.
 > **API:** `tanggal_berlaku` min H+3 + pengumuman otomatis — siap.
-> Riwayat harga sudah ditampilkan di UI; **form edit belum kirim `tanggal_berlaku`**.
+> Form edit harga sudah kirim `tanggal_berlaku` ke API (`WasteCategoryList.tsx`).
 
 - [x] **Form edit harga kategori:** input `tanggal_berlaku` (date) dengan validasi client min H+3
   - Kirim ke API bersama harga baru; tampilkan error envelope jika server tolak
@@ -475,4 +475,4 @@
 |------|---------|
 | Backend (kanonik) | `backend/.ai-steering/11-security-and-privacy.md` |
 | Web Admin | `.ai-steering/11-security-and-privacy.md` |
-| Mobile | `mirumobileapp/.ai-steering/11-security-and-privacy.md` |
+| Mobile | `mobile/.ai-steering/11-security-and-privacy.md` |
