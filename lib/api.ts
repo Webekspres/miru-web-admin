@@ -46,19 +46,68 @@ export async function parseEnvelope<T>(response: Response): Promise<T> {
   try {
     envelope = await response.json()
   } catch {
-    throw new ApiError('Respons server tidak valid.', response.status)
+    throw new ApiError(invalidResponseMessage(response), response.status, 'INVALID_RESPONSE')
+  }
+
+  if (typeof envelope?.success !== 'boolean') {
+    throw new ApiError(invalidResponseMessage(response), response.status, 'INVALID_RESPONSE')
   }
 
   if (!envelope.success) {
     throw new ApiError(
-      envelope.message,
-      envelope.status_code,
+      envelope.message || defaultErrorMessage(response.status, envelope.code),
+      envelope.status_code ?? response.status,
       envelope.code,
       envelope.errors ?? undefined,
     )
   }
 
   return envelope.data as T
+}
+
+/** Pesan ramah saat body bukan JSON envelope MIRU (HTML 404 nginx, proxy error, dll). */
+function invalidResponseMessage(response: Response): string {
+  const status = response.status
+
+  if (status === 404) {
+    return (
+      'Endpoint API tidak ditemukan (HTTP 404). ' +
+      'Periksa URL backend atau pastikan fitur sudah di-deploy di server.'
+    )
+  }
+  if (status === 401 || status === 403) {
+    return (
+      `Akses ditolak (HTTP ${status}), tetapi respons bukan format standar MIRU. ` +
+      'Coba login ulang atau hubungi pengelola.'
+    )
+  }
+  if (status === 502 || status === 503 || status === 504) {
+    return (
+      `Server API sedang tidak tersedia (HTTP ${status}). ` +
+      'Coba beberapa saat lagi. Jika berlanjut, hubungi pengelola staging/production.'
+    )
+  }
+  if (status >= 500) {
+    return (
+      `Server mengalami gangguan (HTTP ${status}). ` +
+      'Respons bukan JSON envelope MIRU — coba lagi atau hubungi pengelola.'
+    )
+  }
+  if (status >= 400) {
+    return (
+      `Permintaan gagal (HTTP ${status}). ` +
+      'Server mengembalikan respons yang tidak dapat dibaca aplikasi. Coba lagi atau hubungi pengelola.'
+    )
+  }
+  return (
+    `Respons server tidak dapat dibaca (HTTP ${status || 'tidak diketahui'}). ` +
+    'Pastikan API MIRU aktif dan mengembalikan format JSON envelope.'
+  )
+}
+
+function defaultErrorMessage(status: number, code?: string): string {
+  if (code) return `Permintaan gagal (${code}, HTTP ${status}).`
+  return `Permintaan gagal (HTTP ${status}).`
 }
 
 /** Ubah error koneksi mentah (`fetch failed`, timeout) menjadi ApiError berbahasa Indonesia. */

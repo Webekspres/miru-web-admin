@@ -85,8 +85,20 @@ describe('parseEnvelope', () => {
 
     await expect(parseEnvelope(response)).rejects.toMatchObject({
       name: 'ApiError',
-      message: 'Respons server tidak valid.',
+      message:
+        'Server mengalami gangguan (HTTP 500). Respons bukan JSON envelope MIRU — coba lagi atau hubungi pengelola.',
       statusCode: 500,
+      code: 'INVALID_RESPONSE',
+    })
+  })
+
+  it('explains HTML/empty 404 responses clearly', async () => {
+    const response = new Response('<html>404</html>', { status: 404 })
+
+    await expect(parseEnvelope(response)).rejects.toMatchObject({
+      statusCode: 404,
+      code: 'INVALID_RESPONSE',
+      message: expect.stringContaining('Endpoint API tidak ditemukan (HTTP 404)'),
     })
   })
 })

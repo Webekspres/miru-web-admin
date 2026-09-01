@@ -26,8 +26,8 @@ export default function LoginPage() {
         <LoginSessionSync />
       </Suspense>
 
-      <div className="grid min-h-full flex-1 lg:grid-cols-2">
-        <aside className="relative hidden overflow-hidden lg:block">
+      <div className="grid min-h-full flex-1 lg:h-full lg:min-h-0 lg:grid-cols-2 lg:overflow-hidden">
+        <aside className="relative hidden min-h-0 overflow-hidden lg:block">
           <PhotoBackdrop
             src="/landing/hero.webp"
             alt="Pengelolaan bank sampah Mimika Baru"
@@ -86,7 +86,7 @@ export default function LoginPage() {
           </div>
         </aside>
 
-        <main className="relative flex flex-col justify-center px-4 py-10 sm:px-8 lg:px-12 xl:px-16">
+        <main className="relative flex min-h-0 flex-col justify-center px-4 py-10 sm:px-8 lg:overflow-hidden lg:px-12 lg:py-8 xl:px-16">
           <PhotoBackdrop
             src="/landing/hero.webp"
             overlay="split"

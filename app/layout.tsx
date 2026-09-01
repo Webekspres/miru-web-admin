@@ -27,14 +27,15 @@ export const metadata: Metadata = {
   applicationName: 'MIRU',
   manifest: '/brand/favicon/site.webmanifest',
   icons: {
+    // PNG first: reliable in all tabs. SVG is a clean logo (no nested/white-only export).
     icon: [
-      { url: '/brand/favicon/favicon.ico', sizes: 'any' },
-      { url: '/brand/favicon/favicon.svg', type: 'image/svg+xml' },
       {
         url: '/brand/favicon/favicon-96x96.png',
         sizes: '96x96',
         type: 'image/png',
       },
+      { url: '/brand/favicon/favicon.svg', type: 'image/svg+xml' },
+      { url: '/brand/favicon/favicon.ico', sizes: '48x48' },
     ],
     apple: [
       {

@@ -5,6 +5,16 @@ import type { ReactNode } from 'react'
 import { PublicNavbar } from './PublicNavbar'
 import { PublicFooter } from './PublicFooter'
 
+/** Full-bleed auth surfaces: no public navbar/footer, viewport-locked on desktop. */
+const AUTH_SURFACES = ['/login', '/forgot-password', '/hapus-akun'] as const
+
+function isAuthSurface(pathname: string | null): boolean {
+  if (!pathname) return false
+  return AUTH_SURFACES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  )
+}
+
 export function PublicSiteLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
 
@@ -35,27 +45,30 @@ export function PublicSiteLayout({ children }: { children: ReactNode }) {
     return <>{children}</>
   }
 
-  const isAuthPage = pathname === '/login' || pathname === '/forgot-password'
+  const authSurface = isAuthSurface(pathname)
+  const isLogin = pathname === '/login'
 
   return (
     <div
       className={
-        isAuthPage
+        authSurface
           ? 'flex h-dvh flex-col overflow-hidden bg-background text-foreground'
           : 'flex min-h-screen flex-col bg-background text-foreground'
       }
     >
-      <PublicNavbar showSectionLinks={!isAuthPage} lockScroll={isAuthPage} />
+      {!authSurface && <PublicNavbar showSectionLinks />}
       <main
         className={
-          isAuthPage
-            ? 'flex min-h-0 flex-1 flex-col overflow-y-auto'
+          authSurface
+            ? isLogin
+              ? 'flex min-h-0 flex-1 flex-col overflow-y-auto lg:overflow-hidden'
+              : 'flex min-h-0 flex-1 flex-col overflow-y-auto'
             : 'flex-1'
         }
       >
         {children}
       </main>
-      {!isAuthPage && <PublicFooter />}
+      {!authSurface && <PublicFooter />}
     </div>
   )
 }
