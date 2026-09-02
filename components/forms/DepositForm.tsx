@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { Html5Qrcode } from 'html5-qrcode'
 import { api, ApiError } from '@/lib/api'
+import { MIN_BERAT_KG, calculateSubtotal, parseBeratKg } from '@/lib/deposit'
 import { formatRupiah, formatWeightKg } from '@/lib/format'
 import { parseMiruNasabahQr } from '@/lib/miru-qr'
+import { useSubmitLock } from '@/hooks/useSubmitLock'
 import { useToast } from '@/components/feedback/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -53,7 +55,6 @@ interface DetailRow {
 
 // ─── Constants ────────────────────────────────────────────────────
 
-const MIN_BERAT_KG = 1
 const EMPTY_DETAIL_ROW: Omit<DetailRow, 'id'> = {
   kategori: '',
   kategori_nama: '',
@@ -65,8 +66,7 @@ const EMPTY_DETAIL_ROW: Omit<DetailRow, 'id'> = {
 // ─── Helpers ──────────────────────────────────────────────────────
 
 function parseNumber(value: string | number): number {
-  const num = typeof value === 'string' ? parseFloat(value) : value
-  return Number.isFinite(num) ? num : 0
+  return parseBeratKg(value)
 }
 
 function generateId(): string {
@@ -231,7 +231,7 @@ function NasabahSearch({
               setTimeout(() => setOpen(false), 200)
             }}
             placeholder="Cari nasabah berdasarkan nama atau No. HP..."
-            className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
+            className="h-11 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
             aria-label="Cari nasabah"
             role="combobox"
             aria-expanded={open}
@@ -677,7 +677,7 @@ function DetailRowInput({
     const cat = categories.find((c) => c.id === catId)
     const harga = cat ? parseNumber(cat.harga_beli_per_kg) : 0
     const berat = parseNumber(row.berat_kg)
-    const subtotal = harga * berat
+    const subtotal = calculateSubtotal(harga, berat)
 
     onUpdate(row.id, 'kategori', catId)
     onUpdate(row.id, 'kategori_nama', cat?.nama ?? '')
@@ -692,7 +692,7 @@ function DetailRowInput({
     const normalized = value.replace(',', '.')
     const berat = parseNumber(normalized)
     const harga = row.harga_per_kg
-    const subtotal = harga * berat
+    const subtotal = calculateSubtotal(harga, berat)
 
     onUpdate(row.id, 'berat_kg', normalized)
     onUpdate(row.id, 'subtotal', subtotal)
@@ -731,7 +731,7 @@ function DetailRowInput({
       <div className="w-32.5 shrink-0">
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-foreground">Harga/kg</span>
-          <div className="flex h-10 items-center rounded-lg border border-border bg-surface-muted px-3 text-sm text-muted-foreground">
+          <div className="flex h-11 items-center rounded-lg border border-border bg-surface-muted px-3 text-sm text-muted-foreground">
             {row.harga_per_kg > 0 ? formatRupiah(row.harga_per_kg) : '—'}
           </div>
         </div>
@@ -741,7 +741,7 @@ function DetailRowInput({
       <div className="w-32.5 shrink-0">
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-foreground">Subtotal</span>
-          <div className="flex h-10 items-center rounded-lg border border-border bg-surface-muted px-3 text-sm font-semibold text-foreground">
+          <div className="flex h-11 items-center rounded-lg border border-border bg-surface-muted px-3 text-sm font-semibold text-foreground">
             {row.subtotal > 0 ? formatRupiah(row.subtotal) : '—'}
           </div>
         </div>
@@ -753,7 +753,7 @@ function DetailRowInput({
           type="button"
           onClick={() => onRemove(row.id)}
           disabled={!canRemove}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-danger/10 hover:text-danger disabled:pointer-events-none disabled:opacity-30"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-danger/10 hover:text-danger disabled:pointer-events-none disabled:opacity-30"
           aria-label={`Hapus baris ${row.kategori_nama || ''}`.trim()}
           title="Hapus baris"
         >
@@ -769,6 +769,7 @@ function DetailRowInput({
 export function DepositForm() {
   const router = useRouter()
   const { success: toastSuccess, error: toastError } = useToast()
+  const { pending: submitting, run: runSubmit } = useSubmitLock()
 
   // ── Data ──
   const {
@@ -791,7 +792,6 @@ export function DepositForm() {
   ])
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [rowErrors, setRowErrors] = useState<Record<number, Record<string, string>>>({})
-  const [submitting, setSubmitting] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
   // ── Derived values ──
@@ -872,7 +872,7 @@ export function DepositForm() {
 
       const berat = parseNumber(row.berat_kg)
       if (!row.berat_kg || berat < MIN_BERAT_KG) {
-        rowErr.berat_kg = `Minimal ${formatWeightKg(MIN_BERAT_KG)}.`
+        rowErr.berat_kg = `Minimal ${MIN_BERAT_KG} kg.`
         valid = false
       }
 
@@ -887,75 +887,68 @@ export function DepositForm() {
   }
 
   // ── Submit ──
-  async function handleSubmit() {
+  async function handleConfirmSave() {
     if (!validate()) return
 
-    setSubmitting(true)
-    setShowConfirm(false)
+    await runSubmit(async () => {
+      setShowConfirm(false)
 
-    const payload = {
-      nasabah: nasabahId,
-      details: details
-        .filter((row) => row.kategori !== '' && parseNumber(row.berat_kg) >= MIN_BERAT_KG)
-        .map((row) => ({
-          kategori: Number(row.kategori),
-          berat_kg: parseNumber(row.berat_kg),
-        })),
-    }
-
-    try {
-      const created = await api.post<Deposit>('/deposits/', payload)
-      const nilai =
-        created.total_nilai != null && created.total_nilai !== ''
-          ? formatRupiah(created.total_nilai)
-          : formatRupiah(total)
-      toastSuccess(`Setoran berhasil disimpan! Nilai: ${nilai}`)
-      router.push('/transactions')
-    } catch (err) {
-      if (err instanceof ApiError) {
-        // Map field errors from API envelope
-        if (err.errors) {
-          const apiErrs: Record<string, string> = {}
-          const apiRowErrs: Record<number, Record<string, string>> = {}
-
-          for (const [field, messages] of Object.entries(err.errors)) {
-            const msg = messages.join(', ')
-
-            if (field === 'nasabah') {
-              apiErrs.nasabah = msg
-            } else if (field === 'details' || field === 'non_field_errors') {
-              apiErrs.details = msg
-            } else if (field.startsWith('details[') || field.startsWith('details.')) {
-              // Parse index from field name like "details[0].kategori" or "details.0.berat_kg"
-              const match = field.match(/details[\[.](\d+)[\].](\w+)/)
-              if (match) {
-                const idx = Number(match[1])
-                const subField = match[2]
-                if (!apiRowErrs[idx]) apiRowErrs[idx] = {}
-                apiRowErrs[idx][subField] = msg
-              }
-            } else {
-              // Unknown field - show as general error
-              apiErrs._general = msg
-            }
-          }
-
-          setFieldErrors(apiErrs)
-          setRowErrors((prev) => ({ ...prev, ...apiRowErrs }))
-        } else {
-          setFieldErrors({ _general: err.message })
-        }
-        // Additional toast for general error
-        if (!err.errors) {
-          toastError(err.message || 'Gagal menyimpan setoran.')
-        } else {
-          toastError('Periksa kembali isian form.')
-        }
-      } else {
-        toastError('Terjadi kesalahan. Silakan coba lagi.')
+      const payload = {
+        nasabah: nasabahId,
+        details: details
+          .filter((row) => row.kategori !== '' && parseNumber(row.berat_kg) >= MIN_BERAT_KG)
+          .map((row) => ({
+            kategori: Number(row.kategori),
+            berat_kg: parseNumber(row.berat_kg),
+          })),
       }
-      setSubmitting(false)
-    }
+
+      try {
+        const created = await api.post<Deposit>('/deposits/', payload)
+        const nilai =
+          created.total_nilai != null && created.total_nilai !== ''
+            ? formatRupiah(created.total_nilai)
+            : formatRupiah(total)
+        toastSuccess(`Setoran berhasil disimpan. Nilai: ${nilai}`)
+        router.push('/transactions')
+      } catch (err) {
+        if (err instanceof ApiError) {
+          if (err.errors) {
+            const apiErrs: Record<string, string> = {}
+            const apiRowErrs: Record<number, Record<string, string>> = {}
+
+            for (const [field, messages] of Object.entries(err.errors)) {
+              const msg = messages.join(', ')
+
+              if (field === 'nasabah') {
+                apiErrs.nasabah = msg
+              } else if (field === 'details' || field === 'non_field_errors') {
+                apiErrs.details = msg
+              } else if (field.startsWith('details[') || field.startsWith('details.')) {
+                const match = field.match(/details[\[.](\d+)[\].](\w+)/)
+                if (match) {
+                  const idx = Number(match[1])
+                  const subField = match[2]
+                  if (!apiRowErrs[idx]) apiRowErrs[idx] = {}
+                  apiRowErrs[idx][subField] = msg
+                }
+              } else {
+                apiErrs._general = msg
+              }
+            }
+
+            setFieldErrors(apiErrs)
+            setRowErrors((prev) => ({ ...prev, ...apiRowErrs }))
+            toastError('Periksa kembali isian form.')
+          } else {
+            setFieldErrors({ _general: err.message })
+            toastError(err.message || 'Gagal menyimpan setoran.')
+          }
+        } else {
+          toastError('Terjadi kesalahan. Silakan coba lagi.')
+        }
+      }
+    })
   }
 
   // ── Loading state ──
@@ -994,6 +987,12 @@ export function DepositForm() {
         </p>
       </div>
 
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (validate()) setShowConfirm(true)
+        }}
+      >
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -1014,7 +1013,7 @@ export function DepositForm() {
                 <button
                   type="button"
                   onClick={() => setSearchMode('name')}
-                  className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
                     searchMode === 'name'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-background text-muted-foreground hover:bg-surface-muted hover:text-foreground'
@@ -1026,7 +1025,7 @@ export function DepositForm() {
                 <button
                   type="button"
                   onClick={() => setSearchMode('qr')}
-                  className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
                     searchMode === 'qr'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-background text-muted-foreground hover:bg-surface-muted hover:text-foreground'
@@ -1123,25 +1122,21 @@ export function DepositForm() {
             </span>
           </div>
 
-          <div className="flex w-full gap-2 sm:w-auto">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button
               type="button"
               variant="outline"
               onClick={() => router.push('/transactions')}
               disabled={submitting}
+              className="w-full sm:w-auto"
             >
               Batal
             </Button>
             <Button
-              type="button"
-              onClick={() => {
-                if (validate()) {
-                  setShowConfirm(true)
-                }
-              }}
+              type="submit"
               loading={submitting}
               disabled={submitting}
-              className="min-w-40"
+              className="w-full min-w-40 sm:w-auto"
             >
               <Calculator className="size-4" aria-hidden />
               Simpan Setoran
@@ -1149,6 +1144,7 @@ export function DepositForm() {
           </div>
         </CardFooter>
       </Card>
+      </form>
 
       {/* Confirmation Modal */}
       <Modal
@@ -1169,7 +1165,7 @@ export function DepositForm() {
             </Button>
             <Button
               type="button"
-              onClick={handleSubmit}
+              onClick={() => void handleConfirmSave()}
               loading={submitting}
               disabled={submitting}
             >

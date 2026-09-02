@@ -5,6 +5,7 @@ import {
   setAccessTokenCookie,
 } from './auth-cookies'
 import { notifyForbidden, notifyUnauthorized } from './api-handlers'
+import { redactLogValue, redactSecrets } from './redact'
 import {
   ApiError,
   type ApiEnvelope,
@@ -144,7 +145,7 @@ async function fetchWithTimeout(
     return await fetch(url, { ...init, signal: controller.signal })
   } catch (error) {
     if (API_DEBUG) {
-      console.error(`[api] request gagal: ${url}`, error)
+      console.error(`[api] request gagal: ${redactSecrets(url)}`, redactLogValue(error))
     }
     throw toNetworkError(error)
   } finally {

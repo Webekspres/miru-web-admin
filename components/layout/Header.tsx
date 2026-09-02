@@ -48,7 +48,7 @@ export function Header({
           aria-label={sidebarOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
           aria-expanded={sidebarOpen}
           aria-controls="app-sidebar"
-          className="border-border/80 hover:bg-surface-muted"
+          className="min-h-11 min-w-11 border-border/80 hover:bg-surface-muted"
         >
           {sidebarOpen ? (
             <X className="size-4 text-foreground" aria-hidden />

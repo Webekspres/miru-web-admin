@@ -8,6 +8,7 @@ import {
   canAccessRoute,
   getLandingPathForRole,
 } from '@/lib/routes'
+import { buildLoginUrl } from '@/lib/session'
 import { useAuth } from '@/providers/AuthProvider'
 import { CardSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
@@ -25,13 +26,13 @@ export function DashboardAuthShell({ children }: DashboardAuthShellProps) {
     if (status === 'loading') return
 
     if (!isAuthenticated) {
-      router.replace('/login')
+      router.replace(buildLoginUrl(pathname))
       return
     }
 
     const token = getAccessToken()
     if (token) setAccessTokenCookie(token)
-  }, [status, isAuthenticated, router])
+  }, [status, isAuthenticated, router, pathname])
 
   useEffect(() => {
     if (status === 'loading' || !role) return

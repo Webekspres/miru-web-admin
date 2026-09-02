@@ -5,6 +5,7 @@ import { APP_NAME } from '@/lib/config'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { ApiErrorBridge } from '@/providers/ApiErrorBridge'
 import { PublicSiteLayout } from '@/components/layout/PublicSiteLayout'
+import { OfflineBanner } from '@/components/feedback/OfflineBanner'
 import './globals.css'
 
 const geistSans = Geist({
@@ -67,6 +68,7 @@ export default function RootLayout({
         <ToastProvider>
           <AuthProvider>
             <ApiErrorBridge />
+            <OfflineBanner />
             <PublicSiteLayout>{children}</PublicSiteLayout>
           </AuthProvider>
         </ToastProvider>

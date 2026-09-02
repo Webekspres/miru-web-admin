@@ -1,4 +1,3 @@
-import type { UserRole } from '@/types/models'
 import { WEB_ADMIN_ROLES } from '@/lib/navigation'
 import type { WebAdminRole } from '@/lib/navigation'
 
@@ -45,6 +44,58 @@ const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
   pemerintah: ['/dashboard', '/reports', '/warehouse', '/profile'],
 }
 
+/** Path yang harus selalu punya guard role (audit Fase 7). */
+export const DASHBOARD_PATHS = [
+  '/dashboard',
+  '/transactions',
+  '/transactions/add',
+  '/pickups',
+  '/balance',
+  '/customers',
+  '/customers/add',
+  '/customers/1',
+  '/customers/1/edit',
+  '/staff',
+  '/staff/add',
+  '/staff/1/edit',
+  '/reward',
+  '/warehouse',
+  '/warehouse/sales',
+  '/warehouse/partners',
+  '/waste',
+  '/waste/categories',
+  '/education',
+  '/education/add',
+  '/education/1/edit',
+  '/complaints',
+  '/reports',
+  '/announcements',
+  '/audit-log',
+  '/settings',
+  '/profile',
+  '/profile/edit',
+  '/institution',
+  '/institution/edit',
+  '/privacy',
+  '/privacy/edit',
+  '/about',
+  '/about/edit',
+  '/syarat-ketentuan',
+  '/syarat-ketentuan/edit',
+] as const
+
+const WRITE_PATH_RE = /\/(add|edit)$/
+
+function isWritePath(pathname: string): boolean {
+  return WRITE_PATH_RE.test(pathname)
+}
+
+function matchesAllowedPrefix(role: WebAdminRole, pathname: string): boolean {
+  return ALLOWED_PREFIXES[role].some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  )
+}
+
 export function isWebAdminRoleValue(role: string): role is WebAdminRole {
   return (WEB_ADMIN_ROLES as string[]).includes(role)
 }
@@ -58,12 +109,28 @@ export function getProfilePathForRole(_role: WebAdminRole): string {
 }
 
 export function canAccessRoute(role: WebAdminRole, pathname: string): boolean {
-  if (role === 'admin') return true
   if (pathname === '/dashboard') return true
+  if (role === 'admin') return true
 
-  return ALLOWED_PREFIXES[role].some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  )
+  if (!matchesAllowedPrefix(role, pathname)) return false
+
+  if (role === 'pemerintah' && pathname.startsWith('/warehouse/')) {
+    return false
+  }
+
+  if (role === 'petugas' && pathname.startsWith('/customers') && isWritePath(pathname)) {
+    return false
+  }
+
+  if (
+    (role === 'koordinator' || role === 'pemerintah') &&
+    pathname.startsWith('/transactions') &&
+    isWritePath(pathname)
+  ) {
+    return false
+  }
+
+  return true
 }
 
 /** `from` query hanya untuk path app — abaikan aset statis / manifest. */

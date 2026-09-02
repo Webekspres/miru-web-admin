@@ -4,14 +4,14 @@
   color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
-  --primary: #16a34a;
-  --primary-hover: #15803d;
+  --primary: #15803d;
+  --primary-hover: #166534;
   --primary-foreground: #ffffff;
   --surface-muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --muted-foreground: #52525b;
   --border: #e4e4e7;
-  --success: #16a34a;
-  --warning: #ca8a04;
+  --success: #15803d;
+  --warning: #a16207;
   --danger: #dc2626;
   --danger-hover: #b91c1c;
 }
@@ -109,7 +109,8 @@ body {
 }
 
 :focus-visible {
-  outline-color: var(--primary);
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* ── W0: cursor pointer pada semua elemen klikabel ───────────── */
@@ -175,7 +176,7 @@ select:disabled {
     font-size: 16pt;
     font-weight: 700;
     margin-bottom: 12px;
-    color: #16a34a !important;
+    color: #15803d !important;
   }
 
   table {

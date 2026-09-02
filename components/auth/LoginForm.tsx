@@ -6,6 +6,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ApiError } from '@/lib/api'
 import { mapLoginError, WebAdminAccessError } from '@/lib/auth'
 import { resolvePostLoginPath } from '@/lib/routes'
+import {
+  isSessionExpiredReason,
+  SESSION_EXPIRED_MESSAGE,
+  SESSION_EXPIRED_PARAM,
+} from '@/lib/session'
 import { useAuth } from '@/providers/AuthProvider'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -23,7 +28,7 @@ function mapFieldErrors(
 }
 
 export function LoginForm() {
-  const { login, status } = useAuth()
+  const { login } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [username, setUsername] = useState('')
@@ -31,10 +36,11 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const sessionExpired = isSessionExpiredReason(searchParams.get(SESSION_EXPIRED_PARAM))
 
   const hasEmptyCredentials =
     username.trim().length === 0 || password.length === 0
-  const isDisabled = loading || status === 'loading' || hasEmptyCredentials
+  const isDisabled = loading || hasEmptyCredentials
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -53,8 +59,6 @@ export function LoginForm() {
         setFieldErrors(mapFieldErrors(error.errors))
       } else if (error instanceof WebAdminAccessError) {
         setFormError(error.message)
-      } else if (error instanceof Error) {
-        setFormError(error.message)
       } else {
         setFormError('Login gagal. Silakan coba lagi.')
       }
@@ -65,6 +69,15 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      {sessionExpired && !formError && (
+        <div
+          role="status"
+          className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-foreground"
+        >
+          {SESSION_EXPIRED_MESSAGE}
+        </div>
+      )}
+
       {formError && (
         <div
           role="alert"
@@ -82,7 +95,7 @@ export function LoginForm() {
         value={username}
         onChange={(event) => setUsername(event.target.value)}
         error={fieldErrors.username}
-        disabled={loading || status === 'loading'}
+        disabled={loading}
         required
       />
 
@@ -96,7 +109,7 @@ export function LoginForm() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           error={fieldErrors.password}
-          disabled={loading || status === 'loading'}
+          disabled={loading}
           required
         />
         <div className="flex justify-end">

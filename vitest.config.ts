@@ -3,7 +3,10 @@ import path from 'node:path'
 
 export default defineConfig({
   test: {
-    environment: 'node',
+    environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['e2e/**', 'node_modules/**', '.next/**'],
   },
   resolve: {
     alias: {

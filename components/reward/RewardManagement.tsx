@@ -5,7 +5,9 @@ import useSWR, { useSWRConfig } from 'swr'
 import { api, getAccessToken, ApiError } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatDateWIT } from '@/lib/format'
-import { canMutate } from '@/lib/permissions'
+import { canApproveRedemption, canMutate } from '@/lib/permissions'
+import { BALANCE_MUTATE_OPTIONS } from '@/lib/swr-options'
+import { useSubmitLock } from '@/hooks/useSubmitLock'
 import { useAuth } from '@/providers/AuthProvider'
 import { useToast } from '@/components/feedback/Toast'
 import { Badge } from '@/components/ui/Badge'
@@ -290,7 +292,7 @@ function RewardCatalog({
 function RedemptionList({ canWrite }: { canWrite: boolean }) {
   const { success: toastSuccess, error: toastError } = useToast()
   const [page, setPage] = useState(1)
-  const [loadingAction, setLoadingAction] = useState(false)
+  const { pending: loadingAction, run: runAction } = useSubmitLock()
 
   const { data: fetchResult, error, isLoading, mutate } = useSWR(
     [`/reward-redemptions/`, { page: String(page), page_size: '20', ordering: '-tanggal' }],
@@ -311,20 +313,19 @@ function RedemptionList({ canWrite }: { canWrite: boolean }) {
   const pagination = fetchResult?.pagination
 
   async function handleApprove(redemption: RewardRedemption) {
-    setLoadingAction(true)
-    try {
-      await api.patch(`/reward-redemptions/${redemption.id}/`, { status: 'selesai' })
-      toastSuccess('Penukaran reward berhasil disetujui.')
-      mutate()
-    } catch (err) {
-      if (err instanceof ApiError) {
-        toastError(apiErrorDetail(err))
-      } else {
-        toastError('Gagal menyetujui penukaran.')
+    await runAction(async () => {
+      try {
+        await api.patch(`/reward-redemptions/${redemption.id}/`, { status: 'selesai' })
+        toastSuccess('Penukaran reward berhasil disetujui.')
+        await mutate(undefined, BALANCE_MUTATE_OPTIONS)
+      } catch (err) {
+        if (err instanceof ApiError) {
+          toastError(apiErrorDetail(err))
+        } else {
+          toastError('Gagal menyetujui penukaran.')
+        }
       }
-    } finally {
-      setLoadingAction(false)
-    }
+    })
   }
 
   if (isLoading) return <TableSkeleton rows={5} cols={5} />
@@ -399,6 +400,7 @@ export function RewardManagement() {
   const { role: authRole } = useAuth()
   const [activeTab, setActiveTab] = useState<TabKey>('redemptions')
   const canWrite = authRole ? canMutate(authRole) : false
+  const canApprove = authRole ? canApproveRedemption(authRole) : false
 
   return (
     <div className="space-y-6">
@@ -426,7 +428,7 @@ export function RewardManagement() {
         </CardHeader>
         <div className="p-4">
           {activeTab === 'redemptions' ? (
-            <RedemptionList canWrite={canWrite} />
+            <RedemptionList canWrite={canApprove} />
           ) : (
             <RewardCatalog canWrite={canWrite} />
           )}

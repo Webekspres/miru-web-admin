@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
@@ -22,6 +22,9 @@ const sizeClasses = {
   lg: 'max-w-2xl',
 } as const
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 export function Modal({
   open,
   onClose,
@@ -34,12 +37,45 @@ export function Modal({
 }: ModalProps) {
   const titleId = useId()
   const descriptionId = useId()
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+    const dialog = dialogRef.current
+    const previouslyFocused = document.activeElement as HTMLElement | null
+
+    function getFocusable(): HTMLElement[] {
+      if (!dialog) return []
+      return Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => el.tabIndex !== -1 && !el.hasAttribute('disabled'),
+      )
+    }
+
+    const initial = getFocusable()
+    initial[0]?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        onClose()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const items = getFocusable()
+      if (items.length === 0) return
+
+      const first = items[0]
+      const last = items[items.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown)
@@ -48,6 +84,7 @@ export function Modal({
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = ''
+      previouslyFocused?.focus()
     }
   }, [open, onClose])
 
@@ -55,13 +92,13 @@ export function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button
-        type="button"
+      <div
         className="absolute inset-0 bg-black/50"
-        aria-label="Tutup dialog"
+        aria-hidden
         onClick={onClose}
       />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
@@ -90,7 +127,7 @@ export function Modal({
               type="button"
               variant="ghost"
               size="sm"
-              className="shrink-0 px-2"
+              className="min-h-11 min-w-11 shrink-0 px-2"
               onClick={onClose}
               aria-label="Tutup"
             >
@@ -100,7 +137,7 @@ export function Modal({
         )}
         <div className="px-6 py-4">{children}</div>
         {footer && (
-          <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
+          <div className="flex flex-col-reverse gap-2 border-t border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
             {footer}
           </div>
         )}

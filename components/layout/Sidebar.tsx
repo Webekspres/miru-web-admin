@@ -133,7 +133,7 @@ export function Sidebar({ role, user, open, onClose, className }: SidebarProps) 
           type="button"
           variant="ghost"
           size="sm"
-          className="shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
+          className="min-h-11 min-w-11 shrink-0 text-muted-foreground hover:text-foreground lg:hidden"
           onClick={onClose}
           aria-label="Tutup menu"
         >

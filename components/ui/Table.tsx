@@ -1,5 +1,6 @@
 import type { HTMLAttributes, TableHTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from 'react'
 import { cn } from '@/lib/cn'
+import { EmptyState } from '@/components/feedback/EmptyState'
 
 export function Table({
   className,
@@ -79,14 +80,21 @@ export function TableCell({
 export function TableEmpty({
   colSpan,
   message = 'Tidak ada data.',
+  description,
 }: {
   colSpan: number
   message?: string
+  description?: string
 }) {
   return (
     <TableRow>
-      <TableCell colSpan={colSpan} className="h-24 text-center text-muted-foreground">
-        {message}
+      <TableCell colSpan={colSpan} className="p-0">
+        <EmptyState
+          compact
+          title={message}
+          description={description ?? ''}
+          className="rounded-none border-0 bg-transparent"
+        />
       </TableCell>
     </TableRow>
   )
