@@ -1,9 +1,10 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthProvider, useAuth } from '@/providers/AuthProvider'
 import { NASABAH_LOGIN_MESSAGE } from '@/lib/auth'
 import { TOKEN_KEYS } from '@/lib/auth-constants'
+import { ApiError } from '@/types/api'
 import type { LoginResponse } from '@/types/api'
 import type { User } from '@/types/models'
 
@@ -22,13 +23,14 @@ vi.mock('@/lib/api', async () => {
 })
 
 vi.mock('@/lib/auth-cookies', () => ({
-  setAccessTokenCookie: vi.fn(),
+  getCsrfToken: vi.fn(),
+  clearCsrfToken: vi.fn(),
   setRoleCookie: vi.fn(),
-  clearAccessTokenCookie: vi.fn(),
   clearRoleCookie: vi.fn(),
 }))
 
 import { api } from '@/lib/api'
+import { setRoleCookie } from '@/lib/auth-cookies'
 
 function AuthProbe() {
   const { status, role, isAuthenticated, login, logout } = useAuth()
@@ -64,14 +66,26 @@ function staffLogin(role: LoginResponse['user']['role']): LoginResponse {
   }
 }
 
+function noSessionError(): ApiError {
+  return new ApiError('Sesi tidak valid.', 401, 'AUTHENTICATION_FAILED')
+}
+
+beforeEach(() => {
+  // revokeSession (logout) memakai fetch langsung — netralkan supaya test
+  // tidak pernah mencoba koneksi jaringan sungguhan.
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('fetch failed')))
+})
+
 afterEach(() => {
   cleanup()
-  localStorage.clear()
+  vi.unstubAllGlobals()
   vi.clearAllMocks()
 })
 
 describe('AuthProvider', () => {
-  it('starts unauthenticated when no token is stored', async () => {
+  it('starts unauthenticated when /auth/me/ has no server session', async () => {
+    vi.mocked(api.get).mockRejectedValue(noSessionError())
+
     render(
       <AuthProvider>
         <AuthProbe />
@@ -84,8 +98,7 @@ describe('AuthProvider', () => {
     expect(screen.getByTestId('auth').textContent).toBe('no')
   })
 
-  it('restores session from /auth/me/', async () => {
-    localStorage.setItem(TOKEN_KEYS.access, 'stored-token')
+  it('restores session from /auth/me/ cookies', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({
       id: 2,
       username: 'petugas1',
@@ -104,11 +117,38 @@ describe('AuthProvider', () => {
       expect(screen.getByTestId('status').textContent).toBe('authenticated')
     })
     expect(screen.getByTestId('role').textContent).toBe('petugas')
-    expect(api.get).toHaveBeenCalledWith('/auth/me/')
+    expect(api.get).toHaveBeenCalledWith('/auth/me/', undefined, { skipAuth: true })
   })
 
-  it('rejects nasabah login and does not keep tokens', async () => {
-    vi.mocked(api.post).mockResolvedValueOnce(staffLogin('nasabah'))
+  it('restores session via one refresh round-trip when access cookie expired', async () => {
+    vi.mocked(api.get)
+      .mockRejectedValueOnce(noSessionError())
+      .mockResolvedValueOnce({
+        id: 3,
+        username: 'koordinator1',
+        role: 'koordinator',
+        nama_lengkap: 'Koordinator Satu',
+        is_active: true,
+      } satisfies Partial<User>)
+    vi.mocked(api.post).mockResolvedValueOnce({ access: 'renewed.access.token' })
+
+    render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('role').textContent).toBe('koordinator')
+    })
+    expect(api.post).toHaveBeenCalledWith('/auth/refresh/', {}, { skipAuth: true })
+  })
+
+  it('rejects nasabah login and does not mark any session', async () => {
+    vi.mocked(api.get).mockRejectedValue(noSessionError())
+    vi.mocked(api.post)
+      .mockRejectedValueOnce(noSessionError())
+      .mockResolvedValueOnce(staffLogin('nasabah'))
 
     render(
       <AuthProvider>
@@ -125,11 +165,15 @@ describe('AuthProvider', () => {
     await waitFor(() => {
       expect(screen.getByTestId('auth').textContent).toBe('no')
     })
+    expect(setRoleCookie).not.toHaveBeenCalled()
     expect(localStorage.getItem(TOKEN_KEYS.access)).toBeNull()
   })
 
-  it('stores tokens for admin login', async () => {
-    vi.mocked(api.post).mockResolvedValueOnce(staffLogin('admin'))
+  it('sets role cookie as session marker for admin login (no localStorage token)', async () => {
+    vi.mocked(api.get).mockRejectedValue(noSessionError())
+    vi.mocked(api.post)
+      .mockRejectedValueOnce(noSessionError())
+      .mockResolvedValueOnce(staffLogin('admin'))
 
     render(
       <AuthProvider>
@@ -146,7 +190,9 @@ describe('AuthProvider', () => {
     await waitFor(() => {
       expect(screen.getByTestId('role').textContent).toBe('admin')
     })
-    expect(localStorage.getItem(TOKEN_KEYS.access)).toBe('header.payload.signature')
+    expect(setRoleCookie).toHaveBeenCalledWith('admin')
+    expect(localStorage.getItem(TOKEN_KEYS.access)).toBeNull()
+    expect(localStorage.getItem(TOKEN_KEYS.refresh)).toBeNull()
   })
 })
 

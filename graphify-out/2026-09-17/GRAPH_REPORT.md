@@ -1,23 +1,23 @@
-# Graph Report - web  (2026-09-17)
+# Graph Report - web  (2026-09-02)
 
 ## Corpus Check
-- 207 files · ~142,578 words
+- 207 files · ~155,373 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1225 nodes · 2923 edges · 84 communities (65 shown, 11 thin omitted)
-- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 5 edges (avg confidence: 0.85)
+- 1222 nodes · 2953 edges · 94 communities (74 shown, 12 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 6 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `118d0297`
+- Built from commit: `745886d8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - formatRupiah
 - 11 — Security & Privacy (Web Admin)
-- 08 — Task List: Web Admin
+- Selesai
 - 10 — Integration & Roles (Web Admin)
 - devDependencies
 - compilerOptions
@@ -32,7 +32,7 @@
 - 01 — Project Overview (Web Admin)
 - Halaman Detail per Modul
 - README.md
-- models.ts
+- AuthProvider.tsx
 - MIRU Web Admin — Agent Rules
 - graphify
 - RTK - Rust Token Killer
@@ -43,31 +43,33 @@
 - postcss.config.mjs
 - StaffForm.tsx
 - LandingPage.tsx
-- formatDateWIT
+- ProfileDropdown.tsx
 - lib/api.ts
 - DepositForm
-- LoginForm.tsx
+- routes.ts
 - DashboardClient.tsx
 - DailyReportView
 - PublicEducationArticle.tsx
 - MiruLogo.tsx
-- MarkdownDocView.tsx
-- app/layout.tsx
+- api
+- auth.ts
 - ComplaintManagement
-- CustomerForm
+- CustomerForm.tsx
 - canMutate
-- Selesai
-- AnnouncementManagement
-- Toast.tsx
+- Sidebar.tsx
 - cn
+- Toast.tsx
+- proxy.ts
+- DepositForm.tsx
 - PickupManagement
-- useToast
-- WasteCategoryList.tsx
+- LoginForm.tsx
+- WasteCategoryList
 - useAuth
-- MarkdownContent.tsx
-- cropImage.ts
+- PublicAbout.tsx
+- ProfileEditClient.tsx
 - EducationForm.tsx
-- RewardCatalog
+- NotificationBell.tsx
+- useToast
 - WithdrawalManagement
 - DepositHistory
 - contrast.ts
@@ -75,17 +77,25 @@
 - NasabahQrInput
 - PublicLegalDoc.tsx
 - helpers.ts
-- PublicAbout.tsx
-- MarkdownDocEdit.tsx
+- PhotoBackdrop.tsx
+- MarkdownDocEdit
 - StaffList
 - PartnerManagement
+- ApiError
+- ForgotPasswordForm
+- WebAdminRole
 - CustomerList
 - InstitutionEditClient
 - ProfileEditClient
-- DeleteAccountForm.tsx
+- DeleteAccountForm
+- Button.tsx
 - 3. Autentikasi
+- 3. Menu Sidebar per Role
+- EducationForm
 - CustomerDetail
+- EducationEditClient.tsx
 - EducationManagement
+- DashboardLayout
 - AssignPetugasModal
 - Local Development
 - NasabahQrCameraScanner
@@ -107,35 +117,35 @@
 ## Surprising Connections (you probably didn't know these)
 - `ReportsPage()` --calls--> `useAuth()`  [EXTRACTED]
   app/(dashboard)/reports/page.tsx → providers/AuthProvider.tsx
+- `handleLihatKtp()` --calls--> `getAccessToken()`  [EXTRACTED]
+  components/balance/WithdrawalManagement.tsx → lib/api.ts
+- `PetugasDashboard()` --calls--> `formatDateWIT()`  [EXTRACTED]
+  components/dashboard/DashboardClient.tsx → lib/format.ts
 - `ToastCard()` --calls--> `cn()`  [EXTRACTED]
   components/feedback/Toast.tsx → lib/cn.ts
-- `AnnouncementManagement()` --calls--> `canMutate()`  [EXTRACTED]
-  components/announcements/AnnouncementManagement.tsx → lib/permissions.ts
-- `AnnouncementManagement()` --calls--> `useAuth()`  [EXTRACTED]
-  components/announcements/AnnouncementManagement.tsx → providers/AuthProvider.tsx
-- `CanWrite()` --calls--> `canMutate()`  [EXTRACTED]
-  components/auth/CanWrite.tsx → lib/permissions.ts
+- `ProfileDropdownProps` --references--> `WebAdminRole`  [EXTRACTED]
+  components/layout/ProfileDropdown.tsx → lib/navigation.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (84 total, 11 thin omitted)
+## Communities (94 total, 12 thin omitted)
 
 ### Community 0 - "formatRupiah"
-Cohesion: 0.17
-Nodes (14): SetujuiModal(), DepositChartView(), OverviewStatCards(), RecentActivity(), StockMiniSummary(), TonaseTable(), SalesInput(), handleSubmit() (+6 more)
+Cohesion: 0.16
+Nodes (15): SetujuiModal(), DepositChartView(), OverviewStatCards(), RecentActivity(), StockMiniSummary(), TonaseTable(), SalesHistory(), SalesInput() (+7 more)
 
 ### Community 1 - "11 — Security & Privacy (Web Admin)"
 Cohesion: 0.11
 Nodes (18): 10. Mapping Task List, 11. Aturan untuk AI / Engineer, 11 — Security & Privacy (Web Admin), 1. Ruang Lingkup, 2. Autentikasi & Penyimpanan Token, 3. Otorisasi di Client (RBAC UI), 4. Perlindungan Data di UI (PDP), 5. Komunikasi ke API (+10 more)
 
-### Community 2 - "08 — Task List: Web Admin"
-Cohesion: 0.17
-Nodes (11): 08 — Task List: Web Admin, Bisa langsung, Bisa langsung, Bisa langsung (API sudah ✅), Fase 7 — Kualitas & UAT, Fase 8 — Production deploy, Fase 9 — Pengembangan lanjutan, Out of scope (+3 more)
+### Community 2 - "Selesai"
+Cohesion: 0.09
+Nodes (21): 08 — Task List: Web Admin, Bisa langsung, Bisa langsung, Bisa langsung (API sudah ✅), Fase 0 — Scaffold, Fase 1 — Foundation, Fase 2 — Auth & RBAC, Fase 3 — Operasional (+13 more)
 
 ### Community 3 - "10 — Integration & Roles (Web Admin)"
-Cohesion: 0.11
-Nodes (19): 10 — Integration & Roles (Web Admin), 1. Role di Web Admin, 2. Matriks Permission per Role, 3. Menu Sidebar per Role, 4. Redirect Setelah Login, 5.1 Setoran Sampah (Petugas → Backend → Mobile), 5.2 Penjemputan (Mobile → Web Admin → Backend), 5.3 Penarikan Saldo (Mobile → Admin → Manual) (+11 more)
+Cohesion: 0.14
+Nodes (14): 10 — Integration & Roles (Web Admin), 1. Role di Web Admin, 2. Matriks Permission per Role, 4. Redirect Setelah Login, 5.1 Setoran Sampah (Petugas → Backend → Mobile), 5.2 Penjemputan (Mobile → Web Admin → Backend), 5.3 Penarikan Saldo (Mobile → Admin → Manual), 5.4 QR Code Nasabah (Mobile → Petugas) (+6 more)
 
 ### Community 4 - "devDependencies"
 Cohesion: 0.05
@@ -189,9 +199,9 @@ Nodes (9): 07 — Modules & Features (Web Admin), 17 Modul — Implementasi di W
 Cohesion: 0.18
 Nodes (6): 02 — Architecture & Stack (Web Admin), Alur Data, Arsitektur, Environment Variables, Struktur Folder yang Diharapkan, Tech Stack
 
-### Community 17 - "models.ts"
+### Community 17 - "AuthProvider.tsx"
 Cohesion: 0.14
-Nodes (13): PickupAction, Announcement, AuditLog, ComplaintStatus, ComplaintType, DepositDetail, PartnerSale, Pickup (+5 more)
+Nodes (19): handleExportCSV(), exportToCSV(), clearTokens(), getAccessToken(), setTokens(), ACCESS_TOKEN_COOKIE_MAX_AGE, ROLE_COOKIE_KEY, TOKEN_KEYS (+11 more)
 
 ### Community 18 - "MIRU Web Admin — Agent Rules"
 Cohesion: 0.33
@@ -206,44 +216,44 @@ Cohesion: 0.33
 Nodes (5): graphify, Hook-Based Usage, Installation Verification, Meta Commands (always use rtk directly), RTK - Rust Token Killer
 
 ### Community 21 - "ReportsClient.tsx"
-Cohesion: 0.13
-Nodes (13): ReportsPage(), DailyReport, MonthlyReport, Periode, ReportsClient(), TabKey, TABS, TonaseItem (+5 more)
+Cohesion: 0.12
+Nodes (13): ReportsPage(), DailyReport, getCurrentWeek(), MonthlyReport, Periode, ReportsClient(), TabKey, TABS (+5 more)
 
 ### Community 23 - "navigation.ts"
-Cohesion: 0.07
-Nodes (35): DashboardLayoutProps, Header(), HeaderProps, HeaderUser, NotificationBell(), NotificationBellProps, truncateText(), ProfileDropdownProps (+27 more)
+Cohesion: 0.16
+Nodes (13): ADMIN_MENU, getGroupedNavForRole(), getNavItemsForRole(), getNavSectionsForRole(), KOORDINATOR_MENU, MENU_BY_ROLE, NavGroup, NavSection (+5 more)
 
 ### Community 27 - "StaffForm.tsx"
-Cohesion: 0.11
-Nodes (20): ForgotPasswordForm(), clearAlerts(), handleOtp(), handlePassword(), handlePhone(), handleUsername(), mapFieldErrors(), Step (+12 more)
+Cohesion: 0.13
+Nodes (13): Step, StaffEditClient(), FormErrors, ROLE_OPTIONS, StaffForm(), handleSubmit(), validate(), StaffFormData (+5 more)
 
 ### Community 28 - "LandingPage.tsx"
 Cohesion: 0.15
 Nodes (10): HERO_BACKDROPS, KeywordMarquee(), KEYWORDS, CATEGORIES, FAQS, FEATURES, LandingPage(), PILLARS (+2 more)
 
-### Community 29 - "formatDateWIT"
-Cohesion: 0.18
-Nodes (11): DepositTable(), getStatusBadge(), getStatusLabel(), RedemptionTable(), WithdrawalTable(), PetugasDashboard(), SalesHistory(), getSumberLabel() (+3 more)
+### Community 29 - "ProfileDropdown.tsx"
+Cohesion: 0.24
+Nodes (7): ProfileDropdown(), ProfileDropdownProps, iconClass, sizeClass, UserAvatar(), ROLE_LABELS, getProfilePathForRole()
 
 ### Community 30 - "lib/api.ts"
-Cohesion: 0.06
-Nodes (54): EMPTY_BADGES, SidebarBadgeCounts, ApiClient, clearTokens(), defaultErrorMessage(), fetchWithTimeout(), ForbiddenHandler, notifyForbidden() (+46 more)
+Cohesion: 0.10
+Nodes (23): ApiClient, defaultErrorMessage(), fetchWithTimeout(), getRefreshToken(), ForbiddenHandler, notifyForbidden(), notifyUnauthorized(), UnauthorizedHandler (+15 more)
 
 ### Community 31 - "DepositForm"
 Cohesion: 0.16
 Nodes (14): DepositForm(), addRow(), handleConfirmSave(), validate(), DetailRowInput(), handleBeratChange(), handleKategoriChange(), generateId() (+6 more)
 
-### Community 32 - "LoginForm.tsx"
-Cohesion: 0.06
-Nodes (38): LoginForm(), handleSubmit(), mapFieldErrors(), LoginSessionSync(), CardSkeleton(), DashboardAuthShell(), DashboardAuthShellProps, DashboardLayout() (+30 more)
+### Community 32 - "routes.ts"
+Cohesion: 0.18
+Nodes (13): LoginSessionSync(), DashboardAuthShell(), DashboardAuthShellProps, WEB_ADMIN_ROLES, ALLOWED_PREFIXES, canAccessRoute(), DASHBOARD_PATHS, getLandingPathForRole() (+5 more)
 
 ### Community 33 - "DashboardClient.tsx"
 Cohesion: 0.10
-Nodes (14): ACTIVITY_ICONS, ACTIVITY_LABELS, ActivityItem, ChartDay, DashboardClient(), DashboardOverview, DepositChart, DONUT_COLORS (+6 more)
+Nodes (15): ACTIVITY_ICONS, ACTIVITY_LABELS, ActivityItem, ChartDay, DashboardClient(), DashboardOverview, DepositChart, DONUT_COLORS (+7 more)
 
 ### Community 34 - "DailyReportView"
-Cohesion: 0.11
-Nodes (17): DailyReportView(), exportCsv(), exportExcelDaily(), downloadFile(), exportExcel(), getCurrentWeek(), MonthlyReportView(), exportCsv() (+9 more)
+Cohesion: 0.14
+Nodes (15): DailyReportView(), exportCsv(), exportExcelDaily(), downloadFile(), exportExcel(), MonthlyReportView(), exportCsv(), exportExcelMonthly() (+7 more)
 
 ### Community 35 - "PublicEducationArticle.tsx"
 Cohesion: 0.21
@@ -253,69 +263,85 @@ Nodes (8): metadata, metadata, PublicEducationArticle(), PublicEducationList(), 
 Cohesion: 0.19
 Nodes (12): MiruLogo(), MiruLogoProps, MiruLogoVariant, VARIANTS, FOOTER_LEGAL_LINKS, PublicFooter(), NAV_LINKS, PublicNavbar() (+4 more)
 
-### Community 38 - "app/layout.tsx"
-Cohesion: 0.24
-Nodes (5): geistMono, geistSans, metadata, OfflineBanner(), useOnlineStatus()
+### Community 37 - "api"
+Cohesion: 0.19
+Nodes (5): InstitutionView(), MarkdownDocView(), SettingsPageHeader(), api, InstitutionSettings
+
+### Community 38 - "auth.ts"
+Cohesion: 0.25
+Nodes (13): collectErrorText(), extractThrottleWaitSeconds(), isRateLimitError(), LOGIN_INVALID_CREDENTIALS_MESSAGE, LOGIN_RATE_LIMIT_MESSAGE, LOGIN_USER_NOT_FOUND_MESSAGE, LOGIN_WRONG_PASSWORD_MESSAGE, mapLoginError() (+5 more)
 
 ### Community 39 - "ComplaintManagement"
 Cohesion: 0.16
 Nodes (7): calculateSLADays(), ComplaintManagement(), DetailPengaduanModal(), getComplaintTypeLabel(), getSLAStatus(), getStatusBadgeVariant(), getStatusLabel()
 
-### Community 40 - "CustomerForm"
-Cohesion: 0.40
-Nodes (3): CustomerForm(), handleSubmit(), validate()
+### Community 40 - "CustomerForm.tsx"
+Cohesion: 0.19
+Nodes (7): CustomerEditClient(), CustomerForm(), handleSubmit(), validate(), CustomerFormData, CustomerFormProps, FormErrors
 
 ### Community 41 - "canMutate"
 Cohesion: 0.36
 Nodes (6): RewardManagement(), canApproveRedemption(), canApproveWithdrawal(), canCreateDeposit(), canMutate(), isReadOnlyRole()
 
-### Community 42 - "Selesai"
-Cohesion: 0.20
-Nodes (10): Fase 0 — Scaffold, Fase 1 — Foundation, Fase 2 — Auth & RBAC, Fase 3 — Operasional, Fase 4 — Manajemen & stok, Fase 5 — Monitoring & laporan, Fase 6 — Governance UI, Fase 7 (sebagian) (+2 more)
+### Community 42 - "Sidebar.tsx"
+Cohesion: 0.22
+Nodes (10): getBadgeCount(), isActivePath(), NavList(), Sidebar(), SidebarProps, EMPTY_BADGES, fetchCount(), SidebarBadgeCounts (+2 more)
+
+### Community 43 - "cn"
+Cohesion: 0.23
+Nodes (7): EmptyState(), EmptyStateProps, CardSkeleton(), KeywordOrbit(), ToolbarButton(), cn(), APP_NAME
 
 ### Community 44 - "Toast.tsx"
-Cohesion: 0.14
-Nodes (11): ToastCard(), ToastContext, ToastContextValue, ToastItem, ToastProvider(), ToastVariant, variantIcons, variantStyles (+3 more)
+Cohesion: 0.10
+Nodes (15): geistMono, geistSans, metadata, OfflineBanner(), ToastCard(), ToastContext, ToastContextValue, ToastItem (+7 more)
 
-### Community 46 - "cn"
+### Community 45 - "proxy.ts"
+Cohesion: 0.27
+Nodes (10): AUTH_ROUTES, PUBLIC_ASSET_PREFIXES, PUBLIC_FILE, PUBLIC_ROUTES, isWebAdminRoleValue(), config, isAuthRoute(), isPublicAsset() (+2 more)
+
+### Community 46 - "DepositForm.tsx"
 Cohesion: 0.05
-Nodes (107): CustomerEditClient(), ACTION_COLORS, ACTION_LABELS, AuditLogManagement(), TabDefinition, TabKey, TABS, TolakSaldoModal() (+99 more)
+Nodes (119): ACTION_COLORS, ACTION_LABELS, AuditLogManagement(), TabDefinition, TabKey, TABS, TolakSaldoModal(), COMPLAINT_TYPE_LABELS (+111 more)
 
 ### Community 47 - "PickupManagement"
 Cohesion: 0.24
 Nodes (9): getStatusBadgeVariant(), getStatusLabel(), PickupManagement(), executeStatusUpdate(), handleAction(), handleApproveAssign(), handleAssignOnly(), handleTolak() (+1 more)
 
-### Community 48 - "useToast"
-Cohesion: 0.36
-Nodes (7): useToast(), apiErrorDetail(), RedemptionList(), handleApprove(), clearApiErrorHandlers(), setApiErrorHandlers(), ApiErrorBridge()
+### Community 48 - "LoginForm.tsx"
+Cohesion: 0.25
+Nodes (11): LoginForm(), handleSubmit(), mapFieldErrors(), clearApiErrorHandlers(), setApiErrorHandlers(), buildLoginUrl(), isSessionExpiredReason(), SESSION_EXPIRED_MESSAGE (+3 more)
 
-### Community 49 - "WasteCategoryList.tsx"
-Cohesion: 0.15
-Nodes (14): getStockLabelLocal(), buildPriceAnnouncementPreview(), FormErrors, FormState, getMinTanggalBerlaku(), getStockBadge(), PriceHistoryItem, PriceHistoryModal() (+6 more)
+### Community 49 - "WasteCategoryList"
+Cohesion: 0.21
+Nodes (7): buildPriceAnnouncementPreview(), getMinTanggalBerlaku(), getStockBadge(), validateTanggalBerlaku(), WasteCategoryList(), handleSubmit(), validate()
 
 ### Community 50 - "useAuth"
-Cohesion: 0.22
-Nodes (6): CanWrite(), CanWriteProps, useCanWrite(), ProfileClient(), InstitutionView(), useAuth()
+Cohesion: 0.21
+Nodes (7): CanWrite(), CanWriteProps, useCanWrite(), ProfileClient(), ITEMS, SettingsHub(), useAuth()
 
-### Community 51 - "MarkdownContent.tsx"
-Cohesion: 0.43
-Nodes (6): InlineNode, isSafeUrl(), MarkdownContent(), MarkdownListItem(), parseInline(), renderInline()
+### Community 51 - "PublicAbout.tsx"
+Cohesion: 0.26
+Nodes (7): metadata, PublicAbout(), InlineNode, MarkdownContent(), MarkdownListItem(), parseInline(), renderInline()
 
-### Community 52 - "cropImage.ts"
-Cohesion: 0.50
-Nodes (4): handleConfirm(), CropArea, getCroppedFile(), loadImage()
+### Community 52 - "ProfileEditClient.tsx"
+Cohesion: 0.18
+Nodes (13): AvatarCropModal(), handleConfirm(), AccountForm, handleCropped(), API_BASE_URL, CropArea, getCroppedFile(), loadImage() (+5 more)
 
 ### Community 53 - "EducationForm.tsx"
-Cohesion: 0.17
-Nodes (10): EducationEditClient(), EducationForm(), handleSubmit(), validate(), EducationFormProps, FormErrors, FormState, getMarkdown() (+2 more)
+Cohesion: 0.20
+Nodes (10): EducationFormProps, FormErrors, FormState, ImageDropzone(), Input, InputProps, getMarkdown(), RichTextEditor() (+2 more)
 
-### Community 55 - "RewardCatalog"
-Cohesion: 0.40
-Nodes (3): RewardCatalog(), handleSubmit(), validate()
+### Community 54 - "NotificationBell.tsx"
+Cohesion: 0.25
+Nodes (6): NotificationBell(), NotificationBellProps, truncateText(), fetchNotifications(), useNotifications(), Notification
+
+### Community 55 - "useToast"
+Cohesion: 0.20
+Nodes (5): AnnouncementManagement(), useToast(), RewardCatalog(), handleSubmit(), validate()
 
 ### Community 56 - "WithdrawalManagement"
 Cohesion: 0.18
-Nodes (3): getStatusBadgeVariant(), getStatusLabel(), WithdrawalManagement()
+Nodes (4): getStatusBadgeVariant(), getStatusLabel(), WithdrawalManagement(), handleLihatKtp()
 
 ### Community 57 - "DepositHistory"
 Cohesion: 0.22
@@ -330,20 +356,16 @@ Cohesion: 0.25
 Nodes (8): assertNasabahLookup(), formatLookupError(), NasabahQrInput(), handleKeyDown(), handleSearch(), coercePositiveInt(), MiruNasabahQrPayload, parseMiruNasabahQr()
 
 ### Community 61 - "PublicLegalDoc.tsx"
-Cohesion: 0.24
-Nodes (5): metadata, metadata, PublicLegalDoc(), PublicLegalDocProps, LegalDocument
+Cohesion: 0.28
+Nodes (4): metadata, metadata, PublicLegalDoc(), PublicLegalDocProps
 
 ### Community 62 - "helpers.ts"
 Cohesion: 0.42
 Nodes (6): E2ERole, envelope(), errorEnvelope(), loginAs(), mockApi(), mockUser()
 
-### Community 63 - "PublicAbout.tsx"
-Cohesion: 0.24
-Nodes (5): metadata, OVERLAY, PhotoBackdrop(), PublicAbout(), InstitutionSettings
-
-### Community 64 - "MarkdownDocEdit.tsx"
-Cohesion: 0.15
-Nodes (10): MarkdownDocEdit(), API_BASE_URL, API_DEBUG, AUTH, PLAY_STORE_URL, MediaUploadResult, uploadAvatarImage(), uploadContentImage() (+2 more)
+### Community 63 - "PhotoBackdrop.tsx"
+Cohesion: 0.32
+Nodes (3): metadata, OVERLAY, PhotoBackdrop()
 
 ### Community 65 - "StaffList"
 Cohesion: 0.25
@@ -353,25 +375,49 @@ Nodes (4): getRoleLabel(), getStatusBadge(), getStatusLabel(), StaffList()
 Cohesion: 0.29
 Nodes (3): PartnerManagement(), handleSubmit(), validate()
 
+### Community 67 - "ApiError"
+Cohesion: 0.29
+Nodes (4): CheckResponse, RiwayatCounts, Step, ApiError
+
+### Community 68 - "ForgotPasswordForm"
+Cohesion: 0.62
+Nodes (7): ForgotPasswordForm(), clearAlerts(), handleOtp(), handlePassword(), handlePhone(), handleUsername(), mapFieldErrors()
+
+### Community 69 - "WebAdminRole"
+Cohesion: 0.57
+Nodes (5): DashboardLayoutProps, Header(), HeaderProps, HeaderUser, WebAdminRole
+
 ### Community 70 - "CustomerList"
-Cohesion: 0.25
-Nodes (5): CustomerList(), handleExportCSV(), exportToCSV(), getStatusBadge(), getStatusLabel()
+Cohesion: 0.33
+Nodes (3): CustomerList(), getStatusBadge(), getStatusLabel()
 
 ### Community 71 - "InstitutionEditClient"
 Cohesion: 0.33
 Nodes (4): InstitutionEditClient(), handleSave(), toApiTime(), toTimeInput()
 
 ### Community 72 - "ProfileEditClient"
-Cohesion: 0.29
-Nodes (4): fieldError(), ProfileEditClient(), handleCropped(), handleSave()
+Cohesion: 0.33
+Nodes (3): fieldError(), ProfileEditClient(), handleSave()
 
-### Community 73 - "DeleteAccountForm.tsx"
-Cohesion: 0.22
-Nodes (11): metadata, CheckResponse, DeleteAccountForm(), clearAlerts(), handleConfirm(), handlePhone(), handleUsername(), mapFieldErrors() (+3 more)
+### Community 73 - "DeleteAccountForm"
+Cohesion: 0.67
+Nodes (6): DeleteAccountForm(), clearAlerts(), handleConfirm(), handlePhone(), handleUsername(), mapFieldErrors()
+
+### Community 74 - "Button.tsx"
+Cohesion: 0.33
+Nodes (5): ButtonProps, ButtonSize, ButtonVariant, sizes, variants
 
 ### Community 75 - "3. Autentikasi"
 Cohesion: 0.40
 Nodes (5): 3.1 Login Flow, 3.2 Token Refresh, 3.3 Profil Login, 3.4 Header Standar, 3. Autentikasi
+
+### Community 76 - "3. Menu Sidebar per Role"
+Cohesion: 0.40
+Nodes (5): 3. Menu Sidebar per Role, Admin — Menu Lengkap, Koordinator — Monitoring, Pemerintah Distrik — Evaluasi, Petugas — Menu Terbatas
+
+### Community 77 - "EducationForm"
+Cohesion: 0.50
+Nodes (3): EducationForm(), handleSubmit(), validate()
 
 ### Community 83 - "Local Development"
 Cohesion: 0.50
@@ -382,24 +428,24 @@ Cohesion: 1.00
 Nodes (3): NasabahSearch(), handleKeyDown(), handleSelect()
 
 ## Knowledge Gaps
-- **376 isolated node(s):** `metadata`, `metadata`, `metadata`, `geistSans`, `geistMono` (+371 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 530 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **373 isolated node(s):** `metadata`, `metadata`, `metadata`, `geistSans`, `geistMono` (+368 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 526 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `cn` to `formatRupiah`, `DashboardClient.tsx`, `LoginForm.tsx`, `MiruLogo.tsx`, `Toast.tsx`, `EducationForm.tsx`, `navigation.ts`, `StaffForm.tsx`, `LandingPage.tsx`, `PublicAbout.tsx`?**
-  _High betweenness centrality (0.037) - this node is a cross-community bridge._
-- **Why does `useToast()` connect `useToast` to `formatRupiah`, `StaffForm.tsx`, `DepositForm`, `ComplaintManagement`, `CustomerForm`, `AnnouncementManagement`, `Toast.tsx`, `cn`, `PickupManagement`, `WasteCategoryList.tsx`, `EducationForm.tsx`, `RewardCatalog`, `WithdrawalManagement`, `MarkdownDocEdit.tsx`, `PartnerManagement`, `CustomerList`, `InstitutionEditClient`, `ProfileEditClient`, `CustomerDetail`, `EducationManagement`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Why does `useAuth()` connect `useAuth` to `ReportsClient.tsx`, `navigation.ts`, `lib/api.ts`, `LoginForm.tsx`, `DashboardClient.tsx`, `MarkdownDocView.tsx`, `ComplaintManagement`, `canMutate`, `AnnouncementManagement`, `cn`, `PickupManagement`, `useToast`, `WasteCategoryList.tsx`, `EducationForm.tsx`, `WithdrawalManagement`, `DepositHistory`, `MarkdownDocEdit.tsx`, `StaffList`, `CustomerList`, `InstitutionEditClient`, `ProfileEditClient`, `CustomerDetail`, `EducationManagement`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+- **Why does `cn()` connect `cn` to `formatRupiah`, `DashboardClient.tsx`, `MiruLogo.tsx`, `WebAdminRole`, `Sidebar.tsx`, `Button.tsx`, `Toast.tsx`, `DepositForm.tsx`, `DashboardLayout`, `EducationForm.tsx`, `NotificationBell.tsx`, `StaffForm.tsx`, `LandingPage.tsx`, `ProfileDropdown.tsx`, `PhotoBackdrop.tsx`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+- **Why does `useToast()` connect `useToast` to `formatRupiah`, `StaffForm.tsx`, `DepositForm`, `api`, `ComplaintManagement`, `CustomerForm.tsx`, `Toast.tsx`, `DepositForm.tsx`, `PickupManagement`, `LoginForm.tsx`, `WasteCategoryList`, `ProfileEditClient.tsx`, `EducationForm.tsx`, `WithdrawalManagement`, `MarkdownDocEdit`, `PartnerManagement`, `CustomerList`, `InstitutionEditClient`, `ProfileEditClient`, `EducationForm`, `CustomerDetail`, `EducationManagement`?**
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
+- **Why does `useAuth()` connect `useAuth` to `AuthProvider.tsx`, `ReportsClient.tsx`, `routes.ts`, `DashboardClient.tsx`, `api`, `ComplaintManagement`, `canMutate`, `DepositForm.tsx`, `PickupManagement`, `LoginForm.tsx`, `WasteCategoryList`, `ProfileEditClient.tsx`, `EducationForm.tsx`, `useToast`, `WithdrawalManagement`, `DepositHistory`, `MarkdownDocEdit`, `StaffList`, `CustomerList`, `InstitutionEditClient`, `ProfileEditClient`, `EducationForm`, `CustomerDetail`, `EducationManagement`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
 - **What connects `metadata`, `metadata`, `metadata` to the rest of the system?**
-  _376 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _373 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `11 — Security & Privacy (Web Admin)` be split into smaller, more focused modules?**
   _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
+- **Should `Selesai` be split into smaller, more focused modules?**
+  _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
 - **Should `10 — Integration & Roles (Web Admin)` be split into smaller, more focused modules?**
-  _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
-- **Should `devDependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.046464646464646465 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._

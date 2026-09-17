@@ -16,8 +16,9 @@ export function ApiErrorBridge() {
   useEffect(() => {
     setApiErrorHandlers({
       onUnauthorized: () => {
-        logout()
-        router.replace(buildLoginUrl(pathname, true))
+        void logout().finally(() => {
+          router.replace(buildLoginUrl(pathname, true))
+        })
       },
       onForbidden: () => {
         toastError('Anda tidak memiliki akses')

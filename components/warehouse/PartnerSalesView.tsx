@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
-import { api, getAccessToken, ApiError } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatDateWIT, formatRupiah, formatWeightKg } from '@/lib/format'
 import { useToast } from '@/components/feedback/Toast'
@@ -149,9 +149,9 @@ function SalesHistory() {
     async ([path, queryParams]: [string, Record<string, string>]) => {
       const url = new URL(`${API_PREFIX}${path}`)
       for (const [k, v] of Object.entries(queryParams)) url.searchParams.set(k, v)
-      const token = getAccessToken()
       const res = await fetch(url.toString(), {
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'Accept-Language': 'id', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'Accept-Language': 'id' },
       })
       const envelope = await res.json()
       return { items: (envelope.data ?? []) as PartnerSale[], pagination: envelope.meta?.pagination as PaginationMeta | undefined }

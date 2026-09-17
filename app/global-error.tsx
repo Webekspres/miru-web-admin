@@ -29,7 +29,7 @@ export default function GlobalError({
           />
           <h1 style={{ fontSize: '1.125rem', margin: 0 }}>Aplikasi tidak dapat dimuat</h1>
           <p style={{ fontSize: '0.875rem', color: '#52525b', marginTop: '0.5rem' }}>
-            Terjadi gangguan. Silakan muat ulang halaman. Jika berlanjut, hubungi pengelola.
+            Maaf, sistem kami sedang mengalami gangguan. Silakan coba beberapa saat lagi.
           </p>
           <button
             type="button"

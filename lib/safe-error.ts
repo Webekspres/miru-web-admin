@@ -2,7 +2,7 @@ import { ApiError } from '@/types/api'
 import { redactSecrets } from '@/lib/redact'
 
 export const GENERIC_USER_ERROR =
-  'Terjadi kesalahan. Silakan coba lagi. Jika berlanjut, hubungi pengelola.'
+  'Maaf, sistem kami sedang mengalami gangguan. Silakan coba beberapa saat lagi.'
 
 function looksLikeInternalDetail(text: string): boolean {
   return (

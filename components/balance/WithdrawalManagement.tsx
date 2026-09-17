@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import useSWR from 'swr'
-import { api, getAccessToken } from '@/lib/api'
+import { api } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatDateWIT, formatRupiah } from '@/lib/format'
 import { canApproveWithdrawal } from '@/lib/permissions'
@@ -253,13 +253,12 @@ export function WithdrawalManagement() {
       for (const [key, value] of Object.entries(queryParams)) {
         url.searchParams.set(key, value)
       }
-      const token = getAccessToken()
       const res = await fetch(url.toString(), {
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
           'Accept-Language': 'id',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       })
       const envelope = await res.json()
@@ -286,15 +285,10 @@ export function WithdrawalManagement() {
   }
 
   async function handleLihatKtp(withdrawal: Withdrawal) {
-    const token = getAccessToken()
-    if (!token) {
-      toastError('Sesi berakhir. Silakan login kembali.')
-      return
-    }
     try {
       const res = await fetch(
         `${API_PREFIX}/withdrawals/${withdrawal.id}/lampiran-ktp/`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { credentials: 'include' },
       )
       if (!res.ok) {
         toastError('Lampiran KTP tidak tersedia.')

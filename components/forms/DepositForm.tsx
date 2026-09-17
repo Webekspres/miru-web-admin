@@ -85,7 +85,7 @@ function formatLookupError(err: ApiError): string {
   if (err.statusCode === 403) {
     return err.message || 'Anda tidak memiliki akses untuk melihat data nasabah ini.'
   }
-  return err.message || 'Terjadi kesalahan. Silakan coba lagi.'
+  return err.message || 'Maaf, terjadi kesalahan. Silakan coba lagi.'
 }
 
 /**
@@ -945,7 +945,7 @@ export function DepositForm() {
             toastError(err.message || 'Gagal menyimpan setoran.')
           }
         } else {
-          toastError('Terjadi kesalahan. Silakan coba lagi.')
+          toastError('Maaf, terjadi kesalahan. Silakan coba lagi.')
         }
       }
     })

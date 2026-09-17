@@ -2,8 +2,6 @@
 
 import { useEffect, type ReactNode } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { getAccessToken } from '@/lib/api'
-import { setAccessTokenCookie } from '@/lib/auth-cookies'
 import {
   canAccessRoute,
   getLandingPathForRole,
@@ -29,9 +27,6 @@ export function DashboardAuthShell({ children }: DashboardAuthShellProps) {
       router.replace(buildLoginUrl(pathname))
       return
     }
-
-    const token = getAccessToken()
-    if (token) setAccessTokenCookie(token)
   }, [status, isAuthenticated, router, pathname])
 
   useEffect(() => {
@@ -42,8 +37,8 @@ export function DashboardAuthShell({ children }: DashboardAuthShellProps) {
     }
   }, [status, role, pathname, router])
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await logout()
     router.replace('/login')
   }
 

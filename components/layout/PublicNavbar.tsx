@@ -95,8 +95,8 @@ export function PublicNavbar({
               href="/login"
               className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3.5 text-xs font-bold text-primary-foreground shadow-xs transition-transform duration-150 hover:bg-primary-hover active:scale-95"
             >
-              <LogIn className="size-3.5" aria-hidden />
               <span>Masuk Panel</span>
+              <LogIn className="size-3.5" aria-hidden />
             </Link>
           ) : null}
 

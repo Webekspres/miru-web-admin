@@ -145,7 +145,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
         }
         toastError('Periksa kembali isian form.')
       } else {
-        toastError('Terjadi kesalahan. Silakan coba lagi.')
+        toastError('Maaf, terjadi kesalahan. Silakan coba lagi.')
       }
     } finally {
       setSubmitting(false)

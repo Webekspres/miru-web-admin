@@ -15,6 +15,7 @@ export const API_DEBUG = process.env.NEXT_PUBLIC_API_DEBUG === 'true'
 export const AUTH = {
   login: `${API_PREFIX}/auth/login/`,
   refresh: `${API_PREFIX}/auth/refresh/`,
+  logout: `${API_PREFIX}/auth/logout/`,
   me: `${API_PREFIX}/auth/me/`,
   forgotPassword: `${API_PREFIX}/auth/forgot-password/`,
   resetPasswordRequestOtp: `${API_PREFIX}/auth/reset-password/request-otp/`,

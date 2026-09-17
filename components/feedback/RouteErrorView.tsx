@@ -18,8 +18,7 @@ export function RouteErrorView({ reset }: RouteErrorViewProps) {
       </div>
       <h1 className="text-lg font-semibold text-foreground">Halaman tidak dapat ditampilkan</h1>
       <p className="mt-2 max-w-md text-sm text-muted-foreground">
-        Terjadi gangguan saat memuat halaman ini. Silakan coba lagi. Jika berlanjut, hubungi
-        pengelola.
+        Maaf, sistem kami sedang mengalami gangguan. Silakan coba beberapa saat lagi.
       </p>
       <Button type="button" className="mt-6" onClick={reset}>
         Muat ulang

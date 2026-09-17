@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { getAccessToken } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatRupiah } from '@/lib/format'
 import { canMutate } from '@/lib/permissions'
@@ -122,13 +121,12 @@ export function CustomerList() {
       for (const [key, value] of Object.entries(queryParams)) {
         url.searchParams.set(key, value)
       }
-      const token = getAccessToken()
       const res = await fetch(url.toString(), {
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
           'Accept-Language': 'id',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       })
       const envelope = await res.json()
@@ -166,13 +164,12 @@ export function CustomerList() {
       url.searchParams.set('role', 'nasabah')
       url.searchParams.set('page_size', '10000')
       if (debouncedSearch) url.searchParams.set('search', debouncedSearch)
-      const token = getAccessToken()
       const res = await fetch(url.toString(), {
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
           'Accept-Language': 'id',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       })
       const envelope = await res.json()

@@ -1,5 +1,5 @@
 import useSWR from 'swr'
-import { api, getAccessToken } from '@/lib/api'
+import { api } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import type { WebAdminRole } from '@/lib/navigation'
 import type { PaginationMeta } from '@/types/api'
@@ -22,13 +22,12 @@ async function fetchCount(path: string, params: Record<string, string>): Promise
     url.searchParams.set(key, value)
   }
 
-  const token = getAccessToken()
   const res = await fetch(url.toString(), {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       'Accept-Language': 'id',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   })
 

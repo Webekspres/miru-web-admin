@@ -21,12 +21,18 @@ interface RiwayatCounts {
 
 interface CheckResponse {
   username: string
+  masked_phone: string
+  next: string
+}
+
+interface RequestOtpResponse {
+  username: string
   nama_lengkap: string
   masked_phone: string
   saldo: string
   poin: number
   riwayat: RiwayatCounts
-  next: string
+  expires_in_seconds: number
 }
 
 function mapFieldErrors(
@@ -44,6 +50,7 @@ export function DeleteAccountForm() {
   const [step, setStep] = useState<Step>('username')
   const [username, setUsername] = useState('')
   const [account, setAccount] = useState<CheckResponse | null>(null)
+  const [accountDetail, setAccountDetail] = useState<RequestOtpResponse | null>(null)
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [acknowledge, setAcknowledge] = useState(false)
@@ -91,15 +98,12 @@ export function DeleteAccountForm() {
     clearAlerts()
     setLoading(true)
     try {
-      const data = await api.post<{
-        username: string
-        masked_phone: string
-        expires_in_seconds: number
-      }>(
+      const data = await api.post<RequestOtpResponse>(
         '/auth/delete-account/request-otp/',
         { username: username.trim(), no_hp: phone.trim() },
         { skipAuth: true },
       )
+      setAccountDetail(data)
       setInfo(`Kode OTP telah dikirim ke WhatsApp ${data.masked_phone}.`)
       setStep('confirm')
     } catch (error) {
@@ -166,6 +170,7 @@ export function DeleteAccountForm() {
             setStep('username')
             setUsername('')
             setAccount(null)
+            setAccountDetail(null)
             setPhone('')
             setOtp('')
             setAcknowledge(false)
@@ -224,34 +229,11 @@ export function DeleteAccountForm() {
       {step === 'phone' && account && (
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-surface-muted p-4 text-sm">
-            <p className="font-semibold text-foreground">
-              {account.nama_lengkap}
-            </p>
-            <p className="text-muted-foreground">@{account.username}</p>
-            <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-lg bg-background p-2">
-                <dt className="text-muted-foreground">Saldo</dt>
-                <dd className="font-semibold text-foreground">
-                  {formatRupiah(account.saldo)}
-                </dd>
-              </div>
-              <div className="rounded-lg bg-background p-2">
-                <dt className="text-muted-foreground">Poin</dt>
-                <dd className="font-semibold text-foreground">
-                  {account.poin.toLocaleString('id-ID')} poin
-                </dd>
-              </div>
-            </dl>
-            <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-              <li>• {account.riwayat.jumlah_setoran} transaksi setoran</li>
-              <li>• {account.riwayat.jumlah_penjemputan} penjemputan</li>
-              <li>• {account.riwayat.jumlah_penarikan} penarikan saldo</li>
-              <li>• {account.riwayat.jumlah_penukaran_poin} penukaran poin</li>
-              <li>• {account.riwayat.jumlah_pengaduan} pengaduan</li>
-            </ul>
-            <p className="mt-3 text-xs text-danger">
-              Saldo, poin, dan seluruh akses ke riwayat akan hilang setelah
-              akun dihapus.
+            <p className="font-semibold text-foreground">@{account.username}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Untuk melindungi data Anda, ringkasan akun (nama, saldo, poin,
+              riwayat) hanya ditampilkan setelah nomor HP yang terdaftar
+              dikonfirmasi.
             </p>
           </div>
 
@@ -287,16 +269,23 @@ export function DeleteAccountForm() {
         </div>
       )}
 
-      {step === 'confirm' && account && (
+      {step === 'confirm' && account && accountDetail && (
         <form onSubmit={handleConfirm} className="space-y-4" noValidate>
           <div
             role="alert"
             className="rounded-lg border border-danger/20 bg-danger/5 px-3 py-2 text-sm text-danger"
           >
-            Anda akan menghapus akun <strong>{account.nama_lengkap}</strong> (
-            @{account.username}) beserta saldo {formatRupiah(account.saldo)} dan{' '}
-            {account.poin.toLocaleString('id-ID')} poin.
+            Anda akan menghapus akun <strong>{accountDetail.nama_lengkap}</strong> (
+            @{account.username}) beserta saldo {formatRupiah(accountDetail.saldo)} dan{' '}
+            {accountDetail.poin.toLocaleString('id-ID')} poin.
           </div>
+          <ul className="space-y-1 text-xs text-muted-foreground">
+            <li>• {accountDetail.riwayat.jumlah_setoran} transaksi setoran</li>
+            <li>• {accountDetail.riwayat.jumlah_penjemputan} penjemputan</li>
+            <li>• {accountDetail.riwayat.jumlah_penarikan} penarikan saldo</li>
+            <li>• {accountDetail.riwayat.jumlah_penukaran_poin} penukaran poin</li>
+            <li>• {accountDetail.riwayat.jumlah_pengaduan} pengaduan</li>
+          </ul>
 
           <Input
             label="Kode OTP dari WhatsApp"
