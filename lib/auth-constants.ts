@@ -5,9 +5,6 @@ export const TOKEN_KEYS = {
 
 export const ROLE_COOKIE_KEY = 'miru_role'
 
-/** Max-age cookie session (detik) — dipakai proxy edge guard */
-export const ACCESS_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24
-
 export const AUTH_ROUTES = ['/login', '/forgot-password'] as const
 
 /** Rute publik yang tidak memerlukan autentikasi */

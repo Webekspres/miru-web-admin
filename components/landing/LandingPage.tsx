@@ -210,9 +210,6 @@ export function LandingPage() {
 
         <div className="relative z-10 mx-auto flex min-h-[85vh] max-w-7xl flex-col justify-end px-4 py-12 sm:min-h-[90vh] sm:px-6 sm:py-16 lg:px-8">
           <div className="max-w-2xl">
-              <p className="mb-3 text-sm font-medium text-emerald-100/85">
-                Pemerintah Kabupaten Mimika · Distrik Mimika Baru
-              </p>
 
               <h1 className="text-3xl font-extrabold leading-[1.12] tracking-tight sm:text-4xl lg:text-5xl">
                 Digitalisasi Pengelolaan Bank Sampah Terpadu
@@ -231,17 +228,7 @@ export function LandingPage() {
                   Masuk Panel Administrasi
                   <ArrowRight className="size-4" />
                 </Link>
-                <Link
-                  href="/edukasi"
-                  className="inline-flex h-12 items-center rounded-md border border-white/45 bg-white/10 px-5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-                >
-                  Edukasi Sampah
-                </Link>
               </div>
-
-              <p className="mt-8 text-xs font-medium tracking-wide text-white/60 sm:text-sm">
-                100% Digital · Mimika Baru · Laporan Realtime
-              </p>
           </div>
         </div>
       </section>
@@ -540,8 +527,8 @@ export function LandingPage() {
             href="/login"
             className="inline-flex h-12 shrink-0 items-center gap-2 rounded-md bg-white px-6 text-sm font-bold text-emerald-950 transition hover:bg-emerald-50 active:scale-[0.98]"
           >
-            <LogIn className="size-4" />
             Masuk ke Panel Administrasi
+            <LogIn className="size-4" />
           </Link>
         </div>
       </section>

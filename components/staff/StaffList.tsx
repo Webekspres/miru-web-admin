@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { getAccessToken } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatDateWIT } from '@/lib/format'
 import { useAuth } from '@/providers/AuthProvider'
@@ -106,13 +105,12 @@ export function StaffList() {
       for (const [key, value] of Object.entries(queryParams)) {
         url.searchParams.set(key, value)
       }
-      const token = getAccessToken()
       const res = await fetch(url.toString(), {
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
           'Accept-Language': 'id',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       })
       const envelope = await res.json()

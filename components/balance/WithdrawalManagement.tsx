@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from 'react'
 import useSWR from 'swr'
-import { api, getAccessToken } from '@/lib/api'
+import { api } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatDateWIT, formatRupiah } from '@/lib/format'
-import { canMutate } from '@/lib/permissions'
+import { canApproveWithdrawal } from '@/lib/permissions'
+import { BALANCE_MUTATE_OPTIONS } from '@/lib/swr-options'
+import { useSubmitLock } from '@/hooks/useSubmitLock'
 import { useAuth } from '@/providers/AuthProvider'
 import { useToast } from '@/components/feedback/Toast'
 import { Badge } from '@/components/ui/Badge'
@@ -195,10 +197,16 @@ function TolakSaldoModal({
         <textarea
           id="alasan-tolak-saldo"
           rows={3}
-          className="h-auto w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
+          className="min-h-24 h-auto w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
           placeholder="Jelaskan alasan penolakan..."
           value={alasan}
           onChange={(e) => setAlasan(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && alasan.trim()) {
+              e.preventDefault()
+              handleConfirm()
+            }
+          }}
         />
       </div>
     </Modal>
@@ -213,12 +221,12 @@ export function WithdrawalManagement() {
 
   const [activeTab, setActiveTab] = useState<TabKey>('menunggu')
   const [page, setPage] = useState(1)
-  const [actionLoading, setActionLoading] = useState(false)
+  const { pending: actionLoading, run: runAction } = useSubmitLock()
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null)
   const [showSetujuiModal, setShowSetujuiModal] = useState(false)
   const [showTolakModal, setShowTolakModal] = useState(false)
 
-  const isReadOnly = !canMutate(authRole ?? 'admin')
+  const canApprove = canApproveWithdrawal(authRole ?? 'koordinator')
 
   // ── Build query params ──
   const activeTabDef = TABS.find((t) => t.key === activeTab)!
@@ -245,13 +253,12 @@ export function WithdrawalManagement() {
       for (const [key, value] of Object.entries(queryParams)) {
         url.searchParams.set(key, value)
       }
-      const token = getAccessToken()
       const res = await fetch(url.toString(), {
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
           'Accept-Language': 'id',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       })
       const envelope = await res.json()
@@ -278,15 +285,10 @@ export function WithdrawalManagement() {
   }
 
   async function handleLihatKtp(withdrawal: Withdrawal) {
-    const token = getAccessToken()
-    if (!token) {
-      toastError('Sesi berakhir. Silakan login kembali.')
-      return
-    }
     try {
       const res = await fetch(
         `${API_PREFIX}/withdrawals/${withdrawal.id}/lampiran-ktp/`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { credentials: 'include' },
       )
       if (!res.ok) {
         toastError('Lampiran KTP tidak tersedia.')
@@ -302,37 +304,35 @@ export function WithdrawalManagement() {
 
   async function confirmSetujui() {
     if (!selectedWithdrawal) return
-    setActionLoading(true)
-    try {
-      await api.patch(`/withdrawals/${selectedWithdrawal.id}/`, { status: 'selesai' })
-      toastSuccess('Penarikan saldo berhasil disetujui.')
-      setShowSetujuiModal(false)
-      setSelectedWithdrawal(null)
-      fetchMutate()
-    } catch {
-      toastError('Gagal menyetujui penarikan. Coba lagi.')
-    } finally {
-      setActionLoading(false)
-    }
+    await runAction(async () => {
+      try {
+        await api.patch(`/withdrawals/${selectedWithdrawal.id}/`, { status: 'selesai' })
+        toastSuccess('Penarikan saldo berhasil disetujui.')
+        setShowSetujuiModal(false)
+        setSelectedWithdrawal(null)
+        await fetchMutate(undefined, BALANCE_MUTATE_OPTIONS)
+      } catch {
+        toastError('Gagal menyetujui penarikan. Coba lagi.')
+      }
+    })
   }
 
   async function confirmTolak(alasan: string) {
     if (!selectedWithdrawal) return
-    setActionLoading(true)
-    try {
-      await api.patch(`/withdrawals/${selectedWithdrawal.id}/`, {
-        status: 'ditolak',
-        catatan: alasan,
-      })
-      toastSuccess('Penarikan saldo ditolak.')
-      setShowTolakModal(false)
-      setSelectedWithdrawal(null)
-      fetchMutate()
-    } catch {
-      toastError('Gagal menolak penarikan. Coba lagi.')
-    } finally {
-      setActionLoading(false)
-    }
+    await runAction(async () => {
+      try {
+        await api.patch(`/withdrawals/${selectedWithdrawal.id}/`, {
+          status: 'ditolak',
+          catatan: alasan,
+        })
+        toastSuccess('Penarikan saldo ditolak.')
+        setShowTolakModal(false)
+        setSelectedWithdrawal(null)
+        await fetchMutate(undefined, BALANCE_MUTATE_OPTIONS)
+      } catch {
+        toastError('Gagal menolak penarikan. Coba lagi.')
+      }
+    })
   }
 
   function handleTabChange(tab: TabKey) {
@@ -412,12 +412,17 @@ export function WithdrawalManagement() {
                 <TableHead className="text-right">Nominal</TableHead>
                 <TableHead>Metode</TableHead>
                 <TableHead>Status</TableHead>
-                {!isReadOnly && activeTab === 'menunggu' && <TableHead className="text-right">Aksi</TableHead>}
+                {canApprove && activeTab === 'menunggu' && (
+                  <TableHead className="text-right">Aksi</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {withdrawals.length === 0 ? (
-                <TableEmpty colSpan={isReadOnly || activeTab !== 'menunggu' ? 5 : 6} message="Tidak ada pengajuan penarikan." />
+                <TableEmpty
+                  colSpan={canApprove && activeTab === 'menunggu' ? 6 : 5}
+                  message="Tidak ada pengajuan penarikan."
+                />
               ) : (
                 withdrawals.map((w) => (
                   <TableRow key={w.id}>
@@ -437,9 +442,9 @@ export function WithdrawalManagement() {
                         {getStatusLabel(w.status)}
                       </Badge>
                     </TableCell>
-                    {!isReadOnly && activeTab === 'menunggu' && (
+                    {canApprove && activeTab === 'menunggu' && (
                       <TableCell>
-                        <div className="flex justify-end gap-1.5">
+                        <div className="flex flex-wrap justify-end gap-1.5">
                           {w.ada_lampiran_ktp && (
                             <Button type="button" variant="outline" size="sm" onClick={() => handleLihatKtp(w)} disabled={actionLoading}>
                               <IdCard className="size-3.5" aria-hidden />

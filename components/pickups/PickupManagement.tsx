@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
-import { api, getAccessToken } from '@/lib/api'
+import { api } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatDateWIT, formatWeightKg } from '@/lib/format'
 import { canMutate } from '@/lib/permissions'
@@ -359,13 +359,12 @@ export function PickupManagement() {
       for (const [key, value] of Object.entries(queryParams)) {
         url.searchParams.set(key, value)
       }
-      const token = getAccessToken()
       const res = await fetch(url.toString(), {
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
           'Accept-Language': 'id',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       })
       const envelope = await res.json()

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseEnvelope } from '@/lib/api'
+import { parseEnvelope, SERVER_UNAVAILABLE_MESSAGE } from '@/lib/api'
 import { ApiError } from '@/types/api'
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -85,8 +85,7 @@ describe('parseEnvelope', () => {
 
     await expect(parseEnvelope(response)).rejects.toMatchObject({
       name: 'ApiError',
-      message:
-        'Server mengalami gangguan (HTTP 500). Respons bukan JSON envelope MIRU — coba lagi atau hubungi pengelola.',
+      message: SERVER_UNAVAILABLE_MESSAGE,
       statusCode: 500,
       code: 'INVALID_RESPONSE',
     })
@@ -98,7 +97,7 @@ describe('parseEnvelope', () => {
     await expect(parseEnvelope(response)).rejects.toMatchObject({
       statusCode: 404,
       code: 'INVALID_RESPONSE',
-      message: expect.stringContaining('Endpoint API tidak ditemukan (HTTP 404)'),
+      message: 'Maaf, layanan yang Anda tuju tidak tersedia. Silakan coba beberapa saat lagi.',
     })
   })
 })

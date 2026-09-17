@@ -8,6 +8,7 @@ export interface EmptyStateProps {
   icon?: ReactNode
   action?: ReactNode
   className?: string
+  compact?: boolean
 }
 
 export function EmptyState({
@@ -16,19 +17,28 @@ export function EmptyState({
   icon,
   action,
   className,
+  compact = false,
 }: EmptyStateProps) {
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background px-6 py-12 text-center',
+        'flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background text-center',
+        compact ? 'px-4 py-8' : 'px-6 py-12',
         className,
       )}
     >
-      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-surface-muted text-muted-foreground">
-        {icon ?? <Inbox className="size-6" aria-hidden />}
+      <div
+        className={cn(
+          'mb-3 flex items-center justify-center rounded-full bg-surface-muted text-muted-foreground',
+          compact ? 'size-10' : 'mb-4 size-12',
+        )}
+      >
+        {icon ?? <Inbox className={cn(compact ? 'size-5' : 'size-6')} aria-hidden />}
       </div>
       <h3 className="text-base font-semibold text-foreground">{title}</h3>
-      <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
+      {description ? (
+        <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
+      ) : null}
       {action && <div className="mt-4">{action}</div>}
     </div>
   )

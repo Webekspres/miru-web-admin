@@ -19,6 +19,21 @@ interface InlineNode {
 const INLINE_TOKEN_RE =
   /(!\[[^\]]*\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g
 
+/**
+ * Only http(s)/mailto/tel schemes (or scheme-less relative URLs) are safe to
+ * put in href/src — anything else (javascript:, data:, vbscript:, ...) is an
+ * XSS sink when this component renders admin-editable markdown to anonymous
+ * visitors.
+ */
+function isSafeUrl(url: string): boolean {
+  const trimmed = url.trim()
+  if (!trimmed || trimmed.startsWith('//')) return false
+  const schemeMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/)
+  if (!schemeMatch) return true
+  const scheme = schemeMatch[1].toLowerCase()
+  return scheme === 'http' || scheme === 'https' || scheme === 'mailto' || scheme === 'tel'
+}
+
 function parseInline(text: string): InlineNode[] {
   const parts = text.split(INLINE_TOKEN_RE)
   const nodes: InlineNode[] = []
@@ -65,6 +80,9 @@ function renderInline(nodes: InlineNode[], keyPrefix: string): ReactNode[] {
           </code>
         )
       case 'link':
+        if (!node.href || !isSafeUrl(node.href)) {
+          return <Fragment key={key}>{node.content}</Fragment>
+        }
         return (
           <a
             key={key}
@@ -77,6 +95,9 @@ function renderInline(nodes: InlineNode[], keyPrefix: string): ReactNode[] {
           </a>
         )
       case 'image':
+        if (!node.href || !isSafeUrl(node.href)) {
+          return null
+        }
         return (
           <img
             key={key}
