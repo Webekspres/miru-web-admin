@@ -5,11 +5,16 @@ import {
 } from '@/lib/auth-constants'
 import type { WebAdminRole } from '@/lib/routes'
 
+function secureFlag(): string {
+  if (typeof window === 'undefined') return ''
+  return window.location.protocol === 'https:' ? '; Secure' : ''
+}
+
 export function setAccessTokenCookie(token: string): void {
   if (typeof document === 'undefined') return
 
   const value = encodeURIComponent(token)
-  document.cookie = `${TOKEN_KEYS.access}=${value}; path=/; SameSite=Lax; max-age=${ACCESS_TOKEN_COOKIE_MAX_AGE}`
+  document.cookie = `${TOKEN_KEYS.access}=${value}; path=/; SameSite=Lax; max-age=${ACCESS_TOKEN_COOKIE_MAX_AGE}${secureFlag()}`
 }
 
 export function clearAccessTokenCookie(): void {
@@ -21,7 +26,7 @@ export function clearAccessTokenCookie(): void {
 export function setRoleCookie(role: WebAdminRole): void {
   if (typeof document === 'undefined') return
 
-  document.cookie = `${ROLE_COOKIE_KEY}=${role}; path=/; SameSite=Lax; max-age=${ACCESS_TOKEN_COOKIE_MAX_AGE}`
+  document.cookie = `${ROLE_COOKIE_KEY}=${role}; path=/; SameSite=Lax; max-age=${ACCESS_TOKEN_COOKIE_MAX_AGE}${secureFlag()}`
 }
 
 export function clearRoleCookie(): void {

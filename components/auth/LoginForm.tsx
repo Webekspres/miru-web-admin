@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@/providers/AuthProvider'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 
 function mapFieldErrors(
   errors?: Record<string, string[]>,
@@ -100,10 +101,9 @@ export function LoginForm() {
       />
 
       <div className="space-y-1.5">
-        <Input
+        <PasswordInput
           label="Kata sandi"
           name="password"
-          type="password"
           autoComplete="current-password"
           placeholder="Masukkan kata sandi"
           value={password}
