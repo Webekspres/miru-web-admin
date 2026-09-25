@@ -16,6 +16,7 @@ import { PaginationControls } from '@/components/ui/PaginationControls'
 import { Select } from '@/components/ui/Select'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
+import { PickupQuotaCard } from '@/components/pickups/PickupQuotaCard'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
   CheckCircle2,
@@ -546,6 +547,8 @@ export function PickupManagement() {
           Muat Ulang
         </Button>
       </div>
+
+      {!isPetugas && <PickupQuotaCard />}
 
       {/* Tabs */}
       <Card>
