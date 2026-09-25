@@ -1,14 +1,19 @@
-/** Minggu kuota jemput: Senin–Minggu kalender WIT (sama dengan backend). */
+/** Jadwal jemput per wilayah: maks 2 hari per minggu Senin–Minggu WIT (sama dengan backend). */
 
-export interface WilayahKuota {
+export const MAX_JADWAL_PER_MINGGU = 2
+
+export interface JadwalJemput {
   id: number
-  kelurahan: string
-  rt: string
-  rw: string
-  aktif: boolean
-  terpakai: number
-  maks: number
-  sisa: number
+  wilayah: number
+  wilayah_nama: string
+  /** YYYY-MM-DD */
+  tanggal: string
+  /** HH:MM:SS */
+  jam_mulai: string
+  jam_selesai: string
+  catatan: string
+  jumlah_pesanan: number
+  bisa_dipesan: boolean
 }
 
 export interface QuotaWeek {
@@ -23,7 +28,7 @@ export function todayWIT(now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jayapura' }).format(now)
 }
 
-function shiftDays(ymd: string, days: number): string {
+export function shiftDays(ymd: string, days: number): string {
   const d = new Date(`${ymd}T00:00:00Z`)
   d.setUTCDate(d.getUTCDate() + days)
   return d.toISOString().slice(0, 10)
@@ -43,4 +48,20 @@ export function formatQuotaWeek({ start, end }: QuotaWeek): string {
   const sameMonth = start.slice(0, 7) === end.slice(0, 7)
   const from = sameMonth ? fmt(start, { day: 'numeric' }) : fmt(start, { day: 'numeric', month: 'short' })
   return `${from}–${fmt(end, { day: 'numeric', month: 'short', year: 'numeric' })}`
+}
+
+/** "Sel, 29 Sep" dari YYYY-MM-DD. */
+export function formatJadwalTanggal(ymd: string): string {
+  return new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'UTC',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(new Date(`${ymd}T00:00:00Z`))
+}
+
+/** "08.00–12.00" dari HH:MM(:SS). */
+export function formatJamRange(mulai: string, selesai: string): string {
+  const hm = (t: string) => t.slice(0, 5).replace(':', '.')
+  return `${hm(mulai)}–${hm(selesai)}`
 }

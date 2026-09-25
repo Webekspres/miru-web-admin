@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { formatQuotaWeek, quotaWeek, todayWIT } from './pickup-quota'
+import {
+  formatJadwalTanggal,
+  formatJamRange,
+  formatQuotaWeek,
+  quotaWeek,
+  todayWIT,
+} from './pickup-schedule'
 
-describe('pickup quota week', () => {
+describe('pickup schedule week', () => {
   it('uses Monday–Sunday', () => {
     expect(quotaWeek('2026-09-25')).toEqual({ start: '2026-09-21', end: '2026-09-27' })
     expect(quotaWeek('2026-09-27')).toEqual({ start: '2026-09-21', end: '2026-09-27' })
@@ -21,5 +27,10 @@ describe('pickup quota week', () => {
   it('formats label', () => {
     expect(formatQuotaWeek({ start: '2026-09-21', end: '2026-09-27' })).toBe('21–27 Sep 2026')
     expect(formatQuotaWeek({ start: '2026-09-28', end: '2026-10-04' })).toBe('28 Sep–4 Okt 2026')
+  })
+
+  it('formats jadwal date and time range', () => {
+    expect(formatJadwalTanggal('2026-09-29')).toBe('Sel, 29 Sep')
+    expect(formatJamRange('08:00:00', '12:00:00')).toBe('08.00–12.00')
   })
 })

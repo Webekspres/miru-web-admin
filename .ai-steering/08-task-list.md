@@ -55,7 +55,7 @@ Hanya task dalam 17 modul. Jangan tambah fitur di luar persyaratan.
 
 - [x] Filter nasabah by kelurahan / wilayah di `/customers` (2026-09-25; + kolom kelurahan, export CSV semua halaman)
 - [x] Field RT / RW / kelurahan di form tambah & edit nasabah (2026-09-25; + consent PDP wajib saat tambah)
-- [x] UI kuota wilayah 2×/minggu di `/pickups` — kartu pemakaian per wilayah + navigasi minggu (2026-09-25)
+- [x] Jadwal jemput per wilayah di `/pickups` (maks 2 hari/minggu, hari bebas): lihat per minggu, tambah (kirim notif ke warga), hapus jika belum ada pesanan (2026-09-25)
 - [ ] Unduh / cetak PDF tanda terima setoran & penarikan (role-gated; bukan URL media publik)
 - [ ] Print-friendly view laporan (margin, tanpa sidebar)
 - [ ] Batasi kolom PII pada export sesuai role
