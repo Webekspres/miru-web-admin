@@ -20,6 +20,7 @@ interface CustomerFormData {
   password: string
   nama_lengkap: string
   no_hp: string
+  email: string
   alamat: string
   kelurahan: string
   rt: string
@@ -31,6 +32,7 @@ interface FormErrors {
   password?: string
   nama_lengkap?: string
   no_hp?: string
+  email?: string
   alamat?: string
   kelurahan?: string
   rt?: string
@@ -47,6 +49,8 @@ interface CustomerFormProps {
     username: string
     nama_lengkap: string
     no_hp?: string
+    email?: string
+    email_verified?: boolean
     alamat?: string
     kelurahan?: number | null
     rt?: string
@@ -68,6 +72,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
     password: '',
     nama_lengkap: initialData?.nama_lengkap ?? '',
     no_hp: initialData?.no_hp ?? '',
+    email: initialData?.email ?? '',
     alamat: initialData?.alamat ?? '',
     kelurahan: initialData?.kelurahan ? String(initialData.kelurahan) : '',
     rt: initialData?.rt ?? '',
@@ -110,6 +115,11 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
       valid = false
     }
 
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errs.email = 'Format email tidak valid.'
+      valid = false
+    }
+
     if (formData.rt.trim().length > 10) {
       errs.rt = 'RT maksimal 10 karakter.'
       valid = false
@@ -145,6 +155,8 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
 
     if (formData.password) payload.password = formData.password
     if (formData.no_hp.trim()) payload.no_hp = formData.no_hp.trim()
+    // Saat edit, kirim string kosong agar email bisa dihapus.
+    if (isEdit || formData.email.trim()) payload.email = formData.email.trim().toLowerCase()
     if (formData.alamat.trim()) payload.alamat = formData.alamat.trim()
     // Saat edit, kirim nilai kosong agar kelurahan/RT/RW bisa dihapus.
     payload.kelurahan = formData.kelurahan ? Number(formData.kelurahan) : null
@@ -173,6 +185,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
             else if (field === 'password') apiErrs.password = msg
             else if (field === 'nama_lengkap') apiErrs.nama_lengkap = msg
             else if (field === 'no_hp') apiErrs.no_hp = msg
+            else if (field === 'email') apiErrs.email = msg
             else if (field === 'alamat') apiErrs.alamat = msg
             else if (field === 'kelurahan') apiErrs.kelurahan = msg
             else if (field === 'rt') apiErrs.rt = msg
@@ -287,6 +300,20 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
                 onChange={(e) => updateField('no_hp', e.target.value)}
                 error={fieldErrors.no_hp}
                 hint="Nomor HP baru berstatus belum terverifikasi dan akan diverifikasi saat user login di aplikasi mobile."
+              />
+              <Input
+                label="Email (opsional)"
+                type="email"
+                autoComplete="off"
+                placeholder="Contoh: budi@gmail.com"
+                value={formData.email}
+                onChange={(e) => updateField('email', e.target.value)}
+                error={fieldErrors.email}
+                hint={
+                  isEdit && initialData?.email_verified && formData.email.trim().toLowerCase() !== (initialData.email ?? '').toLowerCase()
+                    ? 'Email diganti: nasabah harus memverifikasi ulang saat login berikutnya.'
+                    : 'Untuk lupa kata sandi. Kosongkan jika nasabah tidak punya email — tidak wajib verifikasi.'
+                }
               />
             </div>
 

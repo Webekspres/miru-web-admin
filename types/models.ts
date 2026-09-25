@@ -18,6 +18,8 @@ export interface User {
   phone_verified?: boolean
   email?: string
   email_verified?: boolean
+  /** Nasabah didaftarkan admin tanpa email: tidak wajib verifikasi. */
+  email_exempt?: boolean
   /** Wajib verifikasi email sebelum memakai panel. */
   email_required?: boolean
   alamat?: string

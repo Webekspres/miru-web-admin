@@ -43,6 +43,8 @@ export function CustomerEditClient({ customerId }: { customerId: number }) {
         username: user.username,
         nama_lengkap: user.nama_lengkap,
         no_hp: user.no_hp,
+        email: user.email,
+        email_verified: user.email_verified,
         alamat: user.alamat,
         kelurahan: user.kelurahan,
         rt: user.rt,
