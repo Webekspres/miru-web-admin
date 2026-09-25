@@ -11,6 +11,7 @@ import { PasswordInput } from '@/components/ui/PasswordInput'
 import { Select } from '@/components/ui/Select'
 import { ArrowLeft, Save, UserCog } from 'lucide-react'
 import type { StaffRole } from '@/types/models'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -57,16 +58,21 @@ export function StaffForm({ initialData, isEdit = false }: StaffFormProps) {
   const router = useRouter()
   const { success: toastSuccess, error: toastError } = useToast()
 
-  const [formData, setFormData] = useState<StaffFormData>({
+  const [initialForm] = useState<StaffFormData>(() => ({
     username: initialData?.username ?? '',
     password: '',
     nama_lengkap: initialData?.nama_lengkap ?? '',
     no_hp: initialData?.no_hp ?? '',
     role: initialData?.role ?? 'petugas',
-  })
+  }))
+  const [formData, setFormData] = useState<StaffFormData>(initialForm)
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true)
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
+  const dirty =
+    (Object.keys(formData) as (keyof StaffFormData)[]).some((k) => formData[k] !== initialForm[k]) ||
+    isActive !== (initialData?.is_active ?? true)
+  const guard = useUnsavedChanges({ dirty, onSave: save })
 
   // ── Validation ──
   function validate(): boolean {
@@ -111,7 +117,14 @@ export function StaffForm({ initialData, isEdit = false }: StaffFormProps) {
   // ── Submit ──
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!validate()) return
+    if (await save()) {
+      guard.allowNavigation()
+      router.push('/staff')
+    }
+  }
+
+  async function save(): Promise<boolean> {
+    if (!validate()) return false
 
     setSubmitting(true)
 
@@ -134,7 +147,7 @@ export function StaffForm({ initialData, isEdit = false }: StaffFormProps) {
         await api.post('/users/', payload)
         toastSuccess('Staff baru berhasil ditambahkan.')
       }
-      router.push('/staff')
+      return true
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.errors) {
@@ -156,6 +169,7 @@ export function StaffForm({ initialData, isEdit = false }: StaffFormProps) {
       } else {
         toastError('Maaf, terjadi kesalahan. Silakan coba lagi.')
       }
+      return false
     } finally {
       setSubmitting(false)
     }
@@ -175,7 +189,7 @@ export function StaffForm({ initialData, isEdit = false }: StaffFormProps) {
     <div className="space-y-6">
       {/* Page Title */}
       <div className="flex items-center gap-3">
-        <Button type="button" variant="ghost" size="sm" onClick={() => router.push('/staff')}>
+        <Button type="button" variant="ghost" size="sm" onClick={() => guard.leave('/staff')}>
           <ArrowLeft className="size-4" aria-hidden />
           Kembali
         </Button>
@@ -288,7 +302,7 @@ export function StaffForm({ initialData, isEdit = false }: StaffFormProps) {
           </CardContent>
 
           <CardFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.push('/staff')} disabled={submitting}>
+            <Button type="button" variant="outline" onClick={() => guard.leave('/staff')} disabled={submitting}>
               Batal
             </Button>
             <Button type="submit" loading={submitting} disabled={submitting}>
@@ -298,6 +312,7 @@ export function StaffForm({ initialData, isEdit = false }: StaffFormProps) {
           </CardFooter>
         </form>
       </Card>
+      {guard.dialog}
     </div>
   )
 }
