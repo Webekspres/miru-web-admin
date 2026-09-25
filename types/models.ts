@@ -16,6 +16,10 @@ export interface User {
   nama_lengkap: string
   no_hp?: string
   phone_verified?: boolean
+  email?: string
+  email_verified?: boolean
+  /** Wajib verifikasi email sebelum memakai panel. */
+  email_required?: boolean
   alamat?: string
   kelurahan?: number | null
   kelurahan_nama?: string | null

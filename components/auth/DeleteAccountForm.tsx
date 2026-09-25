@@ -9,7 +9,7 @@ import { formatRupiah } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
-type Step = 'username' | 'phone' | 'confirm' | 'done'
+type Step = 'username' | 'email' | 'confirm' | 'done'
 
 interface RiwayatCounts {
   jumlah_setoran: number
@@ -21,14 +21,14 @@ interface RiwayatCounts {
 
 interface CheckResponse {
   username: string
-  masked_phone: string
+  masked_email: string
   next: string
 }
 
 interface RequestOtpResponse {
   username: string
   nama_lengkap: string
-  masked_phone: string
+  masked_email: string
   saldo: string
   poin: number
   riwayat: RiwayatCounts
@@ -51,7 +51,7 @@ export function DeleteAccountForm() {
   const [username, setUsername] = useState('')
   const [account, setAccount] = useState<CheckResponse | null>(null)
   const [accountDetail, setAccountDetail] = useState<RequestOtpResponse | null>(null)
-  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [acknowledge, setAcknowledge] = useState(false)
   const [confirmationText, setConfirmationText] = useState('')
@@ -78,9 +78,9 @@ export function DeleteAccountForm() {
       )
       setAccount(data)
       setInfo(
-        'Akun ditemukan. Periksa ringkasan di bawah, lalu konfirmasi nomor HP untuk melanjutkan.',
+        'Akun ditemukan. Konfirmasi email yang terdaftar untuk melanjutkan.',
       )
-      setStep('phone')
+      setStep('email')
     } catch (error) {
       if (error instanceof ApiError) {
         setFormError(error.message)
@@ -93,18 +93,18 @@ export function DeleteAccountForm() {
     }
   }
 
-  async function handlePhone(event: FormEvent) {
+  async function handleEmail(event: FormEvent) {
     event.preventDefault()
     clearAlerts()
     setLoading(true)
     try {
       const data = await api.post<RequestOtpResponse>(
         '/auth/delete-account/request-otp/',
-        { username: username.trim(), no_hp: phone.trim() },
+        { username: username.trim(), email: email.trim() },
         { skipAuth: true },
       )
       setAccountDetail(data)
-      setInfo(`Kode OTP telah dikirim ke WhatsApp ${data.masked_phone}.`)
+      setInfo(`Kode OTP telah dikirim ke ${data.masked_email}. Periksa kotak masuk atau folder spam.`)
       setStep('confirm')
     } catch (error) {
       if (error instanceof ApiError) {
@@ -171,7 +171,7 @@ export function DeleteAccountForm() {
             setUsername('')
             setAccount(null)
             setAccountDetail(null)
-            setPhone('')
+            setEmail('')
             setOtp('')
             setAcknowledge(false)
             setConfirmationText('')
@@ -226,34 +226,35 @@ export function DeleteAccountForm() {
         </form>
       )}
 
-      {step === 'phone' && account && (
+      {step === 'email' && account && (
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-surface-muted p-4 text-sm">
             <p className="font-semibold text-foreground">@{account.username}</p>
             <p className="mt-2 text-xs text-muted-foreground">
               Untuk melindungi data Anda, ringkasan akun (nama, saldo, poin,
-              riwayat) hanya ditampilkan setelah nomor HP yang terdaftar
+              riwayat) hanya ditampilkan setelah email yang terdaftar
               dikonfirmasi.
             </p>
           </div>
 
-          <form onSubmit={handlePhone} className="space-y-4" noValidate>
+          <form onSubmit={handleEmail} className="space-y-4" noValidate>
             <p className="text-xs text-muted-foreground">
-              Nomor terdaftar: <strong>{account.masked_phone}</strong>
+              Email terdaftar: <strong>{account.masked_email}</strong>
             </p>
             <Input
-              label="Nomor HP"
-              name="no_hp"
-              type="tel"
-              placeholder="08xxxxxxxxxx"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              error={fieldErrors.no_hp}
+              label="Email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="nama@contoh.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              error={fieldErrors.email}
               disabled={loading}
               required
             />
-            <Button type="submit" className="w-full" loading={loading} disabled={!phone.trim()}>
-              Kirim OTP WhatsApp
+            <Button type="submit" className="w-full" loading={loading} disabled={!email.trim()}>
+              Kirim Kode OTP
             </Button>
             <button
               type="button"
@@ -288,7 +289,7 @@ export function DeleteAccountForm() {
           </ul>
 
           <Input
-            label="Kode OTP dari WhatsApp"
+            label="Kode OTP dari email"
             name="otp"
             inputMode="numeric"
             maxLength={6}
@@ -346,7 +347,7 @@ export function DeleteAccountForm() {
             className="w-full text-xs font-semibold text-muted-foreground hover:text-foreground"
             onClick={() => {
               clearAlerts()
-              setStep('phone')
+              setStep('email')
             }}
           >
             Kembali ke langkah sebelumnya

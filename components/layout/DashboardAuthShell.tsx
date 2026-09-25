@@ -10,6 +10,7 @@ import { buildLoginUrl } from '@/lib/session'
 import { useAuth } from '@/providers/AuthProvider'
 import { CardSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { VerifyEmailGate } from '@/components/auth/VerifyEmailGate'
 
 export interface DashboardAuthShellProps {
   children: ReactNode
@@ -48,6 +49,10 @@ export function DashboardAuthShell({ children }: DashboardAuthShellProps) {
         <CardSkeleton className="w-full max-w-md" />
       </div>
     )
+  }
+
+  if (user.email_required) {
+    return <VerifyEmailGate onLogout={handleLogout} />
   }
 
   return (

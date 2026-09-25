@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 
-type Step = 'username' | 'phone' | 'otp' | 'password' | 'done'
+type Step = 'username' | 'email' | 'otp' | 'password' | 'done'
 
 function mapFieldErrors(
   errors?: Record<string, string[]>,
@@ -26,8 +26,8 @@ export function ForgotPasswordForm() {
   const router = useRouter()
   const [step, setStep] = useState<Step>('username')
   const [username, setUsername] = useState('')
-  const [maskedPhone, setMaskedPhone] = useState('')
-  const [phone, setPhone] = useState('')
+  const [maskedEmail, setMaskedEmail] = useState('')
+  const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [resetToken, setResetToken] = useState('')
   const [password, setPassword] = useState('')
@@ -50,14 +50,14 @@ export function ForgotPasswordForm() {
     try {
       const data = await api.post<{
         username: string
-        masked_phone: string
+        masked_email: string
         next: string
       }>('/auth/forgot-password/', { username: username.trim() }, { skipAuth: true })
-      setMaskedPhone(data.masked_phone)
+      setMaskedEmail(data.masked_email)
       setInfo(
-        `Akun ditemukan. Konfirmasi nomor HP yang terdaftar (${data.masked_phone}), lalu kami kirim OTP ke WhatsApp.`,
+        `Akun ditemukan. Masukkan email yang terdaftar (${data.masked_email}), lalu kami kirim kode OTP ke email tersebut.`,
       )
-      setStep('phone')
+      setStep('email')
     } catch (error) {
       if (error instanceof ApiError) {
         setFormError(error.message)
@@ -70,22 +70,22 @@ export function ForgotPasswordForm() {
     }
   }
 
-  async function handlePhone(event: FormEvent) {
+  async function handleEmail(event: FormEvent) {
     event.preventDefault()
     clearAlerts()
     setLoading(true)
     try {
       const data = await api.post<{
         username: string
-        masked_phone: string
+        masked_email: string
         expires_in_seconds: number
       }>(
         '/auth/reset-password/request-otp/',
-        { username: username.trim(), no_hp: phone.trim() },
+        { username: username.trim(), email: email.trim() },
         { skipAuth: true },
       )
-      setMaskedPhone(data.masked_phone)
-      setInfo(`Kode OTP telah dikirim ke WhatsApp ${data.masked_phone}.`)
+      setMaskedEmail(data.masked_email)
+      setInfo(`Kode OTP telah dikirim ke ${data.masked_email}. Periksa kotak masuk atau folder spam.`)
       setStep('otp')
     } catch (error) {
       if (error instanceof ApiError) {
@@ -202,24 +202,25 @@ export function ForgotPasswordForm() {
         </form>
       )}
 
-      {step === 'phone' && (
-        <form onSubmit={handlePhone} className="space-y-4" noValidate>
+      {step === 'email' && (
+        <form onSubmit={handleEmail} className="space-y-4" noValidate>
           <p className="text-xs text-muted-foreground">
-            Nomor terdaftar: <strong>{maskedPhone}</strong>
+            Email terdaftar: <strong>{maskedEmail}</strong>
           </p>
           <Input
-            label="Nomor HP"
-            name="no_hp"
-            type="tel"
-            placeholder="08xxxxxxxxxx"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            error={fieldErrors.no_hp}
+            label="Email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="nama@contoh.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={fieldErrors.email}
             disabled={loading}
             required
           />
-          <Button type="submit" className="w-full" loading={loading} disabled={!phone.trim()}>
-            Kirim OTP WhatsApp
+          <Button type="submit" className="w-full" loading={loading} disabled={!email.trim()}>
+            Kirim Kode OTP
           </Button>
           <button
             type="button"
@@ -240,7 +241,7 @@ export function ForgotPasswordForm() {
             label="Kode OTP"
             name="otp"
             inputMode="numeric"
-            placeholder="Masukkan kode dari WhatsApp"
+            placeholder="Masukkan 6 digit kode dari email"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             error={fieldErrors.otp}
