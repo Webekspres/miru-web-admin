@@ -27,6 +27,8 @@ import {
   Truck,
   UserPlus,
 } from 'lucide-react'
+import { LokasiMap, osmLink } from '@/components/maps/LokasiMap'
+import { PickupMapCard, pickupPoint } from '@/components/pickups/PickupMapCard'
 import type { Pickup, PickupStatus, User as UserType } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
 import { ApiError } from '@/types/api'
@@ -222,6 +224,40 @@ function AssignPetugasModal({
   )
 }
 
+// ─── Lokasi Modal ─────────────────────────────────────────────────
+
+function LokasiModal({ pickup, onClose }: { pickup: Pickup | null; onClose: () => void }) {
+  const point = useMemo(() => (pickup ? pickupPoint(pickup) : null), [pickup])
+  const points = useMemo(() => (point ? [point] : []), [point])
+
+  return (
+    <Modal
+      open={pickup !== null}
+      onClose={onClose}
+      title="Lokasi Penjemputan"
+      description={pickup ? `${pickup.nasabah_nama ?? `#${pickup.nasabah}`} — ${pickup.alamat_jemput}` : undefined}
+      size="lg"
+      footer={
+        point && (
+          <a
+            href={osmLink(point.lat, point.lng)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Buka di OpenStreetMap
+          </a>
+        )
+      }
+    >
+      {pickup?.catatan_lokasi && (
+        <p className="mb-3 text-sm text-muted-foreground">Patokan: {pickup.catatan_lokasi}</p>
+      )}
+      {pickup && <LokasiMap points={points} height={360} />}
+    </Modal>
+  )
+}
+
 // ─── Tolak Modal ──────────────────────────────────────────────────
 
 function TolakModal({
@@ -317,6 +353,7 @@ export function PickupManagement() {
     pickup: null,
     mode: 'approve_assign',
   })
+  const [lokasiPickup, setLokasiPickup] = useState<Pickup | null>(null)
   const [tolakModal, setTolakModal] = useState<{ open: boolean; pickup: Pickup | null }>({
     open: false,
     pickup: null,
@@ -550,6 +587,8 @@ export function PickupManagement() {
 
       {!isPetugas && <PickupScheduleCard />}
 
+      <PickupMapCard />
+
       {/* Tabs */}
       <Card>
         <CardHeader className="border-b border-border pb-0">
@@ -604,8 +643,23 @@ export function PickupManagement() {
                       <TableCell className="font-medium">
                         {pickup.nasabah_nama ?? `#${pickup.nasabah}`}
                       </TableCell>
-                      <TableCell className="max-w-50 truncate text-muted-foreground" title={pickup.alamat_jemput}>
-                        {pickup.alamat_jemput}
+                      <TableCell className="max-w-60 text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate" title={pickup.alamat_jemput}>
+                            {pickup.alamat_jemput}
+                          </span>
+                          {pickupPoint(pickup) && (
+                            <button
+                              type="button"
+                              onClick={() => setLokasiPickup(pickup)}
+                              className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/10"
+                              aria-label={`Lihat lokasi ${pickup.nasabah_nama ?? ''} di peta`}
+                            >
+                              <MapPin className="size-3.5" aria-hidden />
+                              Peta
+                            </button>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <span className="whitespace-nowrap text-muted-foreground">
@@ -660,6 +714,8 @@ export function PickupManagement() {
         onConfirm={assignModal.mode === 'approve_assign' ? handleApproveAssign : handleAssignOnly}
         loading={actionLoading}
       />
+
+      <LokasiModal pickup={lokasiPickup} onClose={() => setLokasiPickup(null)} />
 
       {/* Tolak Modal */}
       <TolakModal

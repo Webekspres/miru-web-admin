@@ -27,6 +27,9 @@ export interface User {
   kelurahan_nama?: string | null
   rt?: string
   rw?: string
+  /** Titik rumah (decimal string dari API). */
+  latitude?: string | null
+  longitude?: string | null
   saldo?: string
   poin?: number
   is_active: boolean
@@ -87,6 +90,10 @@ export interface Pickup {
   petugas_nama?: string | null
   estimasi_berat: string
   alamat_jemput: string
+  /** Decimal dari API (string), null bila nasabah tidak menandai titik. */
+  latitude?: string | null
+  longitude?: string | null
+  catatan_lokasi?: string
   jadwal: string
   status: PickupStatus
   catatan?: string
@@ -261,8 +268,20 @@ export interface PriceHistory {
 export interface WilayahLayanan {
   id: number
   kelurahan: string
+  /** Kode Kemendagri, mis. 94.04.01.1001 (null untuk wilayah buatan admin). */
+  kode?: string | null
+  jenis?: 'kelurahan' | 'kampung' | ''
   rt: string
   rw: string
   aktif: boolean
   created_at?: string
+}
+
+/** GET /wilayah/cakupan/ — alamat bertingkat terkunci ke Distrik Mimika Baru. */
+export interface WilayahCakupan {
+  provinsi: { kode: string; nama: string }
+  kabupaten: { kode: string; nama: string }
+  distrik: { kode: string; nama: string }
+  kelurahan: { id: number; kode: string; nama: string; jenis: 'kelurahan' | 'kampung' | '' }[]
+  pesan: string
 }

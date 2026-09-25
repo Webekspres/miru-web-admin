@@ -1,7 +1,7 @@
 import useSWR from 'swr'
 import { api } from '@/lib/api'
 import type { SelectOption } from '@/components/ui/Select'
-import type { User, WilayahLayanan } from '@/types/models'
+import type { User, WilayahCakupan, WilayahLayanan } from '@/types/models'
 
 export function wilayahLabel(w: WilayahLayanan): string {
   const parts = [w.kelurahan]
@@ -33,4 +33,20 @@ export function useWilayah() {
   }))
 
   return { wilayah, options, error, isLoading }
+}
+
+/** Alamat bertingkat terkunci ke Distrik Mimika Baru; kelurahan hanya yang aktif. */
+export function useCakupanWilayah() {
+  const { data, error, isLoading } = useSWR(
+    '/wilayah/cakupan/',
+    (path: string) => api.get<WilayahCakupan>(path),
+    { revalidateOnFocus: false },
+  )
+
+  const options: SelectOption[] = (data?.kelurahan ?? []).map((k) => ({
+    value: String(k.id),
+    label: k.jenis === 'kampung' ? `Kampung ${k.nama}` : `Kelurahan ${k.nama}`,
+  }))
+
+  return { cakupan: data, options, error, isLoading }
 }

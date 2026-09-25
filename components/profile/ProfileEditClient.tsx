@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 
 type AccountForm = {
   username: string
@@ -37,13 +38,16 @@ export function ProfileEditClient() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState<AccountForm>(() => ({
+  const [initialForm] = useState<AccountForm>(() => ({
     username: user?.username ?? '',
     nama_lengkap: user?.nama_lengkap ?? '',
     no_hp: user?.no_hp ?? '',
     alamat: user?.alamat ?? '',
   }))
+  const [form, setForm] = useState<AccountForm>(initialForm)
   const [errors, setErrors] = useState<Partial<Record<keyof AccountForm, string>>>({})
+  const dirty = (Object.keys(form) as (keyof AccountForm)[]).some((k) => form[k] !== initialForm[k])
+  const guard = useUnsavedChanges({ dirty, onSave: save })
 
   if (!user || !role) return null
 
@@ -67,7 +71,7 @@ export function ProfileEditClient() {
     }
   }
 
-  async function handleSave() {
+  async function save(): Promise<boolean> {
     setSaving(true)
     setErrors({})
     try {
@@ -79,7 +83,7 @@ export function ProfileEditClient() {
       })
       await refreshProfile()
       toastSuccess('Akun berhasil diperbarui.')
-      router.push('/profile')
+      return true
     } catch (err) {
       if (err instanceof ApiError) {
         toastError(err.message)
@@ -94,8 +98,16 @@ export function ProfileEditClient() {
       } else {
         toastError('Gagal menyimpan akun. Coba lagi.')
       }
+      return false
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleSave() {
+    if (await save()) {
+      guard.allowNavigation()
+      router.push('/profile')
     }
   }
 
@@ -174,6 +186,8 @@ export function ProfileEditClient() {
           {saving ? 'Menyimpan...' : 'Simpan akun'}
         </Button>
       </Card>
+
+      {guard.dialog}
 
       {cropSrc && (
         <AvatarCropModal

@@ -10,8 +10,9 @@ import { Input } from '@/components/ui/Input'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 import { Select } from '@/components/ui/Select'
 import { UserAvatar } from '@/components/ui/UserAvatar'
-import { UserPlus, ArrowLeft, Save } from 'lucide-react'
-import { useWilayah } from '@/hooks/useWilayah'
+import { UserPlus, ArrowLeft, Save, Info } from 'lucide-react'
+import { useCakupanWilayah } from '@/hooks/useWilayah'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
   const router = useRouter()
   const { success: toastSuccess, error: toastError } = useToast()
 
-  const [formData, setFormData] = useState<CustomerFormData>({
+  const [initialForm] = useState<CustomerFormData>(() => ({
     username: initialData?.username ?? '',
     password: '',
     nama_lengkap: initialData?.nama_lengkap ?? '',
@@ -77,12 +78,22 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
     kelurahan: initialData?.kelurahan ? String(initialData.kelurahan) : '',
     rt: initialData?.rt ?? '',
     rw: initialData?.rw ?? '',
-  })
+  }))
+  const [formData, setFormData] = useState<CustomerFormData>(initialForm)
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true)
   const [consent, setConsent] = useState(false)
-  const { options: wilayahOptions, isLoading: wilayahLoading } = useWilayah()
+  const { cakupan, options: wilayahOptions, isLoading: wilayahLoading } = useCakupanWilayah()
+  const kelurahanTidakDilayani =
+    !wilayahLoading &&
+    !!initialData?.kelurahan &&
+    formData.kelurahan === String(initialData.kelurahan) &&
+    !wilayahOptions.some((o) => o.value === formData.kelurahan)
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
+  const dirty =
+    (Object.keys(formData) as (keyof CustomerFormData)[]).some((k) => formData[k] !== initialForm[k]) ||
+    isActive !== (initialData?.is_active ?? true)
+  const guard = useUnsavedChanges({ dirty, onSave: save })
 
   // ── Validation ──
   function validate(): boolean {
@@ -142,7 +153,14 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
   // ── Submit ──
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!validate()) return
+    if (await save()) {
+      guard.allowNavigation()
+      router.push('/customers')
+    }
+  }
+
+  async function save(): Promise<boolean> {
+    if (!validate()) return false
 
     setSubmitting(true)
 
@@ -174,7 +192,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
         await api.post('/users/', payload)
         toastSuccess('Nasabah baru berhasil ditambahkan.')
       }
-      router.push('/customers')
+      return true
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.errors) {
@@ -201,6 +219,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
       } else {
         toastError('Maaf, terjadi kesalahan. Silakan coba lagi.')
       }
+      return false
     } finally {
       setSubmitting(false)
     }
@@ -220,7 +239,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
     <div className="space-y-6">
       {/* Page Title */}
       <div className="flex items-center gap-3">
-        <Button type="button" variant="ghost" size="sm" onClick={() => router.push('/customers')}>
+        <Button type="button" variant="ghost" size="sm" onClick={() => guard.leave('/customers')}>
           <ArrowLeft className="size-4" aria-hidden />
           Kembali
         </Button>
@@ -325,6 +344,19 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
               error={fieldErrors.alamat}
             />
 
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                {cakupan?.pesan ??
+                  'MIRU Bank Sampah hanya melayani warga Distrik Mimika Baru, Kabupaten Mimika, Papua Tengah.'}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Input label="Provinsi" value={cakupan?.provinsi?.nama ?? 'Papua Tengah'} disabled readOnly />
+                <Input label="Kabupaten" value={cakupan?.kabupaten?.nama ?? 'Kabupaten Mimika'} disabled readOnly />
+                <Input label="Distrik" value={cakupan?.distrik?.nama ?? 'Mimika Baru'} disabled readOnly />
+              </div>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
               <Select
                 label="Kelurahan / Kampung"
@@ -332,7 +364,10 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
                 value={formData.kelurahan}
                 onChange={(e) => updateField('kelurahan', e.target.value)}
                 options={[{ value: '', label: wilayahLoading ? 'Memuat wilayah…' : '— Belum dipilih —' }, ...wilayahOptions]}
-                error={fieldErrors.kelurahan}
+                error={
+                  fieldErrors.kelurahan ??
+                  (kelurahanTidakDilayani ? 'Kelurahan lama tidak dilayani. Pilih ulang.' : undefined)
+                }
                 disabled={wilayahLoading}
               />
               <Input
@@ -413,7 +448,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
           </CardContent>
 
           <CardFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.push('/customers')} disabled={submitting}>
+            <Button type="button" variant="outline" onClick={() => guard.leave('/customers')} disabled={submitting}>
               Batal
             </Button>
             <Button type="submit" loading={submitting} disabled={submitting}>
@@ -423,6 +458,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
           </CardFooter>
         </form>
       </Card>
+      {guard.dialog}
     </div>
   )
 }
