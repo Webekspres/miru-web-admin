@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { api } from '@/lib/api'
@@ -26,6 +26,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { LokasiMap, type MapPoint } from '@/components/maps/LokasiMap'
 import { formatWilayah } from '@/hooks/useWilayah'
 import type { User, Deposit, Withdrawal, RewardRedemption } from '@/types/models'
 
@@ -133,6 +134,20 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
     (path) => api.get<unknown[]>(path),
     { revalidateOnFocus: false },
   )
+
+  const rumahPoints = useMemo<MapPoint[]>(() => {
+    const lat = Number(profile?.latitude)
+    const lng = Number(profile?.longitude)
+    if (!profile || profile.latitude == null || profile.longitude == null) return []
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return []
+    return [{
+      id: profile.id,
+      lat,
+      lng,
+      title: profile.nama_lengkap,
+      lines: [profile.alamat ?? '', formatWilayah(profile)].filter(Boolean),
+    }]
+  }, [profile])
 
   // ── Loading ──
   if (profileLoading) {
@@ -293,6 +308,16 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
               </p>
             </div>
           </div>
+
+          {rumahPoints.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="size-4" aria-hidden />
+                Titik lokasi rumah
+              </p>
+              <LokasiMap points={rumahPoints} height={260} />
+            </div>
+          )}
         </CardContent>
       </Card>
 

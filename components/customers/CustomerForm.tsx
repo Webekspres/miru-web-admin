@@ -10,8 +10,8 @@ import { Input } from '@/components/ui/Input'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 import { Select } from '@/components/ui/Select'
 import { UserAvatar } from '@/components/ui/UserAvatar'
-import { UserPlus, ArrowLeft, Save } from 'lucide-react'
-import { useWilayah } from '@/hooks/useWilayah'
+import { UserPlus, ArrowLeft, Save, Info } from 'lucide-react'
+import { useCakupanWilayah } from '@/hooks/useWilayah'
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -80,7 +80,12 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
   })
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true)
   const [consent, setConsent] = useState(false)
-  const { options: wilayahOptions, isLoading: wilayahLoading } = useWilayah()
+  const { cakupan, options: wilayahOptions, isLoading: wilayahLoading } = useCakupanWilayah()
+  const kelurahanTidakDilayani =
+    !wilayahLoading &&
+    !!initialData?.kelurahan &&
+    formData.kelurahan === String(initialData.kelurahan) &&
+    !wilayahOptions.some((o) => o.value === formData.kelurahan)
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
 
@@ -325,6 +330,19 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
               error={fieldErrors.alamat}
             />
 
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                {cakupan?.pesan ??
+                  'MIRU Bank Sampah hanya melayani warga Distrik Mimika Baru, Kabupaten Mimika, Papua Tengah.'}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Input label="Provinsi" value={cakupan?.provinsi?.nama ?? 'Papua Tengah'} disabled readOnly />
+                <Input label="Kabupaten" value={cakupan?.kabupaten?.nama ?? 'Kabupaten Mimika'} disabled readOnly />
+                <Input label="Distrik" value={cakupan?.distrik?.nama ?? 'Mimika Baru'} disabled readOnly />
+              </div>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
               <Select
                 label="Kelurahan / Kampung"
@@ -332,7 +350,10 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
                 value={formData.kelurahan}
                 onChange={(e) => updateField('kelurahan', e.target.value)}
                 options={[{ value: '', label: wilayahLoading ? 'Memuat wilayah…' : '— Belum dipilih —' }, ...wilayahOptions]}
-                error={fieldErrors.kelurahan}
+                error={
+                  fieldErrors.kelurahan ??
+                  (kelurahanTidakDilayani ? 'Kelurahan lama tidak dilayani. Pilih ulang.' : undefined)
+                }
                 disabled={wilayahLoading}
               />
               <Input
