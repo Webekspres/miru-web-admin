@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import 'leaflet/dist/leaflet.css'
 import type { Map as LeafletMap } from 'leaflet'
 
@@ -39,6 +39,9 @@ function escapeHtml(text: string): string {
 /**
  * Peta OpenStreetMap (Leaflet) tanpa API key. Satu titik → zoom ke titik;
  * banyak titik → peta menyesuaikan agar semua terlihat.
+ *
+ * Zoom: Ctrl/⌘ + scroll (atau pinch trackpad) saat kursor di atas peta.
+ * Scroll biasa tetap menggulir halaman dan memunculkan petunjuk.
  */
 export function LokasiMap({
   points,
@@ -53,6 +56,29 @@ export function LokasiMap({
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<LeafletMap | null>(null)
+  const [showHint, setShowHint] = useState(false)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    let timer: ReturnType<typeof setTimeout> | undefined
+    // Fase capture: hentikan scroll tanpa Ctrl sebelum sampai ke handler zoom Leaflet.
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        setShowHint(false)
+        return
+      }
+      e.stopPropagation()
+      setShowHint(true)
+      clearTimeout(timer)
+      timer = setTimeout(() => setShowHint(false), 1200)
+    }
+    el.addEventListener('wheel', onWheel, { capture: true })
+    return () => {
+      el.removeEventListener('wheel', onWheel, { capture: true })
+      clearTimeout(timer)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -60,7 +86,7 @@ export function LokasiMap({
 
     import('leaflet').then(({ default: L }) => {
       if (cancelled || !containerRef.current) return
-      map = L.map(containerRef.current, { scrollWheelZoom: false })
+      map = L.map(containerRef.current, { scrollWheelZoom: true, wheelPxPerZoomLevel: 90 })
       mapRef.current = map
       L.tileLayer(TILE_URL, { attribution: ATTRIBUTION, maxZoom: 19 }).addTo(map)
 
@@ -100,12 +126,21 @@ export function LokasiMap({
   }, [points, zoom])
 
   return (
-    <div
-      ref={containerRef}
-      role="region"
-      aria-label="Peta lokasi"
-      className={`z-0 w-full overflow-hidden rounded-lg border border-border ${className}`}
-      style={{ height }}
-    />
+    <div className={`relative z-0 w-full ${className}`} style={{ height }}>
+      <div
+        ref={containerRef}
+        role="region"
+        aria-label="Peta lokasi. Tahan Ctrl lalu scroll untuk memperbesar atau memperkecil."
+        className="h-full w-full overflow-hidden rounded-lg border border-border"
+      />
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 z-[1000] flex items-center justify-center rounded-lg bg-black/45 text-sm font-medium text-white transition-opacity duration-200 ${
+          showHint ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        Tahan Ctrl (⌘ di Mac) lalu scroll untuk zoom peta
+      </div>
+    </div>
   )
 }
