@@ -25,6 +25,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { formatWilayah } from '@/hooks/useWilayah'
 import type { User, Deposit, Withdrawal, RewardRedemption } from '@/types/models'
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -253,7 +254,10 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                 <MapPin className="size-4" aria-hidden />
                 Alamat
               </div>
-              <p className="mt-1 text-sm text-foreground">{profile.alamat ?? '—'}</p>
+              <p className="mt-1 text-sm text-foreground">{profile.alamat || '—'}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatWilayah(profile)}
+              </p>
             </div>
             <div className="rounded-lg bg-surface-muted p-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
