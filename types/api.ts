@@ -44,8 +44,12 @@ export interface LoginResponse {
     role: string
     nama_lengkap: string
     no_hp?: string
+    email?: string
+    email_verified?: boolean
+    email_required?: boolean
     saldo?: string
     poin?: number
+    avatar_url?: string | null
   }
 }
 

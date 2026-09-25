@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { api, getAccessToken } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import { formatRupiah } from '@/lib/format'
 import { canMutate } from '@/lib/permissions'
@@ -12,17 +11,18 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { PaginationControls } from '@/components/ui/PaginationControls'
+import { Select } from '@/components/ui/Select'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { useToast } from '@/components/feedback/Toast'
+import { formatWilayah, useWilayah } from '@/hooks/useWilayah'
 import {
-  ChevronLeft,
-  ChevronRight,
   Download,
   FileText,
   Plus,
-  User as UserIcon,
   UserCheck,
   UserX,
 } from 'lucide-react'
@@ -41,12 +41,15 @@ function getStatusLabel(isActive: boolean): string {
 
 /** Export array of objects to CSV file and trigger download */
 function exportToCSV(data: CustomerRow[], filename = 'nasabah.csv') {
-  const headers = ['ID', 'Nama Lengkap', 'No. HP', 'Alamat', 'Saldo', 'Poin', 'Status']
+  const headers = ['ID', 'Nama Lengkap', 'No. HP', 'Alamat', 'Kelurahan', 'RT', 'RW', 'Saldo', 'Poin', 'Status']
   const rows = data.map((c) => [
     String(c.id),
     c.nama_lengkap,
     c.no_hp ?? '',
     c.alamat ?? '',
+    c.kelurahan_nama ?? '',
+    c.rt ?? '',
+    c.rw ?? '',
     c.saldo ?? '0',
     String(c.poin ?? 0),
     c.is_active ? 'Aktif' : 'Nonaktif',
@@ -77,42 +80,42 @@ interface CustomerRow {
   nama_lengkap: string
   no_hp?: string
   alamat?: string
+  kelurahan_nama?: string | null
+  rt?: string
+  rw?: string
   saldo?: string
   poin?: number
   is_active: boolean
+  phone_verified?: boolean
+  avatar_url?: string | null
 }
 
-// ─── Pagination ───────────────────────────────────────────────────
-
-function PaginationControls({
-  meta,
-  page,
-  onPageChange,
-}: {
-  meta: PaginationMeta | undefined
-  page: number
-  onPageChange: (p: number) => void
-}) {
-  if (!meta || meta.total_pages <= 1) return null
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Menampilkan halaman {meta.page} dari {meta.total_pages} ({meta.count} total)
-      </p>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" disabled={!meta.previous} onClick={() => onPageChange(page - 1)}>
-          <ChevronLeft className="size-4" aria-hidden />
-          Sebelumnya
-        </Button>
-        <Button type="button" variant="outline" size="sm" disabled={!meta.next} onClick={() => onPageChange(page + 1)}>
-          Selanjutnya
-          <ChevronRight className="size-4" aria-hidden />
-        </Button>
-      </div>
-    </div>
-  )
+function toCustomerRows(users: User[]): CustomerRow[] {
+  return users
+    .filter((u) => u.role === 'nasabah')
+    .map((u) => ({
+      id: u.id,
+      nama_lengkap: u.nama_lengkap,
+      no_hp: u.no_hp,
+      alamat: u.alamat,
+      kelurahan_nama: u.kelurahan_nama,
+      rt: u.rt,
+      rw: u.rw,
+      saldo: u.saldo,
+      poin: u.poin,
+      is_active: u.is_active,
+      phone_verified: u.phone_verified,
+      avatar_url: u.avatar_url,
+    }))
 }
+
+const FETCH_HEADERS = {
+  'Content-Type': 'application/json',
+  Accept: 'application/json',
+  'Accept-Language': 'id',
+}
+
+
 
 // ─── Main Component ───────────────────────────────────────────────
 
@@ -124,6 +127,8 @@ export function CustomerList() {
   const [page, setPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [kelurahanFilter, setKelurahanFilter] = useState('')
+  const { options: wilayahOptions } = useWilayah()
 
   const canWrite = authRole ? canMutate(authRole) : false
 
@@ -135,8 +140,9 @@ export function CustomerList() {
       role: 'nasabah',
     }
     if (debouncedSearch) p.search = debouncedSearch
+    if (kelurahanFilter) p.kelurahan = kelurahanFilter
     return p
-  }, [page, debouncedSearch])
+  }, [page, debouncedSearch, kelurahanFilter])
 
   // ── Fetch with raw response ──
   const {
@@ -151,31 +157,14 @@ export function CustomerList() {
       for (const [key, value] of Object.entries(queryParams)) {
         url.searchParams.set(key, value)
       }
-      const token = getAccessToken()
       const res = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'Accept-Language': 'id',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: 'include',
+        headers: FETCH_HEADERS,
       })
       const envelope = await res.json()
 
-      const users = ((envelope.data ?? []) as User[])
-        .filter((u) => u.role === 'nasabah')
-        .map((u) => ({
-          id: u.id,
-          nama_lengkap: u.nama_lengkap,
-          no_hp: u.no_hp,
-          alamat: u.alamat,
-          saldo: u.saldo,
-          poin: u.poin,
-          is_active: u.is_active,
-        }))
-
       return {
-        customers: users,
+        customers: toCustomerRows((envelope.data ?? []) as User[]),
         pagination: envelope.meta?.pagination as PaginationMeta | undefined,
       }
     },
@@ -188,32 +177,25 @@ export function CustomerList() {
   // ── Export CSV (fetch all pages) ──
   async function handleExportCSV() {
     try {
-      // Fetch all customers (no pagination) for export
-      const url = new URL(`${API_PREFIX}/users/`)
-      url.searchParams.set('role', 'nasabah')
-      url.searchParams.set('page_size', '10000')
-      if (debouncedSearch) url.searchParams.set('search', debouncedSearch)
-      const token = getAccessToken()
-      const res = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'Accept-Language': 'id',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      })
-      const envelope = await res.json()
-      const allUsers = ((envelope.data ?? []) as User[])
-        .filter((u) => u.role === 'nasabah')
-        .map((u) => ({
-          id: u.id,
-          nama_lengkap: u.nama_lengkap,
-          no_hp: u.no_hp,
-          alamat: u.alamat,
-          saldo: u.saldo,
-          poin: u.poin,
-          is_active: u.is_active,
-        }))
+      // Backend membatasi page_size maks 100 — ambil semua halaman.
+      const allUsers: CustomerRow[] = []
+      for (let exportPage = 1; ; exportPage++) {
+        const url = new URL(`${API_PREFIX}/users/`)
+        url.searchParams.set('role', 'nasabah')
+        url.searchParams.set('page_size', '100')
+        url.searchParams.set('page', String(exportPage))
+        if (debouncedSearch) url.searchParams.set('search', debouncedSearch)
+        if (kelurahanFilter) url.searchParams.set('kelurahan', kelurahanFilter)
+        const res = await fetch(url.toString(), {
+          credentials: 'include',
+          headers: FETCH_HEADERS,
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const envelope = await res.json()
+        allUsers.push(...toCustomerRows((envelope.data ?? []) as User[]))
+        const meta = envelope.meta?.pagination as PaginationMeta | undefined
+        if (!meta || exportPage >= meta.total_pages) break
+      }
 
       exportToCSV(allUsers, `nasabah_${new Date().toISOString().split('T')[0]}.csv`)
       toastSuccess('Data nasabah berhasil diekspor.')
@@ -238,7 +220,7 @@ export function CustomerList() {
             Daftar nasabah terdaftar di MIRU Bank Sampah.
           </p>
         </div>
-        <TableSkeleton rows={8} cols={6} />
+        <TableSkeleton rows={8} cols={7} />
       </div>
     )
   }
@@ -319,6 +301,18 @@ export function CustomerList() {
               }}
             />
           </div>
+          <div className="sm:w-64">
+            <Select
+              label="Kelurahan"
+              id="filter-kelurahan"
+              value={kelurahanFilter}
+              onChange={(e) => {
+                setKelurahanFilter(e.target.value)
+                setPage(1)
+              }}
+              options={[{ value: '', label: 'Semua kelurahan' }, ...wilayahOptions]}
+            />
+          </div>
         </div>
       </Card>
 
@@ -331,6 +325,7 @@ export function CustomerList() {
                 <TableHead>Nama Lengkap</TableHead>
                 <TableHead>No. HP</TableHead>
                 <TableHead>Alamat</TableHead>
+                <TableHead>Kelurahan</TableHead>
                 <TableHead className="text-right">Saldo</TableHead>
                 <TableHead className="text-right">Poin</TableHead>
                 <TableHead>Status</TableHead>
@@ -339,9 +334,9 @@ export function CustomerList() {
             <TableBody>
               {customers.length === 0 ? (
                 <TableEmpty
-                  colSpan={6}
+                  colSpan={7}
                   message={
-                    debouncedSearch
+                    debouncedSearch || kelurahanFilter
                       ? 'Nasabah tidak ditemukan.'
                       : 'Belum ada nasabah terdaftar.'
                   }
@@ -355,15 +350,27 @@ export function CustomerList() {
                   >
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted">
-                          <UserIcon className="size-4 text-muted-foreground" aria-hidden />
-                        </div>
+                        <UserAvatar
+                          src={customer.avatar_url}
+                          name={customer.nama_lengkap}
+                          size="sm"
+                        />
                         <span className="font-medium text-foreground">{customer.nama_lengkap}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{customer.no_hp ?? '—'}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span>{customer.no_hp ?? '—'}</span>
+                        {customer.no_hp && customer.phone_verified === false && (
+                          <Badge variant="warning">Belum Verifikasi</Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-[200px] truncate text-muted-foreground" title={customer.alamat}>
-                      {customer.alamat ?? '—'}
+                      {customer.alamat || '—'}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {customer.kelurahan_nama ? formatWilayah(customer) : '—'}
                     </TableCell>
                     <TableCell className="text-right font-semibold text-foreground">
                       {customer.saldo ? formatRupiah(customer.saldo) : 'Rp0,00'}

@@ -1,13 +1,20 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ApiError } from '@/lib/api'
-import { WebAdminAccessError } from '@/lib/auth'
+import { mapLoginError, WebAdminAccessError } from '@/lib/auth'
 import { resolvePostLoginPath } from '@/lib/routes'
+import {
+  isSessionExpiredReason,
+  SESSION_EXPIRED_MESSAGE,
+  SESSION_EXPIRED_PARAM,
+} from '@/lib/session'
 import { useAuth } from '@/providers/AuthProvider'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 
 function mapFieldErrors(
   errors?: Record<string, string[]>,
@@ -22,7 +29,7 @@ function mapFieldErrors(
 }
 
 export function LoginForm() {
-  const { login, status } = useAuth()
+  const { login } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [username, setUsername] = useState('')
@@ -30,11 +37,16 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const sessionExpired = isSessionExpiredReason(searchParams.get(SESSION_EXPIRED_PARAM))
 
-  const isDisabled = loading || status === 'loading'
+  const hasEmptyCredentials =
+    username.trim().length === 0 || password.length === 0
+  const isDisabled = loading || hasEmptyCredentials
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (hasEmptyCredentials) return
+
     setFormError(null)
     setFieldErrors({})
     setLoading(true)
@@ -44,11 +56,9 @@ export function LoginForm() {
       router.replace(resolvePostLoginPath(role, searchParams.get('from')))
     } catch (error) {
       if (error instanceof ApiError) {
-        setFormError(error.message)
+        setFormError(mapLoginError(error))
         setFieldErrors(mapFieldErrors(error.errors))
       } else if (error instanceof WebAdminAccessError) {
-        setFormError(error.message)
-      } else if (error instanceof Error) {
         setFormError(error.message)
       } else {
         setFormError('Login gagal. Silakan coba lagi.')
@@ -60,6 +70,15 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      {sessionExpired && !formError && (
+        <div
+          role="status"
+          className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-foreground"
+        >
+          {SESSION_EXPIRED_MESSAGE}
+        </div>
+      )}
+
       {formError && (
         <div
           role="alert"
@@ -77,22 +96,31 @@ export function LoginForm() {
         value={username}
         onChange={(event) => setUsername(event.target.value)}
         error={fieldErrors.username}
-        disabled={isDisabled}
+        disabled={loading}
         required
       />
 
-      <Input
-        label="Kata sandi"
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        placeholder="Masukkan kata sandi"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        error={fieldErrors.password}
-        disabled={isDisabled}
-        required
-      />
+      <div className="space-y-1.5">
+        <PasswordInput
+          label="Kata sandi"
+          name="password"
+          autoComplete="current-password"
+          placeholder="Masukkan kata sandi"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          error={fieldErrors.password}
+          disabled={loading}
+          required
+        />
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-xs font-semibold text-primary transition hover:underline"
+          >
+            Lupa kata sandi?
+          </Link>
+        </div>
+      </div>
 
       <Button
         type="submit"

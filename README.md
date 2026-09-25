@@ -27,7 +27,7 @@ Panel administrasi web untuk **MIRU Bank Sampah (Miru-G)** — sistem pengelolaa
 ## Prerequisites
 
 - Node.js 20+
-- npm / pnpm / yarn
+- [Bun](https://bun.sh) 1.x
 - Backend MIRU berjalan di `http://localhost:8000` (clone & setup repositori **miru-backend-api**)
 
 ## Local Development
@@ -48,8 +48,8 @@ cp .env.example .env.local
 ### 2. Install & Run
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Buka [http://localhost:3000](http://localhost:3000).
@@ -159,10 +159,11 @@ Repositori terkait (GitHub terpisah): **miru-backend-api** (API), **mirumobileap
 ## Scripts
 
 ```bash
-npm run dev      # Development server (port 3000)
-npm run build    # Production build
-npm run start    # Start production server
-npm run lint     # ESLint
+bun run dev      # Development server (port 3000)
+bun run build    # Production build
+bun run start    # Start production server
+bun run lint     # ESLint
+bun run test     # Vitest
 ```
 
 ## Status Proyek

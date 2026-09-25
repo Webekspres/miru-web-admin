@@ -12,15 +12,9 @@ import {
 import {
   api,
   clearTokens,
-  getAccessToken,
-  setTokens,
-  TOKEN_KEYS,
+  revokeSession,
 } from '@/lib/api'
-import {
-  clearRoleCookie,
-  setAccessTokenCookie,
-  setRoleCookie,
-} from '@/lib/auth-cookies'
+import { setRoleCookie } from '@/lib/auth-cookies'
 import { validateWebAdminRole } from '@/lib/auth'
 import type { WebAdminRole } from '@/lib/routes'
 import type { LoginResponse } from '@/types/api'
@@ -34,7 +28,7 @@ export interface AuthContextValue {
   status: AuthStatus
   isAuthenticated: boolean
   login: (username: string, password: string) => Promise<WebAdminRole>
-  logout: () => void
+  logout: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
 
@@ -45,12 +39,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<WebAdminRole | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
 
-  const logout = useCallback(() => {
-    clearTokens()
-    clearRoleCookie()
-    setUser(null)
-    setRole(null)
-    setStatus('unauthenticated')
+  const logout = useCallback(async () => {
+    // Token HttpOnly tidak bisa dihapus lewat JS — minta backend membatalkan
+    // sesi (blacklist refresh + hapus cookie) lalu bersihkan marker lokal.
+    try {
+      await revokeSession()
+    } finally {
+      clearTokens()
+      setUser(null)
+      setRole(null)
+      setStatus('unauthenticated')
+    }
   }, [])
 
   const applyUser = useCallback((nextUser: User) => {
@@ -75,7 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       )
 
       validateWebAdminRole(data.user.role as UserRole)
-      setTokens(data.access, data.refresh)
+      // Token access/refresh disimpan backend sebagai cookie HttpOnly —
+      // web admin cukup membawa cookie, tidak perlu menyimpan token di JS.
 
       const webAdminRole = data.user.role as UserRole
       applyUser({
@@ -84,9 +84,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: webAdminRole,
         nama_lengkap: data.user.nama_lengkap,
         no_hp: data.user.no_hp,
+        email: data.user.email,
+        email_verified: data.user.email_verified,
+        email_required: data.user.email_required,
         saldo: data.user.saldo,
         poin: data.user.poin,
         is_active: true,
+        avatar_url: data.user.avatar_url,
       })
 
       return validateWebAdminRole(webAdminRole)
@@ -98,16 +102,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     async function restoreSession() {
-      const token = getAccessToken()
-      if (!token) {
-        if (!cancelled) setStatus('unauthenticated')
+      try {
+        const profile = await api.get<User>('/auth/me/', undefined, { skipAuth: true })
+        if (cancelled) return
+        applyUser(profile)
         return
+      } catch {
+        // Access cookie basi/kedaluwarsa — coba refresh satu kali lewat cookie.
       }
 
-      setAccessTokenCookie(token)
-
       try {
-        await refreshProfile()
+        await api.post('/auth/refresh/', {}, { skipAuth: true })
+        const profile = await api.get<User>('/auth/me/', undefined, { skipAuth: true })
+        if (cancelled) return
+        applyUser(profile)
       } catch {
         if (!cancelled) logout()
       }
@@ -118,20 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [logout, refreshProfile])
-
-  useEffect(() => {
-    function handleStorage(event: StorageEvent) {
-      if (event.key === TOKEN_KEYS.access && !event.newValue) {
-        setUser(null)
-        setRole(null)
-        setStatus('unauthenticated')
-      }
-    }
-
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
-  }, [])
+  }, [logout, applyUser])
 
   const value = useMemo<AuthContextValue>(
     () => ({

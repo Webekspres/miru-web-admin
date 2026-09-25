@@ -15,9 +15,9 @@ const variants = {
 } as const
 
 const sizes = {
-  sm: 'h-8 px-3 text-xs gap-1.5',
-  md: 'h-10 px-4 text-sm gap-2',
-  lg: 'h-11 px-5 text-base gap-2',
+  sm: 'min-h-9 h-9 px-3 text-xs gap-1.5',
+  md: 'min-h-11 h-11 px-4 text-sm gap-2',
+  lg: 'min-h-12 h-12 px-5 text-base gap-2',
 } as const
 
 export type ButtonVariant = keyof typeof variants
@@ -46,6 +46,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
+        aria-busy={loading || undefined}
         className={cn(
           'inline-flex items-center justify-center rounded-lg font-medium transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',

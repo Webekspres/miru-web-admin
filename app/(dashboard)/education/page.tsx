@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from '@/components/layout/ModulePlaceholder'
+import { EducationManagement } from '@/components/education/EducationManagement'
 
 export default function EducationPage() {
-  return (
-    <ModulePlaceholder
-      title="Edukasi Sampah"
-      description="CRUD artikel dan panduan pemilahan sampah (modul future)."
-    />
-  )
+  return <EducationManagement />
 }

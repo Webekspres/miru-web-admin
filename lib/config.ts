@@ -3,8 +3,6 @@ export const API_BASE_URL =
 
 export const API_PREFIX = `${API_BASE_URL}/api`
 
-export const API_DOCS_URL = `${API_BASE_URL}/api/docs/`
-
 export const APP_NAME =
   process.env.NEXT_PUBLIC_APP_NAME ?? 'MIRU Bank Sampah'
 
@@ -17,5 +15,13 @@ export const API_DEBUG = process.env.NEXT_PUBLIC_API_DEBUG === 'true'
 export const AUTH = {
   login: `${API_PREFIX}/auth/login/`,
   refresh: `${API_PREFIX}/auth/refresh/`,
+  logout: `${API_PREFIX}/auth/logout/`,
   me: `${API_PREFIX}/auth/me/`,
+  forgotPassword: `${API_PREFIX}/auth/forgot-password/`,
+  resetPasswordRequestOtp: `${API_PREFIX}/auth/reset-password/request-otp/`,
+  resetPasswordVerifyOtp: `${API_PREFIX}/auth/reset-password/verify-otp/`,
+  resetPassword: `${API_PREFIX}/auth/reset-password/`,
+  deleteAccountCheck: `${API_PREFIX}/auth/delete-account/check/`,
+  deleteAccountRequestOtp: `${API_PREFIX}/auth/delete-account/request-otp/`,
+  deleteAccountConfirm: `${API_PREFIX}/auth/delete-account/confirm/`,
 } as const

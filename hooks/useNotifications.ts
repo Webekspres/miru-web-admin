@@ -1,5 +1,4 @@
 import useSWR from 'swr'
-import { getAccessToken } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
 import type { PaginationMeta } from '@/types/api'
 import type { Notification } from '@/types/models'
@@ -12,13 +11,12 @@ async function fetchNotifications(userId: number) {
   url.searchParams.set('page_size', '50')
   url.searchParams.set('ordering', '-created_at')
 
-  const token = getAccessToken()
   const res = await fetch(url.toString(), {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       'Accept-Language': 'id',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   })
   const envelope = await res.json()

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseEnvelope } from '@/lib/api'
+import { parseEnvelope, SERVER_UNAVAILABLE_MESSAGE } from '@/lib/api'
 import { ApiError } from '@/types/api'
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -85,8 +85,19 @@ describe('parseEnvelope', () => {
 
     await expect(parseEnvelope(response)).rejects.toMatchObject({
       name: 'ApiError',
-      message: 'Respons server tidak valid.',
+      message: SERVER_UNAVAILABLE_MESSAGE,
       statusCode: 500,
+      code: 'INVALID_RESPONSE',
+    })
+  })
+
+  it('explains HTML/empty 404 responses clearly', async () => {
+    const response = new Response('<html>404</html>', { status: 404 })
+
+    await expect(parseEnvelope(response)).rejects.toMatchObject({
+      statusCode: 404,
+      code: 'INVALID_RESPONSE',
+      message: 'Maaf, layanan yang Anda tuju tidak tersedia. Silakan coba beberapa saat lagi.',
     })
   })
 })

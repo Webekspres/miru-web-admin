@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { api } from '@/lib/api'
-import { formatRupiah, formatWeightKg } from '@/lib/format'
+import { formatRupiah, formatWeightKg, MONTHS } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
@@ -83,10 +83,7 @@ interface WasteReport {
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
-const MONTHS = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-]
+
 
 type TabKey = 'daily' | 'weekly' | 'monthly' | 'waste'
 

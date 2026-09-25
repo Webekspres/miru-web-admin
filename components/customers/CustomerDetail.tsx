@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { api } from '@/lib/api'
@@ -19,12 +19,15 @@ import {
   CheckCircle2,
   Edit,
   Gift,
+  Mail,
   MapPin,
   Phone,
-  User as UserIcon,
   Wallet,
   XCircle,
 } from 'lucide-react'
+import { UserAvatar } from '@/components/ui/UserAvatar'
+import { LokasiMap, type MapPoint } from '@/components/maps/LokasiMap'
+import { formatWilayah } from '@/hooks/useWilayah'
 import type { User, Deposit, Withdrawal, RewardRedemption } from '@/types/models'
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -68,6 +71,16 @@ function getStatusLabel(status: string): string {
     diproses: 'Diproses',
   }
   return labels[status] ?? status
+}
+
+function emailStatus(user: User): { text: string; tone: string } {
+  if (!user.email) {
+    return user.email_exempt
+      ? { text: 'Tidak wajib — didaftarkan admin tanpa email.', tone: 'text-muted-foreground' }
+      : { text: 'Belum diisi — akan diminta saat login.', tone: 'text-warning' }
+  }
+  if (user.email_verified) return { text: 'Terverifikasi', tone: 'text-success' }
+  return { text: 'Belum verifikasi — akan diminta saat login.', tone: 'text-warning' }
 }
 
 // ─── Main Component ───────────────────────────────────────────────
@@ -122,6 +135,20 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
     { revalidateOnFocus: false },
   )
 
+  const rumahPoints = useMemo<MapPoint[]>(() => {
+    const lat = Number(profile?.latitude)
+    const lng = Number(profile?.longitude)
+    if (!profile || profile.latitude == null || profile.longitude == null) return []
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return []
+    return [{
+      id: profile.id,
+      lat,
+      lng,
+      title: profile.nama_lengkap,
+      lines: [profile.alamat ?? '', formatWilayah(profile)].filter(Boolean),
+    }]
+  }, [profile])
+
   // ── Loading ──
   if (profileLoading) {
     return (
@@ -164,9 +191,12 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             {/* Left: Avatar & Name */}
             <div className="flex items-center gap-4">
-              <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                <UserIcon className="size-8 text-primary" aria-hidden />
-              </div>
+              <UserAvatar
+                src={profile.avatar_url}
+                name={profile.nama_lengkap}
+                size="md"
+                className="size-16"
+              />
               <div>
                 <h1 className="text-2xl font-semibold text-foreground">{profile.nama_lengkap}</h1>
                 <p className="text-sm text-muted-foreground">@{profile.username}</p>
@@ -174,6 +204,11 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                   <Badge variant={profile.is_active ? 'success' : 'default'}>
                     {profile.is_active ? 'Aktif' : 'Nonaktif'}
                   </Badge>
+                  {profile.no_hp && profile.phone_verified === false && (
+                    <Badge variant="warning" title="Nomor HP akan diverifikasi saat user login di aplikasi mobile">
+                      HP Belum Verifikasi
+                    </Badge>
+                  )}
                   <Badge variant="default">Nasabah</Badge>
                   {profile.date_joined && (
                     <span className="text-xs text-muted-foreground">
@@ -245,7 +280,10 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                 <MapPin className="size-4" aria-hidden />
                 Alamat
               </div>
-              <p className="mt-1 text-sm text-foreground">{profile.alamat ?? '—'}</p>
+              <p className="mt-1 text-sm text-foreground">{profile.alamat || '—'}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatWilayah(profile)}
+              </p>
             </div>
             <div className="rounded-lg bg-surface-muted p-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -253,17 +291,33 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                 No. HP
               </div>
               <p className="mt-1 text-sm text-foreground">{profile.no_hp ?? '—'}</p>
+              {profile.no_hp && profile.phone_verified === false && (
+                <p className="mt-1 text-xs text-warning">
+                  Belum verifikasi — akan diverifikasi saat login mobile.
+                </p>
+              )}
             </div>
-            {profile.nik && (
-              <div className="rounded-lg bg-surface-muted p-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <UserIcon className="size-4" aria-hidden />
-                  NIK
-                </div>
-                <p className="mt-1 text-sm text-foreground">{profile.nik}</p>
+            <div className="rounded-lg bg-surface-muted p-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="size-4" aria-hidden />
+                Email
               </div>
-            )}
+              <p className="mt-1 break-all text-sm text-foreground">{profile.email || '—'}</p>
+              <p className={`mt-1 text-xs ${emailStatus(profile).tone}`}>
+                {emailStatus(profile).text}
+              </p>
+            </div>
           </div>
+
+          {rumahPoints.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="size-4" aria-hidden />
+                Titik lokasi rumah
+              </p>
+              <LokasiMap points={rumahPoints} height={260} />
+            </div>
+          )}
         </CardContent>
       </Card>
 

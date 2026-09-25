@@ -5,18 +5,36 @@ export type UserRole =
   | 'koordinator'
   | 'pemerintah'
 
+/** Roles yang termasuk staff (bukan nasabah/pemerintah). */
+export type StaffRole = Extract<UserRole, 'petugas' | 'admin' | 'koordinator'>
+
+
 export interface User {
   id: number
   username: string
   role: UserRole
   nama_lengkap: string
-  nik?: string
   no_hp?: string
+  phone_verified?: boolean
+  email?: string
+  email_verified?: boolean
+  /** Nasabah didaftarkan admin tanpa email: tidak wajib verifikasi. */
+  email_exempt?: boolean
+  /** Wajib verifikasi email sebelum memakai panel. */
+  email_required?: boolean
   alamat?: string
+  kelurahan?: number | null
+  kelurahan_nama?: string | null
+  rt?: string
+  rw?: string
+  /** Titik rumah (decimal string dari API). */
+  latitude?: string | null
+  longitude?: string | null
   saldo?: string
   poin?: number
   is_active: boolean
   date_joined?: string
+  avatar_url?: string | null
   qr?: {
     id: number
     nama_lengkap: string
@@ -72,6 +90,10 @@ export interface Pickup {
   petugas_nama?: string | null
   estimasi_berat: string
   alamat_jemput: string
+  /** Decimal dari API (string), null bila nasabah tidak menandai titik. */
+  latitude?: string | null
+  longitude?: string | null
+  catatan_lokasi?: string
   jadwal: string
   status: PickupStatus
   catatan?: string
@@ -88,6 +110,8 @@ export interface Withdrawal {
   metode: string
   status: WithdrawalStatus
   tanggal: string
+  ada_lampiran_ktp?: boolean
+  ktp_diverifikasi?: boolean
   saldo_nasabah_baru?: string
 }
 
@@ -140,6 +164,7 @@ export type ComplaintType =
   | 'petugas_tidak_datang'
   | 'kesalahan_data'
   | 'bukti_tidak_muncul'
+  | 'lainnya'
 
 export type ComplaintStatus = 'terbuka' | 'ditutup'
 
@@ -161,7 +186,44 @@ export interface InstitutionSettings {
   email: string
   logo_url?: string | null
   jam_operasional: string
+  jam_buka?: string | null
+  jam_tutup?: string | null
   pengumuman: string
+  tentang?: string
+  kebijakan?: string
+  syarat_ketentuan?: string
+}
+
+export interface LegalDocument {
+  versi: string
+  judul: string
+  institusi: string
+  ringkasan?: string
+  konten: string
+}
+
+export interface KontenEdukasi {
+  id: number
+  judul: string
+  isi: string
+  featured_image?: string | null
+  gambar_url?: string | null
+  kategori_terkait: number | null
+  kategori_terkait_nama?: string | null
+  aktif: boolean
+  urutan?: number
+  created_at: string
+  updated_at: string
+}
+
+/** List/detail publik — tanpa field internal (aktif, urutan, updated_at). */
+export interface KontenEdukasiPublic {
+  id: number
+  judul: string
+  isi: string
+  gambar_url?: string | null
+  kategori_terkait_nama?: string | null
+  created_at: string
 }
 
 export interface Announcement {
@@ -201,4 +263,25 @@ export interface PriceHistory {
   harga_baru: string
   tanggal_berlaku: string
   diubah_oleh: number | null
+}
+
+export interface WilayahLayanan {
+  id: number
+  kelurahan: string
+  /** Kode Kemendagri, mis. 94.04.01.1001 (null untuk wilayah buatan admin). */
+  kode?: string | null
+  jenis?: 'kelurahan' | 'kampung' | ''
+  rt: string
+  rw: string
+  aktif: boolean
+  created_at?: string
+}
+
+/** GET /wilayah/cakupan/ — alamat bertingkat terkunci ke Distrik Mimika Baru. */
+export interface WilayahCakupan {
+  provinsi: { kode: string; nama: string }
+  kabupaten: { kode: string; nama: string }
+  distrik: { kode: string; nama: string }
+  kelurahan: { id: number; kode: string; nama: string; jenis: 'kelurahan' | 'kampung' | '' }[]
+  pesan: string
 }

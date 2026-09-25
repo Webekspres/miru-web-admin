@@ -4,6 +4,8 @@ import { ToastProvider } from '@/components/feedback/Toast'
 import { APP_NAME } from '@/lib/config'
 import { AuthProvider } from '@/providers/AuthProvider'
 import { ApiErrorBridge } from '@/providers/ApiErrorBridge'
+import { PublicSiteLayout } from '@/components/layout/PublicSiteLayout'
+import { OfflineBanner } from '@/components/feedback/OfflineBanner'
 import './globals.css'
 
 const geistSans = Geist({
@@ -24,6 +26,32 @@ export const metadata: Metadata = {
   description:
     'Panel administrasi MIRU Bank Sampah — kelola nasabah, transaksi setoran, penjemputan, dan laporan.',
   applicationName: 'MIRU',
+  manifest: '/brand/favicon/site.webmanifest',
+  icons: {
+    // PNG first: reliable in all tabs. SVG is a clean logo (no nested/white-only export).
+    icon: [
+      {
+        url: '/brand/favicon/favicon-96x96.png',
+        sizes: '96x96',
+        type: 'image/png',
+      },
+      { url: '/brand/favicon/favicon.svg', type: 'image/svg+xml' },
+      { url: '/brand/favicon/favicon.ico', sizes: '48x48' },
+    ],
+    apple: [
+      {
+        url: '/brand/favicon/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
+  },
+  openGraph: {
+    title: APP_NAME,
+    description:
+      'Panel administrasi MIRU Bank Sampah — kelola nasabah, transaksi setoran, penjemputan, dan laporan.',
+    images: [{ url: '/brand/logo-with-text.svg', alt: 'MIRU Bank Sampah' }],
+  },
 }
 
 export default function RootLayout({
@@ -40,7 +68,8 @@ export default function RootLayout({
         <ToastProvider>
           <AuthProvider>
             <ApiErrorBridge />
-            {children}
+            <OfflineBanner />
+            <PublicSiteLayout>{children}</PublicSiteLayout>
           </AuthProvider>
         </ToastProvider>
       </body>

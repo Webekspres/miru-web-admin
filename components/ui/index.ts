@@ -14,6 +14,8 @@ export { Input } from './Input'
 export type { InputProps } from './Input'
 export { Modal } from './Modal'
 export type { ModalProps } from './Modal'
+export { PaginationControls } from './PaginationControls'
+export type { PaginationControlsProps } from './PaginationControls'
 export { Select } from './Select'
 export type { SelectOption, SelectProps } from './Select'
 export {

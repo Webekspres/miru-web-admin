@@ -6,7 +6,7 @@ Distrik Mimika Baru membutuhkan panel web untuk mengelola operasional **MIRU Ban
 
 > **"Sampah Bernilai, Lingkungan Bersih, Warga Sejahtera"**
 
-Web admin adalah **prioritas kedua** setelah backend API. Nasabah menggunakan mobile app; staff menggunakan web admin.
+Web admin adalah panel operasional staff. MVP selesai; kerja aktif = UAT/Production + **Fase 9 lanjutan** (dalam 17 modul).
 
 ## Posisi dalam Ekosistem
 
@@ -38,9 +38,9 @@ Detail permission matrix: **`10-integration-and-roles.md`**
 
 | Repositori GitHub | Platform | Teknologi | Target Pengguna | Status |
 |-------------------|----------|-----------|-----------------|--------|
-| **miru-backend-api** | REST API | Django + DRF + PostgreSQL | Semua role (via API) | ✅ Paling maju |
-| **miru-web-admin** | Web App | Next.js + TypeScript + Tailwind | Admin, Petugas, Koordinator, Distrik | 🔲 Belum dikerjakan |
-| **mirumobileapp** | Mobile App | Flutter + Dart | Nasabah | 🔲 Belum dikerjakan |
+| **miru-backend-api** | REST API | Django + DRF + PostgreSQL | Semua role (via API) | ✅ MVP selesai; Fase 7–8 aktif |
+| **miru-web-admin** | Web App | Next.js + TypeScript + Tailwind | Admin, Petugas, Koordinator, Distrik | ✅ MVP selesai; UAT + Fase 9 |
+| **mirumobileapp** | Mobile App | Flutter + Dart | Nasabah | ✅ MVP selesai; UAT + Fase 8 |
 
 ## Informasi Branding
 

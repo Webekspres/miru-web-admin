@@ -1,9 +1,5 @@
 import type { ReactNode } from 'react'
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-surface-muted px-4 py-12">
-      {children}
-    </div>
-  )
+  return <div className="min-h-screen bg-background">{children}</div>
 }

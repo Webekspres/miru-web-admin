@@ -40,7 +40,9 @@ export function DashboardLayout({
 
   useEffect(() => {
     if (window.matchMedia('(max-width: 1023px)').matches) {
-      setSidebarOpen(false)
+      setTimeout(() => {
+        setSidebarOpen(false)
+      }, 0)
     }
   }, [pathname])
 
@@ -54,6 +56,12 @@ export function DashboardLayout({
 
   return (
     <div className={cn('min-h-screen bg-surface-muted', className)}>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+      >
+        Lewati ke konten utama
+      </a>
       {sidebarOpen && (
         <button
           type="button"
@@ -65,6 +73,7 @@ export function DashboardLayout({
 
       <Sidebar
         role={role}
+        user={user}
         open={sidebarOpen}
         onClose={closeSidebar}
       />
@@ -81,7 +90,16 @@ export function DashboardLayout({
           sidebarOpen={sidebarOpen}
           onToggleSidebar={toggleSidebar}
         />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 print:p-0">{children}</main>
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 sm:p-6 print:p-0">
+          {children}
+        </main>
+        
+        <footer className="print-hidden border-t border-border bg-background px-4 py-3 text-xs text-muted-foreground sm:px-6">
+          <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
+            <p>Copyright &copy; {new Date().getFullYear()} MIRU Bank Sampah. All rights reserved.</p>
+            <p className="font-mono text-[11px] text-muted-foreground/80">Version 1.0.0</p>
+          </div>
+        </footer>
       </div>
     </div>
   )

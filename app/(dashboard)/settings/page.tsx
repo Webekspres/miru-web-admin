@@ -1,5 +1,5 @@
-import { SettingsClient } from '@/components/settings/SettingsClient'
+import { SettingsHub } from '@/components/settings/SettingsHub'
 
 export default function SettingsPage() {
-  return <SettingsClient />
+  return <SettingsHub />
 }
