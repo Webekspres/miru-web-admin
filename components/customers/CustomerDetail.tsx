@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Edit,
   Gift,
+  Mail,
   MapPin,
   Phone,
   Wallet,
@@ -69,6 +70,16 @@ function getStatusLabel(status: string): string {
     diproses: 'Diproses',
   }
   return labels[status] ?? status
+}
+
+function emailStatus(user: User): { text: string; tone: string } {
+  if (!user.email) {
+    return user.email_exempt
+      ? { text: 'Tidak wajib — didaftarkan admin tanpa email.', tone: 'text-muted-foreground' }
+      : { text: 'Belum diisi — akan diminta saat login.', tone: 'text-warning' }
+  }
+  if (user.email_verified) return { text: 'Terverifikasi', tone: 'text-success' }
+  return { text: 'Belum verifikasi — akan diminta saat login.', tone: 'text-warning' }
 }
 
 // ─── Main Component ───────────────────────────────────────────────
@@ -270,6 +281,16 @@ export function CustomerDetail({ customerId }: { customerId: number }) {
                   Belum verifikasi — akan diverifikasi saat login mobile.
                 </p>
               )}
+            </div>
+            <div className="rounded-lg bg-surface-muted p-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="size-4" aria-hidden />
+                Email
+              </div>
+              <p className="mt-1 break-all text-sm text-foreground">{profile.email || '—'}</p>
+              <p className={`mt-1 text-xs ${emailStatus(profile).tone}`}>
+                {emailStatus(profile).text}
+              </p>
             </div>
           </div>
         </CardContent>
