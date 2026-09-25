@@ -5,11 +5,11 @@ import { PhotoBackdrop } from '@/components/landing/PhotoBackdrop'
 export const metadata: Metadata = {
   title: 'Hapus Akun',
   description:
-    'Hapus akun MIRU-G Bank Sampah — verifikasi kepemilikan dengan OTP WhatsApp dan konfirmasi mendalam sebelum data pribadi dihapus.',
+    'Hapus akun MIRU-G Bank Sampah — verifikasi kepemilikan dengan OTP email dan konfirmasi mendalam sebelum data pribadi dihapus.',
   openGraph: {
     title: 'Hapus Akun | MIRU-G',
     description:
-      'Permintaan penghapusan akun nasabah bank sampah MIRU-G dengan verifikasi OTP WhatsApp.',
+      'Permintaan penghapusan akun nasabah bank sampah MIRU-G dengan verifikasi OTP email.',
   },
 }
 
@@ -25,7 +25,7 @@ export default function DeleteAccountPage() {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Untuk melindungi akun Anda, kami akan memverifikasi kepemilikan
-            melalui OTP WhatsApp dan meminta konfirmasi tertulis sebelum data
+            melalui OTP email dan meminta konfirmasi tertulis sebelum data
             dihapus.
           </p>
           <div className="mt-6">

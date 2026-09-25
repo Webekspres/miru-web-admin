@@ -35,15 +35,15 @@ Hanya task dalam 17 modul. Jangan tambah fitur di luar persyaratan.
 
 ### Bisa langsung
 
-- [ ] `next build` tanpa error
-- [ ] Secret non-public tidak ikut bundle client
+- [x] `next build` tanpa error (2026-09-25)
+- [x] Secret non-public tidak ikut bundle client (hanya `NEXT_PUBLIC_*`)
 
 ### Perlu integrasi (domain, Webekspres, Backend 8.9)
 
 - [ ] Env production: `NEXT_PUBLIC_API_URL=https://…` (HTTPS only)
 - [ ] Deploy ke server Webekspres
 - [ ] HTTPS di domain admin
-- [ ] Security headers: HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` / CSP
+- [x] Security headers: HSTS (nginx) + `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` (`next.config.ts`); CSP belum
 - [ ] CORS backend whitelist domain admin
 - [ ] Checklist go-live: `11-security-and-privacy.md` §9
 
@@ -53,9 +53,9 @@ Hanya task dalam 17 modul. Jangan tambah fitur di luar persyaratan.
 
 ### Bisa langsung (API sudah ✅)
 
-- [ ] Filter nasabah by kelurahan / wilayah di `/customers`
-- [ ] Field RT / RW / kelurahan di form tambah & edit nasabah
-- [ ] UI kuota wilayah 2×/minggu di `/pickups` (pesan envelope BI)
+- [x] Filter nasabah by kelurahan / wilayah di `/customers` (2026-09-25; + kolom kelurahan, export CSV semua halaman)
+- [x] Field RT / RW / kelurahan di form tambah & edit nasabah (2026-09-25; + consent PDP wajib saat tambah)
+- [x] Jadwal jemput per wilayah di `/pickups` (maks 2 hari/minggu, hari bebas): lihat per minggu, tambah (kirim notif ke warga), hapus jika belum ada pesanan (2026-09-25)
 - [ ] Unduh / cetak PDF tanda terima setoran & penarikan (role-gated; bukan URL media publik)
 - [ ] Print-friendly view laporan (margin, tanpa sidebar)
 - [ ] Batasi kolom PII pada export sesuai role

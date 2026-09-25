@@ -16,7 +16,15 @@ export interface User {
   nama_lengkap: string
   no_hp?: string
   phone_verified?: boolean
+  email?: string
+  email_verified?: boolean
+  /** Wajib verifikasi email sebelum memakai panel. */
+  email_required?: boolean
   alamat?: string
+  kelurahan?: number | null
+  kelurahan_nama?: string | null
+  rt?: string
+  rw?: string
   saldo?: string
   poin?: number
   is_active: boolean
@@ -246,4 +254,13 @@ export interface PriceHistory {
   harga_baru: string
   tanggal_berlaku: string
   diubah_oleh: number | null
+}
+
+export interface WilayahLayanan {
+  id: number
+  kelurahan: string
+  rt: string
+  rw: string
+  aktif: boolean
+  created_at?: string
 }

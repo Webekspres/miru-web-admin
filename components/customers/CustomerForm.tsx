@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { PasswordInput } from '@/components/ui/PasswordInput'
+import { Select } from '@/components/ui/Select'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 import { UserPlus, ArrowLeft, Save } from 'lucide-react'
+import { useWilayah } from '@/hooks/useWilayah'
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -19,6 +21,9 @@ interface CustomerFormData {
   nama_lengkap: string
   no_hp: string
   alamat: string
+  kelurahan: string
+  rt: string
+  rw: string
 }
 
 interface FormErrors {
@@ -27,6 +32,10 @@ interface FormErrors {
   nama_lengkap?: string
   no_hp?: string
   alamat?: string
+  kelurahan?: string
+  rt?: string
+  rw?: string
+  setuju_kebijakan_data?: string
   _general?: string
 }
 
@@ -39,6 +48,9 @@ interface CustomerFormProps {
     nama_lengkap: string
     no_hp?: string
     alamat?: string
+    kelurahan?: number | null
+    rt?: string
+    rw?: string
     is_active: boolean
     avatar_url?: string | null
   }
@@ -57,8 +69,13 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
     nama_lengkap: initialData?.nama_lengkap ?? '',
     no_hp: initialData?.no_hp ?? '',
     alamat: initialData?.alamat ?? '',
+    kelurahan: initialData?.kelurahan ? String(initialData.kelurahan) : '',
+    rt: initialData?.rt ?? '',
+    rw: initialData?.rw ?? '',
   })
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true)
+  const [consent, setConsent] = useState(false)
+  const { options: wilayahOptions, isLoading: wilayahLoading } = useWilayah()
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
 
@@ -93,6 +110,21 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
       valid = false
     }
 
+    if (formData.rt.trim().length > 10) {
+      errs.rt = 'RT maksimal 10 karakter.'
+      valid = false
+    }
+
+    if (formData.rw.trim().length > 10) {
+      errs.rw = 'RW maksimal 10 karakter.'
+      valid = false
+    }
+
+    if (!isEdit && !consent) {
+      errs.setuju_kebijakan_data = 'Nasabah harus menyetujui kebijakan data pribadi.'
+      valid = false
+    }
+
     setFieldErrors(errs)
     return valid
   }
@@ -114,6 +146,11 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
     if (formData.password) payload.password = formData.password
     if (formData.no_hp.trim()) payload.no_hp = formData.no_hp.trim()
     if (formData.alamat.trim()) payload.alamat = formData.alamat.trim()
+    // Saat edit, kirim nilai kosong agar kelurahan/RT/RW bisa dihapus.
+    payload.kelurahan = formData.kelurahan ? Number(formData.kelurahan) : null
+    payload.rt = formData.rt.trim()
+    payload.rw = formData.rw.trim()
+    if (!isEdit) payload.setuju_kebijakan_data = true
 
     try {
       if (isEdit && initialData) {
@@ -137,6 +174,10 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
             else if (field === 'nama_lengkap') apiErrs.nama_lengkap = msg
             else if (field === 'no_hp') apiErrs.no_hp = msg
             else if (field === 'alamat') apiErrs.alamat = msg
+            else if (field === 'kelurahan') apiErrs.kelurahan = msg
+            else if (field === 'rt') apiErrs.rt = msg
+            else if (field === 'rw') apiErrs.rw = msg
+            else if (field === 'setuju_kebijakan_data') apiErrs.setuju_kebijakan_data = msg
             else apiErrs._general = msg
           }
           setFieldErrors(apiErrs)
@@ -256,6 +297,64 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
               onChange={(e) => updateField('alamat', e.target.value)}
               error={fieldErrors.alamat}
             />
+
+            <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
+              <Select
+                label="Kelurahan / Kampung"
+                id="kelurahan"
+                value={formData.kelurahan}
+                onChange={(e) => updateField('kelurahan', e.target.value)}
+                options={[{ value: '', label: wilayahLoading ? 'Memuat wilayah…' : '— Belum dipilih —' }, ...wilayahOptions]}
+                error={fieldErrors.kelurahan}
+                disabled={wilayahLoading}
+              />
+              <Input
+                label="RT"
+                placeholder="001"
+                value={formData.rt}
+                onChange={(e) => updateField('rt', e.target.value)}
+                error={fieldErrors.rt}
+              />
+              <Input
+                label="RW"
+                placeholder="002"
+                value={formData.rw}
+                onChange={(e) => updateField('rw', e.target.value)}
+                error={fieldErrors.rw}
+              />
+            </div>
+
+            {!isEdit && (
+              <div className="space-y-1.5">
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 size-4 cursor-pointer accent-primary"
+                    checked={consent}
+                    onChange={(e) => {
+                      setConsent(e.target.checked)
+                      setFieldErrors((prev) => {
+                        const next = { ...prev }
+                        delete next.setuju_kebijakan_data
+                        return next
+                      })
+                    }}
+                  />
+                  <span>
+                    Nasabah telah membaca dan menyetujui{' '}
+                    <a href="/kebijakan-privasi" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline">
+                      kebijakan data pribadi
+                    </a>{' '}
+                    MIRU Bank Sampah.
+                  </span>
+                </label>
+                {fieldErrors.setuju_kebijakan_data && (
+                  <p className="text-xs text-danger" role="alert">
+                    {fieldErrors.setuju_kebijakan_data}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Status Toggle */}
             {isEdit && (

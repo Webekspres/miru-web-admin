@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
             Lupa kata sandi
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Pulihkan akses akun panel dengan verifikasi WhatsApp OTP.
+            Pulihkan akses akun panel dengan verifikasi kode OTP email.
           </p>
           <div className="mt-6">
             <ForgotPasswordForm />
