@@ -237,7 +237,7 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
       </div>
 
       <Card>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               {isEdit ? (
