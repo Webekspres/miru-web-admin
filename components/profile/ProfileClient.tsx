@@ -47,6 +47,17 @@ export function ProfileClient() {
             <span className="font-medium text-foreground">{user.username}</span>
           </div>
           <div className="flex justify-between gap-4 border-b border-border pb-3">
+            <span className="text-muted-foreground">Email</span>
+            <span className="min-w-0 break-all text-right font-medium text-foreground">
+              {user.email || '—'}
+              {user.email && !user.email_verified && (
+                <span className="block text-xs font-normal text-muted-foreground">
+                  Belum terverifikasi
+                </span>
+              )}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4 border-b border-border pb-3">
             <span className="text-muted-foreground">No. HP</span>
             <span className="font-medium text-foreground">{user.no_hp || '—'}</span>
           </div>

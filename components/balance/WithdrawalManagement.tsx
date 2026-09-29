@@ -27,6 +27,7 @@ import {
   ThumbsDown,
   User,
 } from 'lucide-react'
+import { ReceiptButton } from '@/components/receipts/ReceiptButton'
 import type { User as UserType, Withdrawal, WithdrawalStatus } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
 
@@ -412,6 +413,7 @@ export function WithdrawalManagement() {
                 <TableHead className="text-right">Nominal</TableHead>
                 <TableHead>Metode</TableHead>
                 <TableHead>Status</TableHead>
+                {activeTab === 'selesai' && <TableHead className="text-right">Bukti</TableHead>}
                 {canApprove && activeTab === 'menunggu' && (
                   <TableHead className="text-right">Aksi</TableHead>
                 )}
@@ -420,7 +422,7 @@ export function WithdrawalManagement() {
             <TableBody>
               {withdrawals.length === 0 ? (
                 <TableEmpty
-                  colSpan={canApprove && activeTab === 'menunggu' ? 6 : 5}
+                  colSpan={(canApprove && activeTab === 'menunggu') || activeTab === 'selesai' ? 6 : 5}
                   message="Tidak ada pengajuan penarikan."
                 />
               ) : (
@@ -442,6 +444,11 @@ export function WithdrawalManagement() {
                         {getStatusLabel(w.status)}
                       </Badge>
                     </TableCell>
+                    {activeTab === 'selesai' && (
+                      <TableCell className="text-right">
+                        {w.status === 'selesai' && <ReceiptButton kind="penarikan" id={w.id} />}
+                      </TableCell>
+                    )}
                     {canApprove && activeTab === 'menunggu' && (
                       <TableCell>
                         <div className="flex flex-wrap justify-end gap-1.5">

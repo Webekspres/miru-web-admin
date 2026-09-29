@@ -60,7 +60,8 @@ interface FormErrors {
 function getMinTanggalBerlaku(): string {
   const d = new Date()
   d.setDate(d.getDate() + 3)
-  return d.toISOString().slice(0, 10)
+  // Tanggal lokal — toISOString() (UTC) mundur sehari sebelum pukul 07.00 WIB.
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function validateTanggalBerlaku(value: string): string | null {

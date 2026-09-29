@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 import { LokasiMap, type MapPoint } from '@/components/maps/LokasiMap'
+import { ReceiptButton } from '@/components/receipts/ReceiptButton'
 import { formatWilayah } from '@/hooks/useWilayah'
 import type { User, Deposit, Withdrawal, RewardRedemption } from '@/types/models'
 
@@ -379,11 +380,12 @@ function DepositTable({ items }: { items: Deposit[] }) {
           <TableHead>Petugas</TableHead>
           <TableHead className="text-right">Total</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead className="text-right">Bukti</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
-          <TableEmpty colSpan={4} message="Belum ada setoran." />
+          <TableEmpty colSpan={5} message="Belum ada setoran." />
         ) : (
           items.map((item) => (
             <TableRow key={item.id}>
@@ -400,6 +402,9 @@ function DepositTable({ items }: { items: Deposit[] }) {
                 <Badge variant={getStatusBadge(item.status)}>
                   {getStatusLabel(item.status)}
                 </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                {item.status === 'selesai' && <ReceiptButton kind="setoran" id={item.id} />}
               </TableCell>
             </TableRow>
           ))
@@ -420,11 +425,12 @@ function WithdrawalTable({ items }: { items: Withdrawal[] }) {
           <TableHead className="text-right">Nominal</TableHead>
           <TableHead>Metode</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead className="text-right">Bukti</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
-          <TableEmpty colSpan={4} message="Belum ada penarikan." />
+          <TableEmpty colSpan={5} message="Belum ada penarikan." />
         ) : (
           items.map((item) => (
             <TableRow key={item.id}>
@@ -441,6 +447,9 @@ function WithdrawalTable({ items }: { items: Withdrawal[] }) {
                 <Badge variant={getStatusBadge(item.status)}>
                   {getStatusLabel(item.status)}
                 </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                {item.status === 'selesai' && <ReceiptButton kind="penarikan" id={item.id} />}
               </TableCell>
             </TableRow>
           ))
