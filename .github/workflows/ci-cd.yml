@@ -71,7 +71,7 @@ jobs:
             echo "target_dir=/opt/miru-prod" >> $GITHUB_OUTPUT
             echo "image_tag=latest" >> $GITHUB_OUTPUT
             echo "image_sha_tag=production-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-            echo "api_url=https://api.mirubanksampah.id" >> $GITHUB_OUTPUT
+            echo "api_url=https://mirubanksampah.id" >> $GITHUB_OUTPUT  # API di host yang sama (/api/ via edge) → cookie host-only
             echo "app_name=MIRU Bank Sampah" >> $GITHUB_OUTPUT
           else
             echo "env_name=staging" >> $GITHUB_OUTPUT
