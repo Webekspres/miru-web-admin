@@ -58,7 +58,8 @@ describe('ReceiptButton', () => {
 describe('api.download', () => {
   it('saves the PDF blob through a temporary link', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), { status: 200 }),
+      // Body string, bukan Blob jsdom: Response milik Node butuh blob.stream().
+      new Response('%PDF-1.4', { status: 200, headers: { 'Content-Type': 'application/pdf' } }),
     )
     const createUrl = vi.fn(() => 'blob:x')
     Object.assign(URL, { createObjectURL: createUrl, revokeObjectURL: vi.fn() })
