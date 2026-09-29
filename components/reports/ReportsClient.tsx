@@ -114,10 +114,13 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'evaluation', label: 'Evaluasi', icon: ClipboardCheck },
 ]
 
-/** Format date to YYYY-MM-DD */
-function todayISO(): string {
-  const d = new Date()
+/** Tanggal lokal YYYY-MM-DD (bukan toISOString, yang bergeser ke hari sebelumnya di zona +7/+9). */
+function localISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function todayISO(): string {
+  return localISO(new Date())
 }
 
 function getCurrentWeek(): number {
@@ -540,7 +543,7 @@ function MonthlyReportView() {
 function WasteReportView() {
   const today = new Date()
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-  const [start, setStart] = useState(firstOfMonth.toISOString().split('T')[0])
+  const [start, setStart] = useState(localISO(firstOfMonth))
   const [end, setEnd] = useState(todayISO())
 
   const { data, error, isLoading, mutate } = useSWR(
@@ -643,7 +646,7 @@ function WasteReportView() {
 function EvaluationReportView() {
   const today = new Date()
   const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-  const [start, setStart] = useState(firstOfMonth.toISOString().split('T')[0])
+  const [start, setStart] = useState(localISO(firstOfMonth))
   const [end, setEnd] = useState(todayISO())
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
