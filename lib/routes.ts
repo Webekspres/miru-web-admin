@@ -13,14 +13,8 @@ export const LANDING_PATH_BY_ROLE: Record<WebAdminRole, string> = {
 
 const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
   admin: ['/dashboard', '/settings', '/profile'],
-  petugas: [
-    '/dashboard',
-    '/transactions',
-    '/pickups',
-    '/customers',
-    '/reports',
-    '/profile',
-  ],
+  // Petugas: tugas lapangan + riwayat sendiri + profil; tanpa master data/laporan.
+  petugas: ['/dashboard', '/transactions', '/pickups', '/profile'],
   koordinator: [
     '/dashboard',
     '/customers',
@@ -115,10 +109,6 @@ export function canAccessRoute(role: WebAdminRole, pathname: string): boolean {
   if (!matchesAllowedPrefix(role, pathname)) return false
 
   if (role === 'pemerintah' && pathname.startsWith('/warehouse/')) {
-    return false
-  }
-
-  if (role === 'petugas' && pathname.startsWith('/customers') && isWritePath(pathname)) {
     return false
   }
 

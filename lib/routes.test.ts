@@ -70,9 +70,6 @@ describe('dashboard route audit', () => {
         '/transactions',
         '/transactions/add',
         '/pickups',
-        '/customers',
-        '/customers/1',
-        '/reports',
         '/profile',
         '/profile/edit',
       ],
@@ -93,7 +90,9 @@ describe('dashboard route audit', () => {
     }
   })
 
-  it('blocks petugas from customer write paths and balance', () => {
+  it('keeps petugas out of master data, reports, and balance', () => {
+    expect(canAccessRoute('petugas', '/customers')).toBe(false)
+    expect(canAccessRoute('petugas', '/reports')).toBe(false)
     expect(canAccessRoute('petugas', '/customers/add')).toBe(false)
     expect(canAccessRoute('petugas', '/customers/1/edit')).toBe(false)
     expect(canAccessRoute('petugas', '/balance')).toBe(false)

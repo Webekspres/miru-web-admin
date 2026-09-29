@@ -55,10 +55,15 @@ function NavList({
   onNavigate: () => void
   badges: ReturnType<typeof useSidebarBadges>
 }) {
+  // Satu item aktif saja: href paling spesifik (/transactions/add vs /transactions).
+  const activeHref = items
+    .filter((item) => isActivePath(pathname, item.href))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href
+
   return (
     <ul className="flex flex-col gap-1">
       {items.map((item) => {
-        const active = isActivePath(pathname, item.href)
+        const active = item.href === activeHref
         const Icon = item.icon
         const badgeCount = getBadgeCount(item.badgeKey, badges)
 
