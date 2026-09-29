@@ -12,6 +12,7 @@ import {
   Recycle,
   Settings,
   Truck,
+  UserCircle,
   UserCog,
   Users,
   Wallet,
@@ -65,12 +66,15 @@ const ADMIN_MENU: NavItem[] = [
   { label: 'Pengaturan', href: '/settings', icon: Settings, section: 'settings' },
 ]
 
+/** Profil sendiri (data diri) — bukan pengaturan aplikasi yang khusus admin. */
+const PROFIL_ITEM: NavItem = { label: 'Profil Saya', href: '/profile', icon: UserCircle, section: 'settings' }
+
 const PETUGAS_MENU: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, section: 'main' },
   { label: 'Input Setoran', href: '/transactions/add', icon: Wallet, section: 'transactions' },
   { label: 'Penjemputan', href: '/pickups', icon: Truck, badgeKey: 'pickups', section: 'transactions' },
-  { label: 'Nasabah', href: '/customers', icon: Users, section: 'master_data' },
-  { label: 'Laporan Saya', href: '/reports', icon: BarChart3, section: 'reports' },
+  { label: 'Riwayat Setoran', href: '/transactions', icon: History, section: 'transactions' },
+  PROFIL_ITEM,
 ]
 
 const KOORDINATOR_MENU: NavItem[] = [
@@ -87,12 +91,14 @@ const KOORDINATOR_MENU: NavItem[] = [
   { label: 'Laporan', href: '/reports', icon: BarChart3, section: 'reports' },
   { label: 'Pengumuman', href: '/announcements', icon: Megaphone, section: 'settings' },
   { label: 'Pengaturan', href: '/settings', icon: Settings, section: 'settings' },
+  PROFIL_ITEM,
 ]
 
 const PEMERINTAH_MENU: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, section: 'main' },
   { label: 'Laporan', href: '/reports', icon: BarChart3, section: 'reports' },
   { label: 'Ringkasan Stok', href: '/warehouse', icon: Building2, section: 'master_data' },
+  PROFIL_ITEM,
 ]
 
 const MENU_BY_ROLE: Record<WebAdminRole, NavItem[]> = {
