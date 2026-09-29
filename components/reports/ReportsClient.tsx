@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableR
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import * as XLSX from 'xlsx'
+import { csvRow } from '@/lib/csv'
 import {
   BarChart3,
   Calendar,
@@ -129,14 +130,10 @@ function exportExcel(data: Record<string, unknown>[], columns: { key: string; la
 
 /** Convert array of objects to CSV string */
 function toCsv(data: Record<string, unknown>[], columns: { key: string; label: string }[]): string {
-  const header = columns.map((c) => `"${c.label}"`).join(',')
-  const rows = data.map((row) =>
-    columns.map((c) => {
-      const val = row[c.key]
-      return val != null ? `"${String(val).replace(/"/g, '""')}"` : ''
-    }).join(','),
-  )
-  return [header, ...rows].join('\n')
+  return [
+    csvRow(columns.map((c) => c.label)),
+    ...data.map((row) => csvRow(columns.map((c) => row[c.key]))),
+  ].join('\n')
 }
 
 // ─── Sub-Component: Summary Cards ──────────────────────────────────

@@ -21,3 +21,11 @@ export function canApproveRedemption(role: WebAdminRole): boolean {
 export function canCreateDeposit(role: WebAdminRole): boolean {
   return role === 'admin' || role === 'petugas'
 }
+
+/**
+ * Ekspor kontak nasabah (No. HP, alamat, RT/RW): hanya peran yang melayani
+ * nasabah langsung. Koordinator & pemerintah (pemantauan) tanpa kolom kontak.
+ */
+export function canExportContactData(role: WebAdminRole): boolean {
+  return role === 'admin' || role === 'petugas'
+}
