@@ -282,6 +282,43 @@ class ApiClient {
   upload<T>(path: string, formData: FormData): Promise<T> {
     return this.request<T>(path, { method: 'POST', body: formData, timeoutMs: 30000 })
   }
+
+  /** Unduh berkas biner (PDF/Excel) memakai sesi cookie; refresh token sekali bila 401. */
+  async download(
+    path: string,
+    filename: string,
+    params?: Record<string, string>,
+    retried = false,
+  ): Promise<void> {
+    const res = await fetchWithTimeout(
+      this.buildUrl(path, params),
+      { credentials: 'include', headers: { 'Accept-Language': 'id' } },
+      30000,
+    )
+    if (res.status === 401 && !retried && typeof window !== 'undefined') {
+      try {
+        await refreshAccessToken()
+      } catch {
+        clearTokens()
+        notifyUnauthorized()
+        throw new ApiError('Sesi berakhir. Silakan login kembali.', 401)
+      }
+      return this.download(path, filename, params, true)
+    }
+    if (!res.ok) {
+      // Error dari API berbentuk envelope JSON → ApiError dengan pesan server.
+      await parseEnvelope(res)
+      throw new ApiError('Gagal mengunduh berkas.', res.status)
+    }
+    const url = URL.createObjectURL(await res.blob())
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
 }
 
 export const api = new ApiClient()

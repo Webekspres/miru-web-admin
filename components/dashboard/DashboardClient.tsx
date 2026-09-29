@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   DollarSign,
+  MapPin,
   MessageSquare,
   Package,
   PieChart as PieChartIcon,
@@ -56,6 +57,8 @@ interface DashboardOverview {
   penjemputan_menunggu: number
   pengaduan_terbuka: number
   stok_per_kategori: { nama: string; stok: string }[]
+  /** Maks 5 kelurahan dengan nasabah aktif terbanyak. */
+  wilayah_teraktif?: { kelurahan: string; jumlah_nasabah: number }[]
 }
 
 interface PetugasOverview {
@@ -605,6 +608,56 @@ function StockMiniSummary() {
   )
 }
 
+// ─── Sub-Component: Wilayah Teraktif ──────────────────────────────
+
+export function WilayahTeraktifCard({ items }: { items: { kelurahan: string; jumlah_nasabah: number }[] }) {
+  const max = Math.max(1, ...items.map((w) => w.jumlah_nasabah))
+
+  return (
+    <Card>
+      <CardHeader variant="default" className="flex flex-row items-center justify-between border-b border-border">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+          <MapPin className="size-5 text-primary" aria-hidden />
+          Wilayah Teraktif
+        </CardTitle>
+        <Link href="/customers">
+          <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+            Nasabah
+            <ArrowRight className="ml-1 size-3.5" aria-hidden />
+          </Button>
+        </Link>
+      </CardHeader>
+      <CardContent className="p-0">
+        {items.length === 0 ? (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+            Belum ada nasabah aktif yang mengisi kelurahan.
+          </p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {items.map((w, i) => (
+              <li key={w.kelurahan} className="px-4 py-2.5">
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="w-4 shrink-0 text-xs font-semibold text-muted-foreground">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate font-medium text-foreground">{w.kelurahan}</span>
+                  <span className="font-semibold text-foreground">
+                    {w.jumlah_nasabah.toLocaleString('id-ID')} nasabah
+                  </span>
+                </div>
+                <div className="mt-1.5 ml-7 h-1.5 rounded-full bg-surface-muted" aria-hidden>
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${(w.jumlah_nasabah / max) * 100}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 // ─── Petugas Dashboard ───────────────────────────────────────────
 
 const PETUGAS_TASK_STATUSES = 'dijadwalkan,dalam_perjalanan,dijemput'
@@ -839,6 +892,7 @@ function AdminDashboardContent({ userName, role }: { userName: string; role?: st
             isLoading={complaintsLoading}
           />
           <StockMiniSummary />
+          <WilayahTeraktifCard items={overview?.wilayah_teraktif ?? []} />
         </div>
       </div>
     </div>

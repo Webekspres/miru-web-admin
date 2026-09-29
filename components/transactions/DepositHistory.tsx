@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableR
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import { Calendar, FileText, User } from 'lucide-react'
+import { ReceiptButton } from '@/components/receipts/ReceiptButton'
 import type { Deposit } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -121,6 +122,12 @@ function DetailDepositModal({
               </Badge>
             </div>
           </div>
+
+          {deposit.status === 'selesai' && (
+            <div className="flex justify-end">
+              <ReceiptButton kind="setoran" id={deposit.id} label="Unduh bukti setoran (PDF)" />
+            </div>
+          )}
 
           {/* Detail Items */}
           <div>
@@ -408,12 +415,13 @@ export function DepositHistory({
                 <TableHead>Petugas</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="text-right">Bukti</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {depositsList.length === 0 ? (
                 <TableEmpty
-                  colSpan={5}
+                  colSpan={6}
                   message={
                     searchQuery || dateFilter
                       ? 'Tidak ada setoran yang sesuai filter.'
@@ -443,6 +451,9 @@ export function DepositHistory({
                       <Badge variant={getStatusBadgeVariant(deposit.status)}>
                         {getStatusLabel(deposit.status)}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {deposit.status === 'selesai' && <ReceiptButton kind="setoran" id={deposit.id} />}
                     </TableCell>
                   </TableRow>
                 ))

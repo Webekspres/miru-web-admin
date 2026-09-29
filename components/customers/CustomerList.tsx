@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { API_PREFIX } from '@/lib/config'
 import { formatRupiah } from '@/lib/format'
-import { canMutate } from '@/lib/permissions'
+import { csvRow } from '@/lib/csv'
+import { canExportContactData, canMutate } from '@/lib/permissions'
 import { useAuth } from '@/providers/AuthProvider'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -39,28 +40,32 @@ function getStatusLabel(isActive: boolean): string {
   return isActive ? 'Aktif' : 'Nonaktif'
 }
 
-/** Export array of objects to CSV file and trigger download */
-function exportToCSV(data: CustomerRow[], filename = 'nasabah.csv') {
-  const headers = ['ID', 'Nama Lengkap', 'No. HP', 'Alamat', 'Kelurahan', 'RT', 'RW', 'Saldo', 'Poin', 'Status']
-  const rows = data.map((c) => [
-    String(c.id),
-    c.nama_lengkap,
-    c.no_hp ?? '',
-    c.alamat ?? '',
-    c.kelurahan_nama ?? '',
-    c.rt ?? '',
-    c.rw ?? '',
-    c.saldo ?? '0',
-    String(c.poin ?? 0),
-    c.is_active ? 'Aktif' : 'Nonaktif',
-  ])
-
-  const csvContent = [
-    headers.join(','),
-    ...rows.map((row) =>
-      row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','),
-    ),
+/**
+ * Export array of objects to CSV file and trigger download.
+ * `withContact` = false → tanpa No. HP / alamat / RT / RW (peran pemantauan).
+ */
+export function customersToCsv(data: CustomerRow[], withContact: boolean): string {
+  const columns: { label: string; value: (c: CustomerRow) => unknown; contact?: boolean }[] = [
+    { label: 'ID', value: (c) => c.id },
+    { label: 'Nama Lengkap', value: (c) => c.nama_lengkap },
+    { label: 'No. HP', value: (c) => c.no_hp ?? '', contact: true },
+    { label: 'Alamat', value: (c) => c.alamat ?? '', contact: true },
+    { label: 'Kelurahan', value: (c) => c.kelurahan_nama ?? '' },
+    { label: 'RT', value: (c) => c.rt ?? '', contact: true },
+    { label: 'RW', value: (c) => c.rw ?? '', contact: true },
+    { label: 'Saldo', value: (c) => c.saldo ?? '0' },
+    { label: 'Poin', value: (c) => c.poin ?? 0 },
+    { label: 'Status', value: (c) => (c.is_active ? 'Aktif' : 'Nonaktif') },
+  ]
+  const used = columns.filter((col) => withContact || !col.contact)
+  return [
+    csvRow(used.map((col) => col.label)),
+    ...data.map((c) => csvRow(used.map((col) => col.value(c)))),
   ].join('\n')
+}
+
+function exportToCSV(data: CustomerRow[], withContact: boolean, filename = 'nasabah.csv') {
+  const csvContent = customersToCsv(data, withContact)
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -122,7 +127,7 @@ const FETCH_HEADERS = {
 export function CustomerList() {
   const router = useRouter()
   const { role: authRole } = useAuth()
-  const { success: toastSuccess } = useToast()
+  const { success: toastSuccess, error: toastError } = useToast()
 
   const [page, setPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
@@ -197,11 +202,19 @@ export function CustomerList() {
         if (!meta || exportPage >= meta.total_pages) break
       }
 
-      exportToCSV(allUsers, `nasabah_${new Date().toISOString().split('T')[0]}.csv`)
+      exportToCSV(
+        allUsers,
+        authRole ? canExportContactData(authRole) : false,
+        `nasabah_${new Date().toISOString().split('T')[0]}.csv`,
+      )
       toastSuccess('Data nasabah berhasil diekspor.')
     } catch {
-      toastSuccess('Gagal mengekspor semua data. Mengekspor halaman saat ini.')
-      exportToCSV(customers, `nasabah_${new Date().toISOString().split('T')[0]}.csv`)
+      toastError('Gagal mengekspor semua data. Mengekspor halaman saat ini.')
+      exportToCSV(
+        customers,
+        authRole ? canExportContactData(authRole) : false,
+        `nasabah_${new Date().toISOString().split('T')[0]}.csv`,
+      )
     }
   }
 
@@ -260,6 +273,11 @@ export function CustomerList() {
             variant="outline"
             onClick={handleExportCSV}
             disabled={customers.length === 0}
+            title={
+              authRole && !canExportContactData(authRole)
+                ? 'Tanpa kolom kontak (No. HP, alamat, RT/RW) sesuai hak akses Anda'
+                : undefined
+            }
           >
             <Download className="size-4" aria-hidden />
             Export CSV
