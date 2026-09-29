@@ -127,6 +127,17 @@ const ACTIONS_BY_STATUS: Partial<Record<PickupStatus, PickupAction[]>> = {
   ],
 }
 
+/**
+ * Sesuai backend: setujui/tolak/tugaskan hanya admin; langkah lapangan
+ * (mulai → sampai → selesai) oleh petugas yang ditugaskan (atau admin).
+ */
+export function actionsForRole(status: PickupStatus, role: string | undefined): PickupAction[] {
+  const actions = ACTIONS_BY_STATUS[status] ?? []
+  if (role === 'admin') return actions
+  if (role === 'petugas') return actions.filter((a) => a.requiresModal === null)
+  return []
+}
+
 type AssignModalMode = 'approve_assign' | 'assign'
 
 function formatPetugasOptionLabel(p: UserType): string {
@@ -631,7 +642,7 @@ export function PickupManagement() {
                 <TableEmpty colSpan={isReadOnly ? 6 : 7} message="Tidak ada penjemputan." />
               ) : (
                 pickups.map((pickup) => {
-                  const actions = ACTIONS_BY_STATUS[pickup.status] ?? []
+                  const actions = actionsForRole(pickup.status, role)
 
                   return (
                     <TableRow key={pickup.id}>
