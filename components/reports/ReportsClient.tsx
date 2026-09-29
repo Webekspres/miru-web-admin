@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import useSWR from 'swr'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 import { formatRupiah, formatWeightKg, MONTHS } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -15,6 +15,7 @@ import { csvRow } from '@/lib/csv'
 import {
   BarChart3,
   Calendar,
+  ClipboardCheck,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -34,7 +35,7 @@ interface Periode {
 }
 
 interface TonaseItem {
-  nama_kategori: string
+  nama: string
   total_berat_kg: string
   total_nilai: string
 }
@@ -75,6 +76,23 @@ interface MonthlyReport {
   tonase_per_jenis: TonaseItem[]
 }
 
+interface EvaluationReport {
+  periode: Periode
+  jumlah_nasabah_terdaftar: number
+  jumlah_nasabah_aktif: number
+  nasabah_baru: number
+  jumlah_transaksi: number
+  total_sampah_kg: string
+  total_nilai_setoran: string
+  total_penarikan: string
+  jumlah_reward_ditukar: number
+  total_poin_ditukar: number
+  wilayah_teraktif: { kelurahan: string; jumlah_nasabah_aktif: number }[]
+  kendala: { total_pengaduan: number; per_jenis: { jenis: string; label: string; jumlah: number }[] }
+  rekomendasi: string[]
+  tonase_per_jenis: TonaseItem[]
+}
+
 interface WasteReport {
   periode: Periode
   total_berat_kg: string
@@ -86,13 +104,14 @@ interface WasteReport {
 
 
 
-type TabKey = 'daily' | 'weekly' | 'monthly' | 'waste'
+type TabKey = 'daily' | 'weekly' | 'monthly' | 'waste' | 'evaluation'
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'daily', label: 'Harian', icon: Calendar },
   { key: 'weekly', label: 'Mingguan', icon: BarChart3 },
   { key: 'monthly', label: 'Bulanan', icon: TrendingUp },
   { key: 'waste', label: 'Tonase per Kategori', icon: Scale },
+  { key: 'evaluation', label: 'Evaluasi', icon: ClipboardCheck },
 ]
 
 /** Format date to YYYY-MM-DD */
@@ -171,8 +190,8 @@ function TonaseTable({ items }: { items: TonaseItem[] }) {
             <TableEmpty colSpan={3} message="Belum ada data untuk periode ini." />
           ) : (
             items.map((item, idx) => (
-              <TableRow key={`${item.nama_kategori}-${idx}`}>
-                <TableCell className="font-medium text-foreground">{item.nama_kategori}</TableCell>
+              <TableRow key={`${item.nama}-${idx}`}>
+                <TableCell className="font-medium text-foreground">{item.nama}</TableCell>
                 <TableCell className="text-right">{formatWeightKg(item.total_berat_kg)}</TableCell>
                 <TableCell className="text-right font-semibold">{formatRupiah(item.total_nilai)}</TableCell>
               </TableRow>
@@ -264,7 +283,7 @@ function DailyReportView() {
       ) : error ? (
         <ErrorMessage title="Gagal memuat data" message="Tidak dapat memuat laporan harian." onRetry={() => mutate()} />
       ) : data ? (
-        <>
+        <div className="report-print-target space-y-6" data-print-title={`Laporan Harian — ${tanggal}`}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SummaryCard title="Transaksi" value={data.jumlah_transaksi.toLocaleString('id-ID')} subtitle="Jumlah setoran" icon={<BarChart3 className="size-5" />} />
             <SummaryCard title="Sampah Terkumpul" value={formatWeightKg(data.total_sampah_kg)} icon={<Scale className="size-5" />} />
@@ -272,13 +291,13 @@ function DailyReportView() {
             <SummaryCard title="Penarikan" value={formatRupiah(data.total_penarikan)} icon={<Users className="size-5" />} />
           </div>
 
-          <Card className="report-print-target" data-print-title={`Laporan Harian — ${tanggal}`}>
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Tonase per Jenis Sampah</CardTitle>
             </CardHeader>
             <TonaseTable items={data.tonase_per_jenis} />
           </Card>
-        </>
+        </div>
       ) : null}
     </div>
   )
@@ -377,7 +396,7 @@ function WeeklyReportView() {
       ) : error ? (
         <ErrorMessage title="Gagal memuat data" message="Tidak dapat memuat laporan mingguan." onRetry={() => mutate()} />
       ) : data ? (
-        <>
+        <div className="report-print-target space-y-6" data-print-title={`Laporan Mingguan — Minggu ${minggu} ${tahun}`}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SummaryCard title="Transaksi" value={data.jumlah_transaksi.toLocaleString('id-ID')} subtitle="Jumlah setoran" icon={<BarChart3 className="size-5" />} />
             <SummaryCard title="Sampah Terkumpul" value={formatWeightKg(data.total_sampah_kg)} subtitle="Total berat" icon={<Scale className="size-5" />} />
@@ -385,16 +404,13 @@ function WeeklyReportView() {
             <SummaryCard title="Nasabah Baru" value={data.nasabah_baru.toLocaleString('id-ID')} icon={<Users className="size-5" />} />
           </div>
 
-          <Card
-            className="report-print-target"
-            data-print-title={`Laporan Mingguan — Minggu ${minggu} ${tahun}`}
-          >
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Tonase per Jenis Sampah</CardTitle>
             </CardHeader>
             <TonaseTable items={data.tonase_per_jenis} />
           </Card>
-        </>
+        </div>
       ) : null}
     </div>
   )
@@ -499,7 +515,7 @@ function MonthlyReportView() {
       ) : error ? (
         <ErrorMessage title="Gagal memuat data" message="Tidak dapat memuat laporan bulanan." onRetry={() => mutate()} />
       ) : data ? (
-        <>
+        <div className="report-print-target space-y-6" data-print-title={`Laporan Bulanan — ${MONTHS[bulan - 1]} ${tahun}`}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SummaryCard title="Nasabah Terdaftar" value={data.jumlah_nasabah_terdaftar.toLocaleString('id-ID')} subtitle={`${data.jumlah_nasabah_aktif} aktif`} icon={<Users className="size-5" />} />
             <SummaryCard title="Transaksi" value={data.jumlah_transaksi.toLocaleString('id-ID')} icon={<BarChart3 className="size-5" />} />
@@ -507,16 +523,13 @@ function MonthlyReportView() {
             <SummaryCard title="Reward Ditukar" value={data.jumlah_reward_ditukar.toLocaleString('id-ID')} icon={<TrendingUp className="size-5" />} />
           </div>
 
-          <Card
-            className="report-print-target"
-            data-print-title={`Laporan Bulanan — ${MONTHS[bulan - 1]} ${tahun}`}
-          >
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Tonase per Jenis Sampah</CardTitle>
             </CardHeader>
             <TonaseTable items={data.tonase_per_jenis} />
           </Card>
-        </>
+        </div>
       ) : null}
     </div>
   )
@@ -550,7 +563,7 @@ function WasteReportView() {
     const catCsv = toCsv(
       data.per_kategori as unknown as Record<string, unknown>[],
       [
-        { key: 'nama_kategori', label: 'Kategori' },
+        { key: 'nama', label: 'Kategori' },
         { key: 'total_berat_kg', label: 'Total Berat (kg)' },
         { key: 'total_nilai', label: 'Total Nilai' },
       ],
@@ -571,7 +584,7 @@ function WasteReportView() {
 
     exportExcel(summaryRows, [{ key: 'label', label: 'Metrik' }, { key: 'value', label: 'Nilai' }], `laporan-tonase-ringkasan-${start}-${end}.xlsx`)
     exportExcel(catRows, [
-      { key: 'nama_kategori', label: 'Kategori' },
+      { key: 'nama', label: 'Kategori' },
       { key: 'total_berat_kg', label: 'Total Berat (kg)' },
       { key: 'total_nilai', label: 'Total Nilai' },
     ], `laporan-tonase-per-kategori-${start}-${end}.xlsx`)
@@ -607,22 +620,188 @@ function WasteReportView() {
       ) : error ? (
         <ErrorMessage title="Gagal memuat data" message="Tidak dapat memuat laporan tonase." onRetry={() => mutate()} />
       ) : data ? (
-        <>
+        <div className="report-print-target space-y-6" data-print-title={`Laporan Tonase — ${start} s.d. ${end}`}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <SummaryCard title="Total Berat" value={formatWeightKg(data.total_berat_kg)} subtitle={data.per_kategori.length > 0 ? `${data.per_kategori.length} kategori` : undefined} icon={<Scale className="size-5" />} />
             <SummaryCard title="Total Nilai" value={formatRupiah(data.total_nilai)} icon={<TrendingUp className="size-5" />} />
           </div>
 
-          <Card
-            className="report-print-target"
-            data-print-title={`Laporan Tonase — ${start} s.d. ${end}`}
-          >
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Tonase per Kategori</CardTitle>
             </CardHeader>
             <TonaseTable items={data.per_kategori} />
           </Card>
-        </>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+// ─── Evaluation Report ────────────────────────────────────────────
+
+function EvaluationReportView() {
+  const today = new Date()
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+  const [start, setStart] = useState(firstOfMonth.toISOString().split('T')[0])
+  const [end, setEnd] = useState(todayISO())
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
+
+  const { data, error, isLoading, mutate } = useSWR(
+    `/reports/evaluation/?start=${start}&end=${end}`,
+    (path) => api.get<EvaluationReport>(path),
+    { revalidateOnFocus: false },
+  )
+
+  async function exportExcelServer() {
+    setExporting(true)
+    setExportError(null)
+    try {
+      await api.download('/reports/evaluation/export/', `laporan-evaluasi-${start}-${end}.xlsx`, { start, end })
+    } catch (err) {
+      setExportError(err instanceof ApiError ? err.message : 'Gagal mengekspor laporan evaluasi.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="w-40" label="Dari" />
+          <span className="text-muted-foreground">—</span>
+          <Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="w-40" label="Sampai" />
+        </div>
+        <div className="flex gap-2">
+          <Button type="button" variant="ghost" onClick={() => mutate()} disabled={isLoading}>
+            <FileText className="size-4" aria-hidden /> Muat Ulang
+          </Button>
+          {data && (
+            <Button type="button" variant="outline" onClick={() => void exportExcelServer()} loading={exporting}>
+              <FileSpreadsheet className="size-4" aria-hidden /> Excel
+            </Button>
+          )}
+        </div>
+      </div>
+      {exportError && <p className="text-sm text-danger" role="alert">{exportError}</p>}
+
+      {isLoading ? (
+        <TableSkeleton rows={4} cols={3} />
+      ) : error ? (
+        <ErrorMessage title="Gagal memuat data" message="Tidak dapat memuat laporan evaluasi." onRetry={() => mutate()} />
+      ) : data ? (
+        <div className="report-print-target space-y-6" data-print-title={`Laporan Evaluasi — ${start} s.d. ${end}`}>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <SummaryCard
+              title="Nasabah Aktif"
+              value={String(data.jumlah_nasabah_aktif)}
+              subtitle={`dari ${data.jumlah_nasabah_terdaftar} terdaftar · ${data.nasabah_baru} baru`}
+              icon={<Users className="size-5" />}
+            />
+            <SummaryCard
+              title="Transaksi Setoran"
+              value={String(data.jumlah_transaksi)}
+              subtitle={formatWeightKg(data.total_sampah_kg)}
+              icon={<Scale className="size-5" />}
+            />
+            <SummaryCard
+              title="Nilai Setoran"
+              value={formatRupiah(data.total_nilai_setoran)}
+              subtitle={`Penarikan ${formatRupiah(data.total_penarikan)}`}
+              icon={<TrendingUp className="size-5" />}
+            />
+            <SummaryCard
+              title="Reward Ditukar"
+              value={String(data.jumlah_reward_ditukar)}
+              subtitle={`${data.total_poin_ditukar} poin`}
+              icon={<BarChart3 className="size-5" />}
+            />
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Wilayah Teraktif</CardTitle>
+              </CardHeader>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Kelurahan / Kampung</TableHead>
+                    <TableHead className="text-right">Nasabah Aktif</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.wilayah_teraktif.length === 0 ? (
+                    <TableEmpty colSpan={2} message="Belum ada setoran dari nasabah berkelurahan." />
+                  ) : (
+                    data.wilayah_teraktif.map((w) => (
+                      <TableRow key={w.kelurahan}>
+                        <TableCell className="font-medium text-foreground">{w.kelurahan}</TableCell>
+                        <TableCell className="text-right">{w.jumlah_nasabah_aktif}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Kendala ({data.kendala.total_pengaduan} pengaduan)
+                </CardTitle>
+              </CardHeader>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Jenis Pengaduan</TableHead>
+                    <TableHead className="text-right">Jumlah</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.kendala.per_jenis.length === 0 ? (
+                    <TableEmpty colSpan={2} message="Tidak ada pengaduan pada periode ini." />
+                  ) : (
+                    data.kendala.per_jenis.map((k) => (
+                      <TableRow key={k.jenis}>
+                        <TableCell className="font-medium text-foreground">{k.label}</TableCell>
+                        <TableCell className="text-right">{k.jumlah}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Rekomendasi Tindak Lanjut</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.rekomendasi.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Belum ada tindak lanjut dari pengaduan yang ditutup pada periode ini.
+                </p>
+              ) : (
+                <ol className="list-decimal space-y-1.5 pl-5 text-sm text-foreground">
+                  {data.rekomendasi.map((r, i) => (
+                    <li key={i}>{r}</li>
+                  ))}
+                </ol>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Tonase per Jenis</CardTitle>
+            </CardHeader>
+            <TonaseTable items={data.tonase_per_jenis} />
+          </Card>
+        </div>
       ) : null}
     </div>
   )
@@ -643,7 +822,7 @@ export function ReportsClient() {
           </p>
         </div>
         <Button type="button" variant="outline" onClick={() => window.print()} className="print-hidden">
-          <Printer className="size-4" aria-hidden /> Cetak
+          <Printer className="size-4" aria-hidden /> Cetak / Simpan PDF
         </Button>
       </div>
 
@@ -679,6 +858,7 @@ export function ReportsClient() {
           {activeTab === 'weekly' && <WeeklyReportView />}
           {activeTab === 'monthly' && <MonthlyReportView />}
           {activeTab === 'waste' && <WasteReportView />}
+          {activeTab === 'evaluation' && <EvaluationReportView />}
         </div>
       </Card>
     </div>
