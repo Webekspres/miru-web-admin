@@ -98,6 +98,9 @@ export interface Pickup {
   status: PickupStatus
   catatan?: string
   tanggal_pengajuan?: string
+  /** Setoran hasil timbang saat penjemputan diselesaikan (null bila belum). */
+  setoran?: number | null
+  setoran_total?: string | null
 }
 
 export type WithdrawalStatus = 'menunggu' | 'selesai' | 'ditolak'

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
 import { api } from '@/lib/api'
 import { API_PREFIX } from '@/lib/config'
-import { formatDateWIT, formatWeightKg } from '@/lib/format'
+import { formatDateWIT, formatRupiah, formatWeightKg } from '@/lib/format'
 import { canMutate } from '@/lib/permissions'
 import { useAuth } from '@/providers/AuthProvider'
 import { useToast } from '@/components/feedback/Toast'
@@ -17,6 +17,7 @@ import { Select } from '@/components/ui/Select'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { ErrorMessage } from '@/components/feedback/ErrorMessage'
 import { PickupScheduleCard } from '@/components/pickups/PickupScheduleCard'
+import { SelesaikanPickupModal } from '@/components/pickups/SelesaikanPickupModal'
 import { TableSkeleton } from '@/components/feedback/LoadingSkeleton'
 import {
   CheckCircle2,
@@ -93,7 +94,8 @@ interface PickupAction {
   variant: 'primary' | 'danger' | 'outline'
   icon: typeof ThumbsUp
   nextStatus: PickupStatus
-  requiresModal: 'approve_assign' | 'assign' | 'reject' | null
+  /** selesaikan = catat hasil timbang (setoran) — langkah lapangan petugas. */
+  requiresModal: 'approve_assign' | 'assign' | 'reject' | 'selesaikan' | null
 }
 
 const ACTIONS_BY_STATUS: Partial<Record<PickupStatus, PickupAction[]>> = {
@@ -123,7 +125,7 @@ const ACTIONS_BY_STATUS: Partial<Record<PickupStatus, PickupAction[]>> = {
     { label: 'Sampai di Lokasi', variant: 'primary', icon: MapPin, nextStatus: 'dijemput', requiresModal: null },
   ],
   dijemput: [
-    { label: 'Selesaikan', variant: 'primary', icon: CheckCircle2, nextStatus: 'selesai', requiresModal: null },
+    { label: 'Selesaikan', variant: 'primary', icon: CheckCircle2, nextStatus: 'selesai', requiresModal: 'selesaikan' },
   ],
 }
 
@@ -134,7 +136,9 @@ const ACTIONS_BY_STATUS: Partial<Record<PickupStatus, PickupAction[]>> = {
 export function actionsForRole(status: PickupStatus, role: string | undefined): PickupAction[] {
   const actions = ACTIONS_BY_STATUS[status] ?? []
   if (role === 'admin') return actions
-  if (role === 'petugas') return actions.filter((a) => a.requiresModal === null)
+  if (role === 'petugas') {
+    return actions.filter((a) => a.requiresModal === null || a.requiresModal === 'selesaikan')
+  }
   return []
 }
 
@@ -365,6 +369,7 @@ export function PickupManagement() {
     mode: 'approve_assign',
   })
   const [lokasiPickup, setLokasiPickup] = useState<Pickup | null>(null)
+  const [selesaikanPickup, setSelesaikanPickup] = useState<Pickup | null>(null)
   const [tolakModal, setTolakModal] = useState<{ open: boolean; pickup: Pickup | null }>({
     open: false,
     pickup: null,
@@ -451,6 +456,10 @@ export function PickupManagement() {
       setTolakModal({ open: true, pickup })
       return
     }
+    if (action.requiresModal === 'selesaikan') {
+      setSelesaikanPickup(pickup)
+      return
+    }
 
     const ok = await executeStatusUpdate(pickup.id, action.nextStatus)
     if (ok) {
@@ -518,6 +527,27 @@ export function PickupManagement() {
       await refreshBadgesAndNotifs()
     } catch {
       toastError('Gagal menolak penjemputan. Coba lagi.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  /** Hasil timbang → setoran (saldo nasabah bertambah) + penjemputan selesai. */
+  async function handleSelesaikan(details: { kategori: number; berat_kg: number }[]) {
+    if (!selesaikanPickup) return
+    setActionLoading(true)
+    try {
+      const done = await api.post<Pickup>(`/pickups/${selesaikanPickup.id}/complete/`, { details })
+      toastSuccess(
+        done.setoran_total
+          ? `Penjemputan selesai. ${formatRupiah(done.setoran_total)} masuk ke saldo nasabah.`
+          : 'Penjemputan selesai dan setoran tercatat.',
+      )
+      setSelesaikanPickup(null)
+      await fetchMutate()
+      await refreshBadgesAndNotifs()
+    } catch (err) {
+      toastError(err instanceof ApiError ? err.message : 'Gagal menyelesaikan penjemputan. Coba lagi.')
     } finally {
       setActionLoading(false)
     }
@@ -727,6 +757,14 @@ export function PickupManagement() {
       />
 
       <LokasiModal pickup={lokasiPickup} onClose={() => setLokasiPickup(null)} />
+
+      <SelesaikanPickupModal
+        key={selesaikanPickup?.id ?? 'tutup'}
+        pickup={selesaikanPickup}
+        onClose={() => setSelesaikanPickup(null)}
+        onSubmit={handleSelesaikan}
+        loading={actionLoading}
+      />
 
       {/* Tolak Modal */}
       <TolakModal
