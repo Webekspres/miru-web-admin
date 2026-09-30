@@ -115,6 +115,8 @@ export interface Withdrawal {
   nominal: string
   metode: string
   status: WithdrawalStatus
+  /** Alasan dari admin saat menolak. */
+  alasan_penolakan?: string
   tanggal: string
   ada_lampiran_ktp?: boolean
   ktp_diverifikasi?: boolean

@@ -1,16 +1,32 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Bell, CheckCheck } from 'lucide-react'
 import { api } from '@/lib/api'
 import { formatDateWIT } from '@/lib/format'
 import { useNotifications } from '@/hooks/useNotifications'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
+import { notifStyleFor } from '@/lib/notif-style'
 
 function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   return `${text.slice(0, maxLength).trimEnd()}...`
+}
+
+function NotifIcon({ kategori, unread }: { kategori: string; unread: boolean }) {
+  const style = notifStyleFor(kategori)
+  const Icon = style.icon
+  return (
+    <span className={cn('relative mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full', style.tone)}>
+      <Icon className="size-4" aria-hidden />
+      {unread && (
+        <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-background bg-primary" aria-hidden />
+      )}
+    </span>
+  )
 }
 
 export interface NotificationBellProps {
@@ -22,6 +38,7 @@ export function NotificationBell({ userId, className }: NotificationBellProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const { previewItems, unreadCount, isLoading, mutate } = useNotifications(userId)
+  const router = useRouter()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -106,20 +123,17 @@ export function NotificationBell({ userId, className }: NotificationBellProps) {
                       role="menuitem"
                       onClick={() => {
                         if (!item.is_read) void handleMarkRead(item.id)
+                        setOpen(false)
+                        router.push(`/notifications/${item.id}`)
                       }}
                       className={cn(
                         'w-full px-4 py-3 text-left transition-colors hover:bg-surface-muted',
                         !item.is_read && 'bg-primary/5',
                       )}
                     >
-                      <div className="flex items-start gap-2">
-                        {!item.is_read && (
-                          <span
-                            className="mt-1.5 size-2 shrink-0 rounded-full bg-primary"
-                            aria-hidden
-                          />
-                        )}
-                        <div className={cn('min-w-0 flex-1', item.is_read && 'pl-4')}>
+                      <div className="flex items-start gap-3">
+                        <NotifIcon kategori={item.kategori} unread={!item.is_read} />
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-foreground">
                             {item.judul}
                           </p>
@@ -137,6 +151,13 @@ export function NotificationBell({ userId, className }: NotificationBellProps) {
               </ul>
             )}
           </div>
+          <Link
+            href="/notifications"
+            onClick={() => setOpen(false)}
+            className="block border-t border-border px-4 py-2.5 text-center text-sm font-medium text-primary hover:bg-surface-muted"
+          >
+            Lihat semua notifikasi
+          </Link>
         </div>
       )}
     </div>
