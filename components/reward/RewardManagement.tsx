@@ -28,6 +28,7 @@ import {
   Star,
   Trash2,
   User,
+  XCircle,
 } from 'lucide-react'
 import type { Reward, RewardRedemption } from '@/types/models'
 import type { PaginationMeta } from '@/types/api'
@@ -289,6 +290,13 @@ function RewardCatalog({
 
 // ─── Redemptions Sub-component ────────────────────────────────────
 
+const REDEMPTION_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'default' }> = {
+  menunggu: { label: 'Menunggu', variant: 'warning' },
+  selesai: { label: 'Selesai', variant: 'success' },
+  ditolak: { label: 'Ditolak', variant: 'danger' },
+  dibatalkan: { label: 'Dibatalkan', variant: 'default' },
+}
+
 function RedemptionList({ canWrite }: { canWrite: boolean }) {
   const { success: toastSuccess, error: toastError } = useToast()
   const [page, setPage] = useState(1)
@@ -311,6 +319,24 @@ function RedemptionList({ canWrite }: { canWrite: boolean }) {
 
   const items = fetchResult?.items ?? []
   const pagination = fetchResult?.pagination
+
+  const [tolakTarget, setTolakTarget] = useState<RewardRedemption | null>(null)
+  const [alasanTolak, setAlasanTolak] = useState('')
+
+  async function handleReject() {
+    if (!tolakTarget || !alasanTolak.trim()) return
+    await runAction(async () => {
+      try {
+        await api.post(`/reward-redemptions/${tolakTarget.id}/reject/`, { alasan: alasanTolak.trim() })
+        toastSuccess('Penukaran poin ditolak. Poin nasabah tetap utuh.')
+        setTolakTarget(null)
+        setAlasanTolak('')
+        await mutate(undefined, BALANCE_MUTATE_OPTIONS)
+      } catch (err) {
+        toastError(err instanceof ApiError ? apiErrorDetail(err) : 'Gagal menolak penukaran.')
+      }
+    })
+  }
 
   async function handleApprove(redemption: RewardRedemption) {
     await runAction(async () => {
@@ -360,18 +386,27 @@ function RedemptionList({ canWrite }: { canWrite: boolean }) {
                 <TableCell className="text-muted-foreground">{r.reward_nama ?? `Reward #${r.reward}`}</TableCell>
                 <TableCell className="text-right font-semibold">{r.poin_dibutuhkan ?? 0} poin</TableCell>
                 <TableCell>
-                  <Badge variant={r.status === 'selesai' ? 'success' : 'warning'}>
-                    {r.status === 'selesai' ? 'Selesai' : 'Menunggu'}
+                  <Badge variant={REDEMPTION_STATUS[r.status]?.variant ?? 'warning'}>
+                    {REDEMPTION_STATUS[r.status]?.label ?? r.status}
                   </Badge>
+                  {r.status === 'ditolak' && r.alasan_penolakan && (
+                    <p className="mt-1 max-w-56 text-xs text-muted-foreground">{r.alasan_penolakan}</p>
+                  )}
                 </TableCell>
                 {canWrite && (
                   <TableCell>
                     <div className="flex justify-end">
                       {r.status === 'menunggu' && (
-                        <Button type="button" variant="primary" size="sm" onClick={() => handleApprove(r)} disabled={loadingAction}>
-                          <CheckCircle2 className="size-3.5" aria-hidden />
-                          Setujui
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => setTolakTarget(r)} disabled={loadingAction}>
+                            <XCircle className="size-3.5" aria-hidden />
+                            Tolak
+                          </Button>
+                          <Button type="button" variant="primary" size="sm" onClick={() => handleApprove(r)} disabled={loadingAction}>
+                            <CheckCircle2 className="size-3.5" aria-hidden />
+                            Setujui
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </TableCell>
@@ -381,6 +416,36 @@ function RedemptionList({ canWrite }: { canWrite: boolean }) {
           )}
         </TableBody>
       </Table>
+      <Modal
+        open={tolakTarget !== null}
+        onClose={() => setTolakTarget(null)}
+        title="Tolak Penukaran Poin"
+        description={tolakTarget ? `Alasan akan dikirim ke ${tolakTarget.nasabah_nama ?? 'nasabah'} lewat notifikasi. Poin tidak berkurang.` : undefined}
+        size="sm"
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={() => setTolakTarget(null)} disabled={loadingAction}>
+              Batal
+            </Button>
+            <Button type="button" variant="danger" onClick={handleReject} loading={loadingAction} disabled={!alasanTolak.trim() || loadingAction}>
+              <XCircle className="size-4" aria-hidden />
+              Tolak
+            </Button>
+          </>
+        }
+      >
+        <label htmlFor="alasan-tolak-penukaran" className="text-sm font-medium text-foreground">
+          Alasan penolakan <span className="text-danger">*</span>
+        </label>
+        <textarea
+          id="alasan-tolak-penukaran"
+          rows={3}
+          className="mt-1.5 h-auto w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          placeholder="Mis. stok hadiah sedang habis"
+          value={alasanTolak}
+          onChange={(e) => setAlasanTolak(e.target.value)}
+        />
+      </Modal>
       {pagination && pagination.total_pages > 1 && (
         <div className="flex items-center justify-between px-4 py-3">
           <p className="text-sm text-muted-foreground">Halaman {pagination.page} dari {pagination.total_pages} ({pagination.count} total)</p>

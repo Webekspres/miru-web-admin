@@ -322,10 +322,8 @@ export function WithdrawalManagement() {
     if (!selectedWithdrawal) return
     await runAction(async () => {
       try {
-        await api.patch(`/withdrawals/${selectedWithdrawal.id}/`, {
-          status: 'ditolak',
-          catatan: alasan,
-        })
+        // PATCH hanya boleh ke status selesai — penolakan lewat aksi reject.
+        await api.post(`/withdrawals/${selectedWithdrawal.id}/reject/`, { alasan })
         toastSuccess('Penarikan saldo ditolak.')
         setShowTolakModal(false)
         setSelectedWithdrawal(null)

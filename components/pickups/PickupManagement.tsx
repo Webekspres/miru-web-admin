@@ -515,12 +515,12 @@ export function PickupManagement() {
     }
   }
 
-  async function handleTolak(_alasan: string) {
+  async function handleTolak(alasan: string) {
     if (!tolakModal.pickup) return
     setActionLoading(true)
     try {
-      // Backend reject action belum menerima alasan; modal tetap minta alasan untuk UX.
-      await api.post(`/pickups/${tolakModal.pickup.id}/reject/`, {})
+      // Alasan disimpan & disebut di notifikasi ke nasabah.
+      await api.post(`/pickups/${tolakModal.pickup.id}/reject/`, { alasan })
       toastSuccess('Penjemputan berhasil ditolak.')
       setTolakModal({ open: false, pickup: null })
       await fetchMutate()

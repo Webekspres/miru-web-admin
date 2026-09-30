@@ -128,7 +128,7 @@ export interface Reward {
   stok: number
 }
 
-export type RewardRedemptionStatus = 'menunggu' | 'selesai'
+export type RewardRedemptionStatus = 'menunggu' | 'selesai' | 'ditolak' | 'dibatalkan'
 
 export interface RewardRedemption {
   id: number
@@ -138,6 +138,8 @@ export interface RewardRedemption {
   reward_nama?: string
   poin_dibutuhkan?: number
   status: RewardRedemptionStatus
+  /** Alasan dari admin saat menolak (disebut di notifikasi ke nasabah). */
+  alasan_penolakan?: string
   tanggal: string
   poin_nasabah_baru?: number
   stok_reward_baru?: number
