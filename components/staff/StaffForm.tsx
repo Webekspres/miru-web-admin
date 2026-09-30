@@ -136,7 +136,8 @@ export function StaffForm({ initialData, isEdit = false }: StaffFormProps) {
     }
 
     if (formData.password) payload.password = formData.password
-    if (formData.no_hp.trim()) payload.no_hp = formData.no_hp.trim()
+    // Saat edit, kirim string kosong agar nilai lama bisa dihapus.
+    if (isEdit || formData.no_hp.trim()) payload.no_hp = formData.no_hp.trim()
 
     try {
       if (isEdit && initialData) {

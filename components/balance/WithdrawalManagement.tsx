@@ -322,10 +322,8 @@ export function WithdrawalManagement() {
     if (!selectedWithdrawal) return
     await runAction(async () => {
       try {
-        await api.patch(`/withdrawals/${selectedWithdrawal.id}/`, {
-          status: 'ditolak',
-          catatan: alasan,
-        })
+        // PATCH hanya boleh ke status selesai — penolakan lewat aksi reject.
+        await api.post(`/withdrawals/${selectedWithdrawal.id}/reject/`, { alasan })
         toastSuccess('Penarikan saldo ditolak.')
         setShowTolakModal(false)
         setSelectedWithdrawal(null)
@@ -443,6 +441,9 @@ export function WithdrawalManagement() {
                       <Badge variant={getStatusBadgeVariant(w.status)}>
                         {getStatusLabel(w.status)}
                       </Badge>
+                      {w.status === 'ditolak' && w.alasan_penolakan && (
+                        <p className="mt-1 max-w-56 text-xs text-muted-foreground">{w.alasan_penolakan}</p>
+                      )}
                     </TableCell>
                     {activeTab === 'selesai' && (
                       <TableCell className="text-right">
@@ -451,6 +452,7 @@ export function WithdrawalManagement() {
                     )}
                     {canApprove && activeTab === 'menunggu' && (
                       <TableCell>
+                        {w.status === 'menunggu' && (
                         <div className="flex flex-wrap justify-end gap-1.5">
                           {w.ada_lampiran_ktp && (
                             <Button type="button" variant="outline" size="sm" onClick={() => handleLihatKtp(w)} disabled={actionLoading}>
@@ -467,6 +469,7 @@ export function WithdrawalManagement() {
                             Tolak
                           </Button>
                         </div>
+                        )}
                       </TableCell>
                     )}
                   </TableRow>

@@ -172,10 +172,11 @@ export function CustomerForm({ initialData, isEdit = false }: CustomerFormProps)
     }
 
     if (formData.password) payload.password = formData.password
-    if (formData.no_hp.trim()) payload.no_hp = formData.no_hp.trim()
+    // Saat edit, kirim string kosong agar nilai lama bisa dihapus.
+    if (isEdit || formData.no_hp.trim()) payload.no_hp = formData.no_hp.trim()
     // Saat edit, kirim string kosong agar email bisa dihapus.
     if (isEdit || formData.email.trim()) payload.email = formData.email.trim().toLowerCase()
-    if (formData.alamat.trim()) payload.alamat = formData.alamat.trim()
+    if (isEdit || formData.alamat.trim()) payload.alamat = formData.alamat.trim()
     // Saat edit, kirim nilai kosong agar kelurahan/RT/RW bisa dihapus.
     payload.kelurahan = formData.kelurahan ? Number(formData.kelurahan) : null
     payload.rt = formData.rt.trim()

@@ -89,6 +89,9 @@ export interface Pickup {
   petugas: number | null
   petugas_nama?: string | null
   estimasi_berat: string
+  /** Jenis sampah pilihan nasabah saat mengajukan (null untuk pengajuan lama). */
+  kategori?: number | null
+  kategori_nama?: string | null
   alamat_jemput: string
   /** Decimal dari API (string), null bila nasabah tidak menandai titik. */
   latitude?: string | null
@@ -98,6 +101,9 @@ export interface Pickup {
   status: PickupStatus
   catatan?: string
   tanggal_pengajuan?: string
+  /** Setoran hasil timbang saat penjemputan diselesaikan (null bila belum). */
+  setoran?: number | null
+  setoran_total?: string | null
 }
 
 export type WithdrawalStatus = 'menunggu' | 'selesai' | 'ditolak'
@@ -109,6 +115,8 @@ export interface Withdrawal {
   nominal: string
   metode: string
   status: WithdrawalStatus
+  /** Alasan dari admin saat menolak. */
+  alasan_penolakan?: string
   tanggal: string
   ada_lampiran_ktp?: boolean
   ktp_diverifikasi?: boolean
@@ -122,7 +130,7 @@ export interface Reward {
   stok: number
 }
 
-export type RewardRedemptionStatus = 'menunggu' | 'selesai'
+export type RewardRedemptionStatus = 'menunggu' | 'selesai' | 'ditolak' | 'dibatalkan'
 
 export interface RewardRedemption {
   id: number
@@ -132,6 +140,8 @@ export interface RewardRedemption {
   reward_nama?: string
   poin_dibutuhkan?: number
   status: RewardRedemptionStatus
+  /** Alasan dari admin saat menolak (disebut di notifikasi ke nasabah). */
+  alasan_penolakan?: string
   tanggal: string
   poin_nasabah_baru?: number
   stok_reward_baru?: number
