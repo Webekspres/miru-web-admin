@@ -62,4 +62,24 @@ describe('SelesaikanPickupModal', () => {
     await user.click(screen.getByRole('button', { name: /Simpan & Selesaikan/ }))
     expect(onSubmit).toHaveBeenCalledWith([{ kategori: 7, berat_kg: 4 }])
   })
+
+  it('prefills the waste type and estimated weight from the request', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn()
+    render(
+      <SWRConfig value={{ provider: () => new Map() }}>
+        <SelesaikanPickupModal
+          pickup={{ ...pickup, kategori: 7, kategori_nama: 'PET', estimasi_berat: '12.00' }}
+          onClose={() => {}}
+          onSubmit={onSubmit}
+          loading={false}
+        />
+      </SWRConfig>,
+    )
+    await waitFor(() => expect(screen.getByText(/Masuk ke saldo:/).textContent).toMatch(/36\.000/))
+    expect((screen.getByLabelText('Berat (kg)') as HTMLInputElement).value).toBe('12')
+
+    await user.click(screen.getByRole('button', { name: /Simpan & Selesaikan/ }))
+    expect(onSubmit).toHaveBeenCalledWith([{ kategori: 7, berat_kg: 12 }])
+  })
 })
