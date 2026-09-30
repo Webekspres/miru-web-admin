@@ -38,6 +38,13 @@ export function Modal({
   const titleId = useId()
   const descriptionId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
+  // onClose biasanya fungsi inline (baru tiap render). Disimpan di ref supaya
+  // efek fokus hanya jalan saat modal dibuka/ditutup — bukan tiap ketikan
+  // (dulu: fokus dilempar keluar input setiap huruf diketik).
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
 
   useEffect(() => {
     if (!open) return
@@ -57,7 +64,7 @@ export function Modal({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        onClose()
+        onCloseRef.current()
         return
       }
 
@@ -86,7 +93,7 @@ export function Modal({
       document.body.style.overflow = ''
       previouslyFocused?.focus()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 
