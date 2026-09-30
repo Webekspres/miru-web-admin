@@ -4,7 +4,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { CheckCircle2, Plus } from 'lucide-react'
 import { api } from '@/lib/api'
-import { MIN_BERAT_KG, parseBeratKg } from '@/lib/deposit'
+import { MIN_BERAT_KG, calculateSubtotal, parseBeratKg } from '@/lib/deposit'
 import { formatRupiah, formatWeightKg } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
@@ -27,7 +27,18 @@ export function SelesaikanPickupModal({
   onSubmit: (details: { kategori: number; berat_kg: number }[]) => void
   loading: boolean
 }) {
-  const [rows, setRows] = useState<DetailRow[]>(() => [newDetailRow()])
+  // Terisi dari pengajuan nasabah (jenis + estimasi berat); petugas cukup
+  // menyesuaikan dengan hasil timbang.
+  const [rows, setRows] = useState<DetailRow[]>(() => [
+    pickup?.kategori
+      ? {
+          ...newDetailRow(),
+          kategori: pickup.kategori,
+          kategori_nama: pickup.kategori_nama ?? '',
+          berat_kg: String(parseBeratKg(pickup.estimasi_berat)),
+        }
+      : newDetailRow(),
+  ])
   const [errors, setErrors] = useState<Record<string, Record<string, string>>>({})
   const { data: categories = [] } = useSWR(
     pickup ? '/waste-categories/' : null,
@@ -36,7 +47,17 @@ export function SelesaikanPickupModal({
   )
 
   function update(id: string, field: keyof DetailRow, value: string | number) {
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)))
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r
+        // Baris terisi otomatis: bekukan harga hasil hitung sebelum diubah.
+        const auto = r.harga_per_kg === 0 ? viewRows.find((v) => v.id === id) : undefined
+        const base = auto && auto.harga_per_kg > 0
+          ? { ...r, harga_per_kg: auto.harga_per_kg, subtotal: auto.subtotal }
+          : r
+        return { ...base, [field]: value }
+      }),
+    )
     setErrors((prev) => {
       if (!prev[id]) return prev
       const next = { ...prev }
@@ -45,8 +66,16 @@ export function SelesaikanPickupModal({
     })
   }
 
-  const total = rows.reduce((sum, r) => sum + r.subtotal, 0)
-  const totalBerat = rows.reduce((sum, r) => sum + parseBeratKg(r.berat_kg), 0)
+  // Harga baris yang terisi otomatis baru diketahui setelah kategori dimuat.
+  const viewRows = rows.map((r) => {
+    if (r.kategori === '' || r.harga_per_kg > 0) return r
+    const cat = categories.find((c) => c.id === r.kategori)
+    if (!cat) return r
+    const harga = parseBeratKg(cat.harga_beli_per_kg)
+    return { ...r, harga_per_kg: harga, subtotal: calculateSubtotal(harga, parseBeratKg(r.berat_kg)) }
+  })
+  const total = viewRows.reduce((sum, r) => sum + r.subtotal, 0)
+  const totalBerat = viewRows.reduce((sum, r) => sum + parseBeratKg(r.berat_kg), 0)
 
   function handleSubmit() {
     const nextErrors: Record<string, Record<string, string>> = {}
@@ -85,7 +114,7 @@ export function SelesaikanPickupModal({
       }
     >
       <div className="flex flex-col gap-3">
-        {rows.map((row) => (
+        {viewRows.map((row) => (
           <DetailRowInput
             key={row.id}
             row={row}

@@ -89,6 +89,9 @@ export interface Pickup {
   petugas: number | null
   petugas_nama?: string | null
   estimasi_berat: string
+  /** Jenis sampah pilihan nasabah saat mengajukan (null untuk pengajuan lama). */
+  kategori?: number | null
+  kategori_nama?: string | null
   alamat_jemput: string
   /** Decimal dari API (string), null bila nasabah tidak menandai titik. */
   latitude?: string | null
