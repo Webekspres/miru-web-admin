@@ -14,7 +14,7 @@ export const LANDING_PATH_BY_ROLE: Record<WebAdminRole, string> = {
 const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
   admin: ['/dashboard', '/settings', '/profile'],
   // Petugas: tugas lapangan + riwayat sendiri + profil; tanpa master data/laporan.
-  petugas: ['/dashboard', '/transactions', '/pickups', '/profile'],
+  petugas: ['/dashboard', '/transactions', '/pickups', '/profile', '/notifications'],
   koordinator: [
     '/dashboard',
     '/customers',
@@ -30,12 +30,13 @@ const ALLOWED_PREFIXES: Record<WebAdminRole, string[]> = {
     '/reports',
     '/settings',
     '/profile',
+    '/notifications',
     '/institution',
     '/privacy',
     '/about',
     '/syarat-ketentuan',
   ],
-  pemerintah: ['/dashboard', '/reports', '/warehouse', '/profile'],
+  pemerintah: ['/dashboard', '/reports', '/warehouse', '/profile', '/notifications'],
 }
 
 /** Path yang harus selalu punya guard role (audit Fase 7). */
@@ -68,6 +69,8 @@ export const DASHBOARD_PATHS = [
   '/settings',
   '/profile',
   '/profile/edit',
+  '/notifications',
+  '/notifications/1',
   '/institution',
   '/institution/edit',
   '/privacy',

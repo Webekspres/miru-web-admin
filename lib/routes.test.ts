@@ -72,6 +72,8 @@ describe('dashboard route audit', () => {
         '/pickups',
         '/profile',
         '/profile/edit',
+        '/notifications',
+        '/notifications/1',
       ],
       koordinator: DASHBOARD_PATHS.filter(
         (path) =>
@@ -79,7 +81,10 @@ describe('dashboard route audit', () => {
           path !== '/audit-log' &&
           path !== '/transactions/add',
       ),
-      pemerintah: ['/dashboard', '/reports', '/warehouse', '/profile', '/profile/edit'],
+      pemerintah: [
+        '/dashboard', '/reports', '/warehouse', '/profile', '/profile/edit',
+        '/notifications', '/notifications/1',
+      ],
     }
 
     for (const path of DASHBOARD_PATHS) {
